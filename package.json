@@ -3,6 +3,8 @@
   "version": "1.0.0",
   "description": "Standalone version of Språkhjelperen - a Norwegian language learning assistant",
   "private": true,
+  "license": "MIT",
+  "author": "Rune Mikal Birkeland",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
