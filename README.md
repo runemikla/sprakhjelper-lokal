@@ -139,8 +139,20 @@ Prosjektet følger disse retningslinjene:
 
 ## Lisens
 
-[Spesifiser lisens her]
+Dette prosjektet er lisensiert under MIT-lisensen - se [LICENSE](LICENSE) filen for detaljer.
 
 ## Bidrag
 
-[Spesifiser bidragsretningslinjer her]
+Bidrag er velkomne! Vennligst følg disse retningslinjene:
+
+1. Fork repositoriet
+2. Opprett en feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit endringene dine (`git commit -m 'Add some AmazingFeature'`)
+4. Push til branchen (`git push origin feature/AmazingFeature`)
+5. Åpne en Pull Request
+
+Sørg for at koden din:
+- Følger prosjektets kodestil
+- Passerer alle linting-sjekker (`pnpm lint`)
+- Inkluderer passende dokumentasjon
+
