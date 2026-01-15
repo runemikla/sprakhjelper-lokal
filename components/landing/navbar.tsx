@@ -1,49 +1,20 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Menu, X } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 
 export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
   const router = useRouter()
-
-  useEffect(() => {
-    const checkAuth = async () => {
-      const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-      setIsLoggedIn(!!user)
-    }
-
-    checkAuth()
-
-    // Listen for auth changes
-    const supabase = createClient()
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setIsLoggedIn(!!session?.user)
-    })
-
-    return () => {
-      subscription.unsubscribe()
-    }
-  }, [])
-
-  const handleLogout = async () => {
-    const supabase = createClient()
-    await supabase.auth.signOut()
-    router.push('/')
-    router.refresh()
-  }
 
   const handleSpraakhjelperClick = (e: React.MouseEvent) => {
     e.preventDefault()
     // Clear sessionStorage
-    if (typeof window !== 'undefined') {
+    if (globalThis.window !== undefined) {
       sessionStorage.clear()
     }
     // Navigate to spraakhjelper page
@@ -87,32 +58,10 @@ export function Navbar() {
             >
               Om språkhjelperen
             </Link>
-            {isLoggedIn ? (
-              <Button onClick={handleLogout} variant="outline">
-                Logg ut
-              </Button>
-            ) : (
-              <Button asChild>
-                <Link href="/auth/login">
-                  Logg inn
-                </Link>
-              </Button>
-            )}
           </div>
 
           {/* Mobile menu button */}
           <div className="md:hidden flex items-center gap-2">
-            {isLoggedIn ? (
-              <Button onClick={handleLogout} variant="outline" size="sm">
-                Logg ut
-              </Button>
-            ) : (
-              <Button asChild variant="outline" size="sm">
-                <Link href="/auth/login">
-                  Logg inn
-                </Link>
-              </Button>
-            )}
             <Button
               variant="ghost"
               size="icon"

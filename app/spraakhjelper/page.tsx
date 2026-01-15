@@ -1,16 +1,16 @@
-import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
 import SpraakhjelpperClient from './spraakhjelper-client'
 
-export default async function SpraakhjelpperPage() {
-  const supabase = await createClient()
-
-  const { data, error } = await supabase.auth.getUser()
-  
-  if (error || !data?.user) {
-    redirect('/auth/login?redirect=/spraakhjelper')
+export default function SpraakhjelpperPage() {
+  // Mock user for local testing without authentication
+  const mockUser = {
+    id: 'local-user',
+    email: 'test@example.com',
+    user_metadata: {},
+    app_metadata: {},
+    aud: 'authenticated',
+    created_at: new Date().toISOString(),
   }
 
-  return <SpraakhjelpperClient user={data.user} />
+  return <SpraakhjelpperClient user={mockUser as any} />
 }
 
