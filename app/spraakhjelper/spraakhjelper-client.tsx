@@ -297,7 +297,7 @@ export default function SpraakhjelpperClient({ user }: SpraakhjelpperClientProps
   // Get teacher image based on sentence status
   const getTeacherImage = (status: 'riktig' | 'riktig_2' | 'feil' | undefined) => {
     // Add version parameter to bust cache for updated images
-    const version = 'v2'
+    const version = 'v3'
     if (status === 'riktig' || status === 'riktig_2') {
       return `/images/riktig_${teacherVersion}.png?${version}`
     } else if (status === 'feil') {
@@ -799,14 +799,32 @@ export default function SpraakhjelpperClient({ user }: SpraakhjelpperClientProps
 
                   <div>
                     <Label htmlFor="input" className="text-lg font-semibold">Lim inn teksten din her:</Label>
-                    <Textarea
-                      id="input"
-                      placeholder="Skriv eller lim inn teksten din her..."
-                      value={inputValue}
-                      onChange={(e) => setInputValue(e.target.value)}
-                      className="min-h-[200px]"
-                      disabled={isSubmitting}
-                    />
+                    <div className="relative">
+                      <Textarea
+                        id="input"
+                        placeholder="Skriv eller lim inn teksten din her..."
+                        value={inputValue}
+                        onChange={(e) => {
+                          if (e.target.value.length <= 1000) {
+                            setInputValue(e.target.value)
+                          }
+                        }}
+                        maxLength={1000}
+                        className="min-h-[200px] pb-8"
+                        disabled={isSubmitting}
+                      />
+                      <span
+                        className={`absolute bottom-2 right-3 text-xs tabular-nums ${
+                          inputValue.length >= 1000
+                            ? 'text-red-500 font-semibold'
+                            : inputValue.length >= 900
+                              ? 'text-amber-500'
+                              : 'text-gray-400'
+                        }`}
+                      >
+                        {inputValue.length} / 1000
+                      </span>
+                    </div>
                   </div>
 
                   <Button
@@ -868,19 +886,11 @@ export default function SpraakhjelpperClient({ user }: SpraakhjelpperClientProps
                 <div className="space-y-4">
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                     <h3 className="font-semibold mb-3 text-blue-900">Setninger funnet:</h3>
-                    <div className="space-y-3">
+                    <div className="space-y-2">
                       {editableSentences.map((sentence, index) => (
-                        <div key={index} className="flex items-start gap-2">
-                          <span className="font-semibold text-blue-700 mt-2.5 flex-shrink-0">{index + 1}.</span>
-                          <Input
-                            value={sentence}
-                            onChange={(e) => {
-                              const newSentences = [...editableSentences]
-                              newSentences[index] = e.target.value
-                              setEditableSentences(newSentences)
-                            }}
-                            className="flex-1 bg-white"
-                          />
+                        <div key={index} className="flex items-start gap-2 py-2 px-3 bg-white rounded-md border border-blue-100">
+                          <span className="font-semibold text-blue-700 flex-shrink-0">{index + 1}.</span>
+                          <span className="text-gray-800">{sentence}</span>
                         </div>
                       ))}
                     </div>
@@ -998,7 +1008,7 @@ export default function SpraakhjelpperClient({ user }: SpraakhjelpperClientProps
                             />
                             <div className="flex items-center justify-between">
                               <p className="text-sm text-gray-600">
-                                Kan du prøve å rette setningen din?
+                                Setningen er ikke helt riktig. Kan du prøve å rette feilene?
                               </p>
                               <Button
                                 size="sm"
@@ -1021,8 +1031,8 @@ export default function SpraakhjelpperClient({ user }: SpraakhjelpperClientProps
                       <Image
                         src={getTeacherImage(currentSentence.setning_status)}
                         alt="Lærer"
-                        width={96}
-                        height={96}
+                        width={192}
+                        height={192}
                         className="object-contain"
                         priority
                       />

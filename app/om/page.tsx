@@ -31,7 +31,7 @@ export default function OmPage() {
           <Card className="mb-8">
             <CardContent className="pt-6">
               <p className="text-gray-700 leading-relaxed">
-                Språkhjelperen er basert på en systeminstruks utviklet av Ine Jørvum og Jan Erik Paulsen. Rune Mikal Birkeland har utviklet denne prototypen.
+                Språkhjelperen er en prototype utviklet av Rune Mikal Birkeland. Den er en del av et prosjekt i Vestland fylkeskommune, som har som mål å utvikle flere KI-verktøy for elever med norsk som andrespråk. Språkhjelperen er basert på en systeminstruks utviklet av Ine Jørvum og Jan Erik Paulsen. Denne har blitt tilpasset og utvidet i samarbeid med andrespråkspedagoger i Vestland fylkeskommune.
               </p>
             </CardContent>
           </Card>
@@ -89,11 +89,11 @@ export default function OmPage() {
           {/* Mascots */}
           <div className="flex justify-center mt-12">
             <Image 
-              src="/images/glemmen_riktig-bakgrunn fjernet.png" 
-              alt="Språkhjelperen maskotter" 
-              width={500} 
-              height={500} 
-              className="object-contain"
+              src="/images/vestland_team.jpg" 
+              alt="Teamet bak Språkhjelperen" 
+              width={600} 
+              height={400} 
+              className="object-contain rounded-lg shadow-md"
             />
           </div>
         </div>
