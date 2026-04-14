@@ -13,7 +13,7 @@ export default function LærerveiledningPage() {
           <div className="mb-8 flex justify-center">
             <div className="relative w-64 h-64">
               <Image
-                src="/images/feil_2.png"
+                src="/images/gunhild_feil.png"
                 alt="Under konstruksjon"
                 fill
                 className="object-contain"

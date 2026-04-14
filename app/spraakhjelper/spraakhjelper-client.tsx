@@ -297,7 +297,7 @@ export default function SpraakhjelpperClient({ user }: SpraakhjelpperClientProps
   // Get teacher image based on sentence status
   const getTeacherImage = (status: 'riktig' | 'riktig_2' | 'feil' | undefined) => {
     // Add version parameter to bust cache for updated images
-    const version = 'v2'
+    const version = 'v3'
     if (status === 'riktig' || status === 'riktig_2') {
       return `/images/riktig_${teacherVersion}.png?${version}`
     } else if (status === 'feil') {
@@ -1021,8 +1021,8 @@ export default function SpraakhjelpperClient({ user }: SpraakhjelpperClientProps
                       <Image
                         src={getTeacherImage(currentSentence.setning_status)}
                         alt="Lærer"
-                        width={96}
-                        height={96}
+                        width={192}
+                        height={192}
                         className="object-contain"
                         priority
                       />
