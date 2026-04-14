@@ -31,7 +31,7 @@ export default function OmPage() {
           <Card className="mb-8">
             <CardContent className="pt-6">
               <p className="text-gray-700 leading-relaxed">
-                Språkhjelperen er en prototype utviklet av Rune Mikal Birkeland. Den er en del av et prosjekt i Vestland fylkeskommune, som har som mål å utvikle flere KI-verktøy for elever med norsk som andrespråk. Språkhjelperen er basert på en systeminstruks utviklet av Ine Jørvum og Jan Erik Paulsen. Denne har blitt tilpasset og utvidet i samarbeid med andrespråkspedagoger i Vestland fylkeskommune.
+                Språkhjelperen er en prototype utviklet av Rune Mikal Birkeland, som del av et større prosjekt i Vestland fylkeskommune. Målet med prosjektet er å utvikle KI-verktøy tilpasset elever med norsk som andrespråk. Den bygger på en systeminstruks opprinnelig utformet av Ine Jørvum og Jan Erik Paulsen, og har siden blitt videreutviklet i tett samarbeid med andrespråkspedagoger i fylkeskommunen.
               </p>
             </CardContent>
           </Card>
