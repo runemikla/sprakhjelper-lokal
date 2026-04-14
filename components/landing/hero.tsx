@@ -49,7 +49,7 @@ export function Hero() {
 
           {/* Subheading */}
           <p className="text-xl sm:text-2xl text-blue-50 mb-12 max-w-3xl mx-auto leading-relaxed animate-fade-in-up animation-delay-200">
-            Språkhjelperen bruker kunstig intelligens for å gjøre skriving enklere. Den gir forklaringer og forslag på både norsk og ditt eget språk, slik at du forstår hvordan teksten kan forbedres. Du får også tips til videre arbeid og en oversiktlig rapport du kan dele med læreren din.
+            Språkhjelperen bruker kunstig intelligens for å hjelpe deg å skrive bedre norsk. Den gir forklaringer og forslag på både norsk og ditt eget morsmål, slik at du forstår hvordan teksten kan forbedres. <br /> Du får også tips til videre arbeid og en oversiktlig rapport du kan dele med læreren din.
           </p>
 
           {/* CTA Buttons */}
