@@ -28,7 +28,7 @@ export function Navbar() {
           {/* Logo */}
           <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
             <Image
-              src="/images/Logo_Vestland_fylkeskommune_SSF_06982.PNG"
+              src="/images/Logo_Vestland_fylkeskommune.png"
               alt="Vestland fylkeskommune"
               width={180}
               height={40}
@@ -46,6 +46,12 @@ export function Navbar() {
             >
               Språkhjelperen
             </a>
+            <Link
+              href="/grammatikk"
+              className="text-gray-700 hover:text-blue-600 transition-colors font-medium"
+            >
+              Grammatikk øving
+            </Link>
             <Link
               href="/laererveiledning"
               className="text-gray-700 hover:text-blue-600 transition-colors font-medium"
@@ -87,6 +93,13 @@ export function Navbar() {
               >
                 Språkhjelperen
               </a>
+              <Link
+                href="/grammatikk"
+                className="text-gray-700 hover:text-blue-600 transition-colors font-medium px-2"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Grammatikk øving
+              </Link>
               <Link
                 href="/laererveiledning"
                 className="text-gray-700 hover:text-blue-600 transition-colors font-medium px-2"

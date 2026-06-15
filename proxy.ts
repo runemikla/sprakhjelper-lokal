@@ -1,7 +1,30 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-export function middleware(request: NextRequest) {
+// Cookie name for access code authentication
+const ACCESS_COOKIE_NAME = 'spraakhjelper_access';
+
+export function proxy(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  // --- Access Code Protection ---
+  // Skip protection for the access page itself, API verify route, and static assets
+  const isPublicPath =
+    pathname === '/tilgang' ||
+    pathname === '/api/verify-access' ||
+    pathname.startsWith('/_next/') ||
+    pathname.startsWith('/api/') === false && pathname.match(/\.(svg|png|jpg|jpeg|gif|webp|ico|css|js)$/);
+
+  if (!isPublicPath) {
+    const accessCookie = request.cookies.get(ACCESS_COOKIE_NAME);
+    if (!accessCookie || accessCookie.value !== 'authenticated') {
+      // Redirect unauthenticated users to the access page
+      const url = request.nextUrl.clone();
+      url.pathname = '/tilgang';
+      return NextResponse.redirect(url);
+    }
+  }
+
   const response = NextResponse.next();
 
   // HTTPS Enforcement (only in production)
@@ -63,7 +86,7 @@ export function middleware(request: NextRequest) {
   return response;
 }
 
-// Configure which routes the middleware applies to
+// Configure which routes the proxy applies to
 export const config = {
   matcher: [
     /*
@@ -76,4 +99,3 @@ export const config = {
     '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 };
-
