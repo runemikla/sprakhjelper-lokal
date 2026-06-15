@@ -47,6 +47,12 @@ export function Navbar() {
               Språkhjelperen
             </a>
             <Link
+              href="/grammatikk"
+              className="text-gray-700 hover:text-blue-600 transition-colors font-medium"
+            >
+              Grammatikk øving
+            </Link>
+            <Link
               href="/laererveiledning"
               className="text-gray-700 hover:text-blue-600 transition-colors font-medium"
             >
@@ -87,6 +93,13 @@ export function Navbar() {
               >
                 Språkhjelperen
               </a>
+              <Link
+                href="/grammatikk"
+                className="text-gray-700 hover:text-blue-600 transition-colors font-medium px-2"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Grammatikk øving
+              </Link>
               <Link
                 href="/laererveiledning"
                 className="text-gray-700 hover:text-blue-600 transition-colors font-medium px-2"
