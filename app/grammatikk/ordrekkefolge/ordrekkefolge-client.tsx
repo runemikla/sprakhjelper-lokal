@@ -40,6 +40,31 @@ const NEXT_SENTENCE_DELAY = 1800
 const LEVEL_UP_GOAL = 10
 const LEVEL_UP_DELAY = 2600
 
+/**
+ * Fisher-Yates shuffle that ensures the result differs from the original order
+ * (unless all words are identical or there is only one word).
+ */
+function shuffleWords(words: string[]): string[] {
+  if (words.length <= 1) return [...words]
+
+  const allSame = words.every((w) => w === words[0])
+  let attempt = 0
+
+  while (attempt < 10) {
+    const shuffled = [...words]
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1))
+      ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
+    }
+    if (allSame || shuffled.some((w, i) => w !== words[i])) {
+      return shuffled
+    }
+    attempt++
+  }
+
+  return [...words].reverse()
+}
+
 export default function OrdrekkefolgeClient() {
   // Selected difficulty (1–7). `started` flips once the first sentence loads.
   const [level, setLevel] = useState<Level>(1)
@@ -78,6 +103,10 @@ export default function OrdrekkefolgeClient() {
   const [draggingId, setDraggingId] = useState<string | null>(null)
   const draggingIdRef = useRef<string | null>(null)
 
+  // Recent sentence history sent to the API for variety (max 10, cleared on
+  // level-up or restart).
+  const sentenceHistoryRef = useRef<string[]>([])
+
   const generateSentence = useCallback(async (selectedLevel: Level) => {
     setIsLoading(true)
     setError(null)
@@ -89,7 +118,10 @@ export default function OrdrekkefolgeClient() {
       const response = await fetchWithTimeout('/api/generate-sentence', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ level: selectedLevel }),
+        body: JSON.stringify({
+          level: selectedLevel,
+          previousSentences: sentenceHistoryRef.current,
+        }),
       })
 
       if (!response.ok) {
@@ -97,12 +129,22 @@ export default function OrdrekkefolgeClient() {
       }
 
       const data = (await response.json()) as {
-        words: string[]
         correctWords: string[]
+        sentence: string
       }
 
+      // Track the sentence for variety in future requests (max 10).
+      if (data.sentence) {
+        const history = sentenceHistoryRef.current
+        history.push(data.sentence)
+        if (history.length > 10) history.shift()
+      }
+
+      // Shuffle the words client-side so the LLM only handles grammar.
+      const shuffledWords = shuffleWords(data.correctWords)
+
       // Build draggable tokens with stable unique ids (words may repeat).
-      const tokens: WordToken[] = data.words.map((text) => ({
+      const tokens: WordToken[] = shuffledWords.map((text) => ({
         id: crypto.randomUUID(),
         text,
       }))
@@ -122,6 +164,7 @@ export default function OrdrekkefolgeClient() {
   const handleStart = useCallback(() => {
     setStarted(true)
     setScore({ correct: 0, wrong: 0 })
+    sentenceHistoryRef.current = []
     clearReport()
     void generateSentence(level)
   }, [generateSentence, level, clearReport])
@@ -216,6 +259,7 @@ export default function OrdrekkefolgeClient() {
           nextLevel = Math.min(level + 1, MAX_LEVEL) as Level
           setLevel(nextLevel)
           setScore({ correct: 0, wrong: 0 })
+          sentenceHistoryRef.current = []
           setShowConfetti(true)
           void playFanfare()
         } else {
