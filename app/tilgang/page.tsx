@@ -63,16 +63,9 @@ export default function TilgangPage() {
       <div className="relative z-10 w-full max-w-md">
         <Card className="shadow-xl border-0 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm">
           <CardHeader className="text-center space-y-3 pb-2">
-            <div className="mx-auto">
-              <Image
-                src="/images/sprakhjelper_logo_1.png"
-                alt="Språkhjelperen logo"
-                width={200}
-                height={200}
-                className="mx-auto"
-                priority
-              />
-            </div>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+              Språkhjelperen
+            </h1>
             <CardDescription className="text-base">
               Skriv inn tilgangskoden for å bruke appen
             </CardDescription>

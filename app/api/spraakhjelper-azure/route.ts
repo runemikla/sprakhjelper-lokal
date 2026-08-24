@@ -332,7 +332,7 @@ Eksempel 4:
           { role: 'user', content: `Tekst fra eleven: ${text}` }
         ],
         temperature: 0,
-        max_tokens: 4000,
+        max_completion_tokens: 4000,
         response_format: {
           type: "json_schema",
           json_schema: {

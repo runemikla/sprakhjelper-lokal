@@ -31,10 +31,11 @@ export function LoginForm({
 }: React.ComponentPropsWithoutRef<'div'>) {
   const searchParams = useSearchParams()
   const message = searchParams.get('message')
+  const next = searchParams.get('next') ?? '/spraakhjelper'
 
   return (
     <div className={cn('flex flex-col gap-6', className)} {...props}>
-      <Card>
+      <Card className="bg-white/90 backdrop-blur-sm border-0 shadow-xl">
         <CardHeader>
           <CardTitle className="text-2xl">Logg inn</CardTitle>
           <CardDescription>
@@ -48,6 +49,7 @@ export function LoginForm({
             </div>
           )}
           <form action={login}>
+            <input type="hidden" name="next" value={next} />
             <div className="flex flex-col gap-6">
               <div className="grid gap-2">
                 <Label htmlFor="login-email">E-post</Label>
