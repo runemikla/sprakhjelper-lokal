@@ -1,11 +1,11 @@
-import { Navbar } from '@/components/landing/navbar'
+import { AppNavbar } from '@/components/landing/app-navbar'
 import { Footer } from '@/components/landing/footer'
 import Image from 'next/image'
 
 export default function LærerveiledningPage() {
   return (
     <main className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
-      <Navbar />
+      <AppNavbar />
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-24 mt-16">
         <div className="max-w-2xl mx-auto text-center">

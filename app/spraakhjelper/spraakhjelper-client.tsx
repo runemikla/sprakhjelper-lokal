@@ -712,7 +712,7 @@ export default function SpraakhjelpperClient({ user }: SpraakhjelpperClientProps
       </div>
 
       {/* Navbar */}
-      <Navbar />
+      <Navbar userEmail={user.email ?? null} />
 
       {/* Content */}
       <div className="relative z-10 container mx-auto pt-24 pb-8 px-4 max-w-4xl">
@@ -723,10 +723,7 @@ export default function SpraakhjelpperClient({ user }: SpraakhjelpperClientProps
               <div className="px-6 pt-6 pb-4 border-b border-gray-200">
                 <div className="flex items-start justify-between">
                   <div className="cursor-pointer hover:opacity-80 transition-opacity flex-1" onClick={showInputForm}>
-                    <div className="flex items-center gap-1.5 mb-1">
-                      <Image src="/images/sprakhjelper_logo.png" alt="Språkhjelperen" width={36} height={36} className="object-contain" />
-                      <h2 className="text-2xl font-bold text-gray-900">Språkhjelperen</h2>
-                    </div>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-1">Språkhjelperen</h2>
                     <p className="text-sm text-gray-600">
                       Få tilbakemeldinger fra KI på teksten din.
                     </p>
@@ -848,10 +845,7 @@ export default function SpraakhjelpperClient({ user }: SpraakhjelpperClientProps
               <div className="px-6 pt-6 pb-4 border-b border-gray-200">
                 <div className="flex items-start justify-between">
                   <div className="cursor-pointer hover:opacity-80 transition-opacity flex-1" onClick={showInputForm}>
-                    <div className="flex items-center gap-1.5 mb-1">
-                      <Image src="/images/sprakhjelper_logo.png" alt="Språkhjelperen" width={36} height={36} className="object-contain" />
-                      <h2 className="text-2xl font-bold text-gray-900">Språkhjelperen</h2>
-                    </div>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-1">Språkhjelperen</h2>
                     <p className="text-sm text-gray-600">
                       Få tilbakemeldinger fra KI på teksten din.
                     </p>
@@ -917,10 +911,7 @@ export default function SpraakhjelpperClient({ user }: SpraakhjelpperClientProps
               <div className="px-6 pt-6 pb-4 border-b border-gray-200">
                 <div className="flex items-start justify-between">
                   <div className="cursor-pointer hover:opacity-80 transition-opacity flex-1" onClick={showInputForm}>
-                    <div className="flex items-center gap-1.5 mb-1">
-                      <Image src="/images/sprakhjelper_logo.png" alt="Språkhjelperen" width={36} height={36} className="object-contain" />
-                      <h2 className="text-2xl font-bold text-gray-900">Språkhjelperen</h2>
-                    </div>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-1">Språkhjelperen</h2>
                     <p className="text-sm text-gray-600">
                       Få tilbakemeldinger fra KI på teksten din.
                     </p>
@@ -956,10 +947,7 @@ export default function SpraakhjelpperClient({ user }: SpraakhjelpperClientProps
               <div className="px-6 pt-4 pb-4 border-b border-gray-200 flex-shrink-0">
                 <div className="flex items-start justify-between">
                   <div className="cursor-pointer hover:opacity-80 transition-opacity flex-1" onClick={showInputForm}>
-                    <div className="flex items-center gap-1.5 mb-1">
-                      <Image src="/images/sprakhjelper_logo.png" alt="Språkhjelperen" width={36} height={36} className="object-contain" />
-                      <h2 className="text-2xl font-bold text-gray-900">Språkhjelperen</h2>
-                    </div>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-1">Språkhjelperen</h2>
                     <p className="text-sm text-gray-600">
                       Få tilbakemeldinger fra KI på teksten din.
                     </p>
@@ -1182,10 +1170,7 @@ export default function SpraakhjelpperClient({ user }: SpraakhjelpperClientProps
               <div className="px-6 pt-6 pb-4 border-b border-gray-200">
                 <div className="flex items-start justify-between">
                   <div className="cursor-pointer hover:opacity-80 transition-opacity flex-1" onClick={showInputForm}>
-                    <div className="flex items-center gap-1.5 mb-1">
-                      <Image src="/images/sprakhjelper_logo.png" alt="Språkhjelperen" width={36} height={36} className="object-contain" />
-                      <h2 className="text-2xl font-bold text-gray-900">Språkhjelperen</h2>
-                    </div>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-1">Språkhjelperen</h2>
                     <p className="text-sm text-gray-600">
                       Få tilbakemeldinger fra KI på teksten din.
                     </p>

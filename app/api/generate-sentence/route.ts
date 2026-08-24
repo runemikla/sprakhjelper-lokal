@@ -161,7 +161,7 @@ Du skal returnere:
         ],
         // Some randomness so sentences vary between requests
         temperature: 1,
-        max_tokens: 500,
+        max_completion_tokens: 500,
         response_format: {
           type: 'json_schema',
           json_schema: {

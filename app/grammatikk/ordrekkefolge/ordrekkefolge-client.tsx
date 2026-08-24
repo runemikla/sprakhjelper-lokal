@@ -65,7 +65,13 @@ function shuffleWords(words: string[]): string[] {
   return [...words].reverse()
 }
 
-export default function OrdrekkefolgeClient() {
+interface OrdrekkefolgeClientProps {
+  userEmail?: string | null
+}
+
+export default function OrdrekkefolgeClient({
+  userEmail = null,
+}: OrdrekkefolgeClientProps) {
   // Selected difficulty (1–7). `started` flips once the first sentence loads.
   const [level, setLevel] = useState<Level>(1)
   const [started, setStarted] = useState(false)
@@ -323,7 +329,7 @@ export default function OrdrekkefolgeClient() {
         </div>
       </div>
 
-      <Navbar />
+      <Navbar userEmail={userEmail} />
 
       {/* Content */}
       <div className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-12">

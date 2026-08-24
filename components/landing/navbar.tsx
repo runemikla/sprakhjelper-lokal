@@ -5,21 +5,15 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Menu, X } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+import { LogoutButton } from '@/components/logout-button'
+import { KiToolsMenu, KiToolsMobileLinks } from '@/components/landing/ki-tools-menu'
 
-export function Navbar() {
+interface NavbarProps {
+  userEmail?: string | null
+}
+
+export function Navbar({ userEmail = null }: NavbarProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const router = useRouter()
-
-  const handleSpraakhjelperClick = (e: React.MouseEvent) => {
-    e.preventDefault()
-    // Clear sessionStorage
-    if (globalThis.window !== undefined) {
-      sessionStorage.clear()
-    }
-    // Navigate to spraakhjelper page
-    router.push('/spraakhjelper')
-  }
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-200">
@@ -39,19 +33,7 @@ export function Navbar() {
 
           {/* Desktop Navigation Links */}
           <div className="hidden md:flex items-center gap-8">
-            <a
-              href="/spraakhjelper"
-              onClick={handleSpraakhjelperClick}
-              className="text-gray-700 hover:text-blue-600 transition-colors font-medium cursor-pointer"
-            >
-              Språkhjelperen
-            </a>
-            <Link
-              href="/grammatikk"
-              className="text-gray-700 hover:text-blue-600 transition-colors font-medium"
-            >
-              Grammatikk øving
-            </Link>
+            <KiToolsMenu />
             <Link
               href="/laererveiledning"
               className="text-gray-700 hover:text-blue-600 transition-colors font-medium"
@@ -62,8 +44,24 @@ export function Navbar() {
               href="/om"
               className="text-gray-700 hover:text-blue-600 transition-colors font-medium"
             >
-              Om språkhjelperen
+              Om språkhjelp
             </Link>
+            {userEmail ? (
+              <div className="flex items-center gap-3">
+                <span className="hidden lg:inline text-sm text-gray-500 max-w-[180px] truncate">
+                  {userEmail}
+                </span>
+                <LogoutButton />
+              </div>
+            ) : (
+              <Link
+                href="/auth/login"
+                className="inline-flex h-8 items-center justify-center rounded-md px-3 text-sm font-medium hover:opacity-80"
+                style={{ backgroundColor: '#000000', color: '#ffffff' }}
+              >
+                Logg inn
+              </Link>
+            )}
           </div>
 
           {/* Mobile menu button */}
@@ -83,23 +81,7 @@ export function Navbar() {
         {mobileMenuOpen && (
           <div className="md:hidden py-4 border-t border-gray-200">
             <div className="flex flex-col space-y-4">
-              <a
-                href="/spraakhjelper"
-                onClick={(e) => {
-                  handleSpraakhjelperClick(e)
-                  setMobileMenuOpen(false)
-                }}
-                className="text-gray-700 hover:text-blue-600 transition-colors font-medium px-2 cursor-pointer"
-              >
-                Språkhjelperen
-              </a>
-              <Link
-                href="/grammatikk"
-                className="text-gray-700 hover:text-blue-600 transition-colors font-medium px-2"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Grammatikk øving
-              </Link>
+              <KiToolsMobileLinks onNavigate={() => setMobileMenuOpen(false)} />
               <Link
                 href="/laererveiledning"
                 className="text-gray-700 hover:text-blue-600 transition-colors font-medium px-2"
@@ -112,8 +94,25 @@ export function Navbar() {
                 className="text-gray-700 hover:text-blue-600 transition-colors font-medium px-2"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                Om språkhjelperen
+                Om språkhjelp
               </Link>
+              {userEmail ? (
+                <div className="px-2">
+                  <p className="text-sm text-gray-500 mb-2 truncate">{userEmail}</p>
+                  <LogoutButton />
+                </div>
+              ) : (
+                <div className="px-2">
+                  <Link
+                    href="/auth/login"
+                    className="inline-flex h-8 w-full items-center justify-center rounded-md px-3 text-sm font-medium hover:opacity-80"
+                    style={{ backgroundColor: '#000000', color: '#ffffff' }}
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Logg inn
+                  </Link>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -121,4 +120,3 @@ export function Navbar() {
     </nav>
   )
 }
-

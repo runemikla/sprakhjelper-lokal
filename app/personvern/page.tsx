@@ -1,11 +1,11 @@
-import { Navbar } from '@/components/landing/navbar'
+import { AppNavbar } from '@/components/landing/app-navbar'
 import { Footer } from '@/components/landing/footer'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 export default function PersonvernPage() {
   return (
     <div className="min-h-screen flex flex-col">
-      <Navbar />
+      <AppNavbar />
       
       <main className="flex-1 container mx-auto px-4 py-16 max-w-4xl">
         <h1 className="text-4xl font-bold mb-8">Personvernerklæring</h1>

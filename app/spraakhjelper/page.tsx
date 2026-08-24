@@ -1,16 +1,15 @@
 import SpraakhjelpperClient from './spraakhjelper-client'
+import { getUser } from '@/lib/supabase/server'
 
-export default function SpraakhjelpperPage() {
-  // Mock user for local testing without authentication
-  const mockUser = {
-    id: 'local-user',
-    email: 'test@example.com',
-    user_metadata: {},
-    app_metadata: {},
-    aud: 'authenticated',
-    created_at: new Date().toISOString(),
-  }
+export default async function SpraakhjelpperPage() {
+  const user = await getUser()
 
-  return <SpraakhjelpperClient user={mockUser as any} />
+  return (
+    <SpraakhjelpperClient
+      user={{
+        id: user?.id ?? 'guest',
+        email: user?.email ?? undefined,
+      }}
+    />
+  )
 }
-

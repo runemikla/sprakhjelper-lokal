@@ -40,8 +40,8 @@ const securityHeaders = [
       "img-src 'self' data: blob: https:",
       "font-src 'self' data:",
       // Allow Supabase (with specific URL + wildcard) and Azure OpenAI
-      "connect-src 'self' https://ntkmouxfvzrxanolnmke.supabase.co https://*.supabase.co https://*.openai.azure.com",
-      "media-src 'self' data:",
+      "connect-src 'self' https://ltfpqhavtpoiclqcuamg.supabase.co https://*.supabase.co https://*.openai.azure.com https://*.services.ai.azure.com",
+      "media-src 'self' data: blob:",
       "object-src 'none'",
       "base-uri 'self'",
       "form-action 'self'",

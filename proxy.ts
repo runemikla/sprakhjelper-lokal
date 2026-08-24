@@ -1,101 +1,65 @@
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+import { createServerClient } from '@supabase/ssr'
+import { NextResponse, type NextRequest } from 'next/server'
+import { getSupabaseEnv } from '@/lib/supabase/env'
 
-// Cookie name for access code authentication
-const ACCESS_COOKIE_NAME = 'spraakhjelper_access';
+const ACCESS_COOKIE_NAME = 'spraakhjelper_access'
 
-export function proxy(request: NextRequest) {
-  const { pathname } = request.nextUrl;
-
-  // --- Access Code Protection ---
-  // Skip protection for the access page itself, API verify route, and static assets
-  const isPublicPath =
+function isAccessCodeExempt(pathname: string) {
+  return (
     pathname === '/tilgang' ||
     pathname === '/api/verify-access' ||
-    pathname.startsWith('/_next/') ||
-    pathname.startsWith('/api/') === false && pathname.match(/\.(svg|png|jpg|jpeg|gif|webp|ico|css|js)$/);
+    pathname.startsWith('/auth/')
+  )
+}
 
-  if (!isPublicPath) {
-    const accessCookie = request.cookies.get(ACCESS_COOKIE_NAME);
+export async function proxy(request: NextRequest) {
+  const { pathname } = request.nextUrl
+
+  // Access code gate for the app. Login is optional and is not required
+  // for Språkhjelperen or grammatikkøving.
+  if (!isAccessCodeExempt(pathname)) {
+    const accessCookie = request.cookies.get(ACCESS_COOKIE_NAME)
     if (!accessCookie || accessCookie.value !== 'authenticated') {
-      // Redirect unauthenticated users to the access page
-      const url = request.nextUrl.clone();
-      url.pathname = '/tilgang';
-      return NextResponse.redirect(url);
+      const url = request.nextUrl.clone()
+      url.pathname = '/tilgang'
+      url.search = ''
+      return NextResponse.redirect(url)
     }
   }
 
-  const response = NextResponse.next();
+  let supabaseResponse = NextResponse.next({ request })
+  const { url, key } = getSupabaseEnv()
+  const supabase = createServerClient(url, key, {
+    cookies: {
+      getAll() {
+        return request.cookies.getAll()
+      },
+      setAll(cookiesToSet) {
+        cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
+        supabaseResponse = NextResponse.next({ request })
+        cookiesToSet.forEach(({ name, value, options }) =>
+          supabaseResponse.cookies.set(name, value, options)
+        )
+      },
+    },
+  })
 
-  // HTTPS Enforcement (only in production)
+  // Keep optional sessions fresh. Do not run other logic before getUser().
+  await supabase.auth.getUser()
+
   if (
     process.env.NODE_ENV === 'production' &&
     !request.headers.get('x-forwarded-proto')?.includes('https') &&
     !request.url.includes('localhost')
   ) {
-    // Redirect HTTP to HTTPS
-    const url = request.url.replace('http://', 'https://');
-    return NextResponse.redirect(url, 301);
+    return NextResponse.redirect(request.url.replace('http://', 'https://'), 301)
   }
 
-  // CORS Configuration
-  const origin = request.headers.get('origin');
-  const allowedOrigins = [
-    'http://localhost:3000',
-    'http://127.0.0.1:3000',
-    // Add your production domain here
-    // 'https://your-domain.com',
-  ];
-
-  // For local network access (e.g., 192.168.x.x), allow local IPs
-  const isLocalNetwork = origin?.match(/^http:\/\/(192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2[0-9]|3[0-1])\.\d+\.\d+):\d+$/);
-
-  if (origin && (allowedOrigins.includes(origin) || isLocalNetwork)) {
-    response.headers.set('Access-Control-Allow-Origin', origin);
-  }
-
-  // CORS headers for preflight requests
-  if (request.method === 'OPTIONS') {
-    const preflightResponse = new NextResponse(null, { status: 200 });
-
-    // Determine which origin to allow
-    let allowedOrigin = null;
-    if (origin && (allowedOrigins.includes(origin) || isLocalNetwork)) {
-      allowedOrigin = origin;
-    } else if (process.env.NODE_ENV === 'development') {
-      // In development, default to localhost if no origin matches
-      allowedOrigin = 'http://localhost:3000';
-    }
-
-    // Only set CORS header if we have a valid origin
-    if (allowedOrigin) {
-      preflightResponse.headers.set('Access-Control-Allow-Origin', allowedOrigin);
-    }
-
-    preflightResponse.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    preflightResponse.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    preflightResponse.headers.set('Access-Control-Max-Age', '86400'); // 24 hours
-    return preflightResponse;
-  }
-
-  // Additional CORS headers
-  response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  response.headers.set('Access-Control-Allow-Credentials', 'true');
-
-  return response;
+  return supabaseResponse
 }
 
-// Configure which routes the proxy applies to
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public folder
-     */
     '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
-};
+}

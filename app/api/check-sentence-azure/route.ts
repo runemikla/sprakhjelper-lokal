@@ -126,7 +126,7 @@ Eksempel 3 - Setning med feil bøyning av verb:
           { role: 'user', content: `Sammenlign setningene og gi tilbakemelding.` }
         ],
         temperature: 0,
-        max_tokens: 1000,
+        max_completion_tokens: 1000,
         response_format: {
           type: "json_schema",
           json_schema: {
