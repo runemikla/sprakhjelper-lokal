@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState, type MouseEvent } from 'react'
+import { useEffect, useRef, useState, type MouseEvent as ReactMouseEvent } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { ChevronDown } from 'lucide-react'
@@ -51,7 +51,7 @@ export function KiToolsMenu({ onNavigate }: KiToolsMenuProps) {
   }, [isOpen])
 
   function handleToolClick(
-    event: MouseEvent<HTMLAnchorElement>,
+    event: ReactMouseEvent<HTMLAnchorElement>,
     href: string,
     clearsSession: boolean
   ) {
