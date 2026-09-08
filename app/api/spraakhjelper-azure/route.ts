@@ -16,7 +16,21 @@ const AZURE_API_VERSION = process.env.AZURE_OPENAI_API_VERSION || '2024-08-01-pr
 
 // Transfer errors per language (detailed descriptions)
 const TRANSFER_ERRORS: Record<string, string> = {
+  'amharisk': `Amharisk:
+  • De strenge reglene for plassering av ord i setninger, blant annet V2-regelen, altså at verbet skal stå på andre plass i helsetninger
+  • «Det»-setninger, altså setninger der «det» fungerer som formelt subjekt
+  • Norske vokaler, spesielt «u», «y» og «ø»
+  • Ord med mange ulike konsonanter etter hverandre
+  • Preteritum vs. perfektum i verb-bøying
+  • Substantiv-bøying, bl.a. bestemt vs. ubestemt form`,
+
   'arabisk': `Arabisk:
+  • De strenge reglene for plassering av ord i setninger, blant annet V2-regelen, altså at verbet skal stå på andre plass i helsetninger
+  • Norske vokaler, spesielt «u», «y» og «ø»
+  • Preteritum vs. perfektum i verb-bøying
+  • Substantiv-bøying, bl.a. bestemt vs. ubestemt form`,
+
+  'arabisk-syrisk': `Arabisk (syrisk):
   • De strenge reglene for plassering av ord i setninger, blant annet V2-regelen, altså at verbet skal stå på andre plass i helsetninger
   • Norske vokaler, spesielt «u», «y» og «ø»
   • Preteritum vs. perfektum i verb-bøying
@@ -81,6 +95,14 @@ const TRANSFER_ERRORS: Record<string, string> = {
   • Substantiv-bøying
   • Verb-bøying`,
 
+  'pashto': `Pashto:
+  • De strenge reglene for plassering av ord i setninger, blant annet V2-regelen, altså at verbet skal stå på andre plass i helsetninger
+  • «Det»-setninger, altså setninger der «det» fungerer som formelt subjekt
+  • Norske vokaler, spesielt «u», «y» og «ø»
+  • Ord med mange ulike konsonanter etter hverandre
+  • Plassering av ordet «ikke»
+  • Substantiv-bøying, bl.a. bestemt vs. ubestemt form`,
+
   'polsk': `Polsk:
   • De strenge reglene for plassering av ord i setninger, blant annet V2-regelen, altså at verbet skal stå på andre plass i helsetninger
   • Norske vokaler, spesielt «u», «y» og «ø»
@@ -136,6 +158,14 @@ const TRANSFER_ERRORS: Record<string, string> = {
   • Pronomen
   • Substantiv-bøying
   • Verb-bøying`,
+
+  'tagalog': `Tagalog:
+  • De strenge reglene for plassering av ord i setninger, blant annet V2-regelen, altså at verbet skal stå på andre plass i helsetninger
+  • Substantiv-bøying, bl.a. bestemt vs. ubestemt form
+  • Kjønn på substantiv (en/ei/et)
+  • Norske vokaler, spesielt «u», «y» og «ø»
+  • Verb-bøying, spesielt i fortid
+  • Subjektstvang, altså at en setning alltid skal inneholde subjekt`,
 
   'thai': `Thai:
   • De norske konsonantene «l» og «r»

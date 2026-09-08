@@ -71,18 +71,22 @@ interface AnalysisResult {
 }
 
 const languages = [
+  { code: 'amharisk', name: 'Amharisk', flag: '🇪🇹' },
   { code: 'arabisk', name: 'Arabisk', flag: '🇸🇦' },
+  { code: 'arabisk-syrisk', name: 'Arabisk (syrisk)', flag: '🇸🇾' },
   { code: 'dari', name: 'Dari', flag: '🇦🇫' },
   { code: 'engelsk', name: 'Engelsk', flag: '🇬🇧' },
   { code: 'farsi', name: 'Farsi/Persisk', flag: '🇮🇷' },
   { code: 'kurmandsji', name: 'Kurmandsji (Kurdisk)', flag: '🏴' },
   { code: 'mandarin', name: 'Mandarin (Kinesisk)', flag: '🇨🇳' },
+  { code: 'pashto', name: 'Pashto', flag: '🇦🇫' },
   { code: 'polsk', name: 'Polsk', flag: '🇵🇱' },
   { code: 'portugisisk', name: 'Portugisisk', flag: '🇵🇹' },
   { code: 'russisk', name: 'Russisk', flag: '🇷🇺' },
   { code: 'somali', name: 'Somali', flag: '🇸🇴' },
   { code: 'spansk', name: 'Spansk', flag: '🇪🇸' },
   { code: 'swahili', name: 'Swahili', flag: '🇹🇿' },
+  { code: 'tagalog', name: 'Tagalog', flag: '🇵🇭' },
   { code: 'thai', name: 'Thai', flag: '🇹🇭' },
   { code: 'tigrinja', name: 'Tigrinja', flag: '🇪🇷' },
   { code: 'tyrkisk', name: 'Tyrkisk', flag: '🇹🇷' },
