@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import { ChevronDown } from 'lucide-react'
 
 export const KI_TOOLS = [
-  { href: '/spraakhjelper', label: 'Språkhjelperen', clearsSession: true },
+  { href: '/spraakhjelper', label: 'Skrivehjelp', clearsSession: true },
   { href: '/grammatikk', label: 'Grammatikk øving', clearsSession: false },
   { href: '/lytteoving', label: 'Lytteøving', clearsSession: false },
 ] as const

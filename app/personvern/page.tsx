@@ -17,7 +17,7 @@ export default function PersonvernPage() {
             </CardHeader>
             <CardContent className="prose max-w-none">
               <p>
-                Språkhjelperen er utviklet av Vestland fylkeskommune for å hjelpe elever med å lære norsk. 
+                Språkhjelp er utviklet av Vestland fylkeskommune for å hjelpe elever med å lære norsk. 
                 Vi tar personvernet ditt på alvor og denne erklæringen forklarer hvordan vi samler inn, 
                 bruker og beskytter dine personopplysninger.
               </p>
@@ -56,7 +56,7 @@ export default function PersonvernPage() {
               <div>
                 <h4 className="font-semibold">3.2 Tekstdata</h4>
                 <ul className="list-disc pl-6 space-y-1">
-                  <li>Tekster du skriver i språkhjelperen</li>
+                  <li>Tekster du skriver i Skrivehjelp</li>
                   <li>Morsmål du oppgir</li>
                   <li>Tilbakemeldinger fra AI-systemet</li>
                 </ul>
@@ -86,7 +86,7 @@ export default function PersonvernPage() {
                   <strong>Autentisering:</strong> For å sikre at bare du har tilgang til dine data
                 </li>
                 <li>
-                  <strong>Forbedre tjenesten:</strong> For å utvikle og forbedre språkhjelperen
+                  <strong>Forbedre tjenesten:</strong> For å utvikle og forbedre Språkhjelp
                 </li>
                 <li>
                   <strong>Sikkerhet:</strong> For å beskytte mot misbruk og angrep

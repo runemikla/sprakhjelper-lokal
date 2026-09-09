@@ -10,6 +10,7 @@ export const maxDuration = 60
 const codeSchema = z.string().transform(normalizeAccessCode).refine(isValidAccessCode)
 
 const checkAnswersSchema = z.object({
+  taskPosition: z.number().int().min(1).max(3).default(1),
   answers: z.array(z.string().max(500)).min(1).max(10),
 })
 
@@ -23,8 +24,11 @@ interface RouteContext {
 }
 
 interface ExerciseRow {
-  original_text: string
-  questions: { question: string }[]
+  tasks: {
+    position: number
+    original_text: string
+    questions: { question: string }[]
+  }[]
 }
 
 export async function POST(req: Request, { params }: RouteContext) {
@@ -49,7 +53,7 @@ export async function POST(req: Request, { params }: RouteContext) {
 
   try {
     const body = await req.json()
-    const { answers } = checkAnswersSchema.parse(body)
+    const { answers, taskPosition } = checkAnswersSchema.parse(body)
     const studentAnswers = answers.map((answer) => sanitizeContent(answer.trim()))
 
     const supabase = await createClient()
@@ -75,11 +79,14 @@ export async function POST(req: Request, { params }: RouteContext) {
       )
     }
 
-    const questions = (exercise.questions ?? [])
+    const task = (exercise.tasks ?? []).find(
+      (item) => item.position === taskPosition
+    )
+    const questions = (task?.questions ?? [])
       .map((item) => item.question)
       .filter((question) => question.length > 0)
 
-    if (questions.length === 0) {
+    if (!task || questions.length === 0) {
       return NextResponse.json(
         { error: 'Lytteøvingen har ingen spørsmål.' },
         { status: 400 }
@@ -160,7 +167,7 @@ Returner JSON med "results": en liste med nøyaktig ett objekt per spørsmål, i
           { role: 'system', content: systemPrompt },
           {
             role: 'user',
-            content: `Originaltekst:\n${exercise.original_text}\n\n${numberedQuestions}`,
+            content: `Originaltekst:\n${task.original_text}\n\n${numberedQuestions}`,
           },
         ],
         temperature: 0.2,

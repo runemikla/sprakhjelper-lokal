@@ -64,7 +64,7 @@ export default function TilgangPage() {
         <Card className="shadow-xl border-0 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm">
           <CardHeader className="text-center space-y-3 pb-2">
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-              Språkhjelperen
+              Språkhjelp
             </h1>
             <CardDescription className="text-base">
               Skriv inn tilgangskoden for å bruke appen

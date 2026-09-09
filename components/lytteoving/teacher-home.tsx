@@ -7,7 +7,7 @@ import { Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { ListeningPageShell } from '@/components/lytteoving/page-shell'
-import { previewText, type SavedListeningExercise } from '@/lib/lytteoving'
+import { type SavedListeningExercise } from '@/lib/lytteoving'
 
 interface TeacherHomeClientProps {
   userEmail?: string | null
@@ -105,7 +105,9 @@ export function TeacherHomeClient({
                       {exercise.accessCode}
                     </p>
                     <p className="mt-1 text-sm text-gray-600">
-                      {previewText(exercise.originalText)}
+                      {exercise.taskCount > 1
+                        ? `${exercise.taskCount} oppgaver · ${exercise.originalText}`
+                        : exercise.originalText}
                     </p>
                     {exercise.createdAt && (
                       <p className="mt-1 text-xs text-gray-400">

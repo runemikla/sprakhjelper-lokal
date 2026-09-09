@@ -5,12 +5,14 @@ import type { ListeningQuestion } from '@/lib/lytteoving'
 interface QuestionListProps {
   questions: ListeningQuestion[]
   editable?: boolean
+  idPrefix?: string
   onChange?: (index: number, value: string) => void
 }
 
 export function QuestionList({
   questions,
   editable = false,
+  idPrefix = 'question',
   onChange,
 }: QuestionListProps) {
   if (editable) {
@@ -22,9 +24,9 @@ export function QuestionList({
             className="space-y-3 rounded-xl border border-gray-200 bg-white px-4 py-3"
           >
             <div className="space-y-1">
-              <Label htmlFor={`question-${index}`}>Spørsmål {index + 1}</Label>
+              <Label htmlFor={`${idPrefix}-${index}`}>Spørsmål {index + 1}</Label>
               <Textarea
-                id={`question-${index}`}
+                id={`${idPrefix}-${index}`}
                 value={item.question}
                 autosize
                 onChange={(event) => onChange?.(index, event.target.value)}

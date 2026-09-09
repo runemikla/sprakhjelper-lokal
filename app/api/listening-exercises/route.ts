@@ -4,9 +4,13 @@ import { checkRateLimit } from '@/lib/api-helpers'
 import { requireTeacher } from '@/lib/auth/require-teacher'
 import { sanitizeContent } from '@/lib/sanitize'
 import { createClient } from '@/lib/supabase/server'
-import { previewText } from '@/lib/lytteoving'
+import {
+  mapSavedExercise,
+  MAX_LISTENING_TASKS,
+  type ListeningExerciseListRow,
+} from '@/lib/lytteoving'
 
-const saveExerciseSchema = z.object({
+const taskSchema = z.object({
   originalText: z
     .string()
     .trim()
@@ -24,6 +28,13 @@ const saveExerciseSchema = z.object({
     .max(10),
 })
 
+const saveExerciseSchema = z.object({
+  tasks: z.array(taskSchema).min(1).max(MAX_LISTENING_TASKS),
+})
+
+const LIST_SELECT =
+  'id, access_code, created_at, listening_tasks(position, original_text)'
+
 export async function GET() {
   const { user, error } = await requireTeacher()
   if (error) return error
@@ -31,7 +42,7 @@ export async function GET() {
   const supabase = await createClient()
   const { data, error: queryError } = await supabase
     .from('listening_exercises')
-    .select('id, access_code, original_text, created_at')
+    .select(LIST_SELECT)
     .eq('created_by', user.id)
     .order('created_at', { ascending: false })
 
@@ -43,12 +54,7 @@ export async function GET() {
   }
 
   return NextResponse.json({
-    exercises: (data ?? []).map((row) => ({
-      id: row.id,
-      accessCode: row.access_code,
-      originalText: previewText(row.original_text),
-      createdAt: row.created_at,
-    })),
+    exercises: ((data ?? []) as ListeningExerciseListRow[]).map(mapSavedExercise),
   })
 }
 
@@ -67,11 +73,13 @@ export async function POST(req: Request) {
     const { data, error: saveError } = await supabase.rpc(
       'save_listening_exercise',
       {
-        p_original_text: sanitizeContent(parsed.originalText),
-        p_audio_base64: parsed.audioBase64,
-        p_audio_mime_type: parsed.audioMimeType,
-        p_questions: parsed.questions.map((item) => ({
-          question: sanitizeContent(item.question),
+        p_tasks: parsed.tasks.map((task) => ({
+          original_text: sanitizeContent(task.originalText),
+          audio_base64: task.audioBase64,
+          audio_mime_type: task.audioMimeType,
+          questions: task.questions.map((item) => ({
+            question: sanitizeContent(item.question),
+          })),
         })),
       }
     )

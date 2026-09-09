@@ -1,4 +1,3 @@
-import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import type { AnswerCheckResult, ListeningQuestion } from '@/lib/lytteoving'
 
@@ -7,6 +6,7 @@ interface StudentQuestionListProps {
   answers: string[]
   results?: AnswerCheckResult[] | null
   disabled?: boolean
+  idPrefix?: string
   onAnswerChange: (index: number, value: string) => void
 }
 
@@ -15,6 +15,7 @@ export function StudentQuestionList({
   answers,
   results = null,
   disabled = false,
+  idPrefix = 'student-answer',
   onAnswerChange,
 }: StudentQuestionListProps) {
   return (
@@ -35,18 +36,16 @@ export function StudentQuestionList({
             <p className="font-medium text-gray-900">
               {index + 1}. {item.question}
             </p>
-            <div className="space-y-1">
-              <Label htmlFor={`student-answer-${index}`}>Ditt svar</Label>
-              <Textarea
-                id={`student-answer-${index}`}
-                value={answers[index] ?? ''}
-                disabled={disabled}
-                autosize
-                maxLength={500}
-                placeholder="Skriv svaret ditt her..."
-                onChange={(event) => onAnswerChange(index, event.target.value)}
-              />
-            </div>
+            <Textarea
+              id={`${idPrefix}-${index}`}
+              value={answers[index] ?? ''}
+              disabled={disabled}
+              autosize
+              maxLength={500}
+              placeholder="Skriv svaret ditt her..."
+              aria-label={`Svar på spørsmål ${index + 1}`}
+              onChange={(event) => onAnswerChange(index, event.target.value)}
+            />
             {result && (
               <p
                 className={`text-sm ${
