@@ -10,7 +10,7 @@ const defaultUrl = process.env.VERCEL_URL
 
 export const metadata: Metadata = {
   metadataBase: new URL(defaultUrl),
-  title: "Språkhjelperen - Lær norsk",
+  title: "Språkhjelp - Lær norsk",
   description: "En AI-drevet språkassistent for å lære norsk",
 };
 

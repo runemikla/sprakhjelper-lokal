@@ -56,7 +56,7 @@ export function LoadingAnimation({ isVisible }: LoadingAnimationProps) {
           {/* Current Step Text */}
           <div className="text-center">
             <h3 className="text-lg font-semibold text-blue-900 dark:text-blue-100 mb-2">
-              Språkhjelperen arbeider
+              Skrivehjelp arbeider
             </h3>
             <p className="text-blue-700 dark:text-blue-300 text-base font-medium">
               {loadingSteps[currentStep]}{dots}

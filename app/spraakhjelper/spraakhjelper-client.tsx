@@ -560,7 +560,7 @@ export default function SpraakhjelpperClient({ user }: SpraakhjelpperClientProps
       }
 
       // Title
-      addText('Språkhjelperen - Sammendrag', 20, true, [59, 130, 246])
+      addText('Skrivehjelp - Sammendrag', 20, true, [59, 130, 246])
       addSpace(5)
 
       // Date
@@ -637,7 +637,7 @@ export default function SpraakhjelpperClient({ user }: SpraakhjelpperClientProps
       addText('Fortsett å øve!', 10, false, [107, 114, 128])
 
       // Generate filename with date
-      const filename = `spraakhjelperen_sammendrag_${new Date().toISOString().split('T')[0]}.pdf`
+      const filename = `skrivehjelp_sammendrag_${new Date().toISOString().split('T')[0]}.pdf`
 
       // Save PDF
       doc.save(filename)
@@ -727,7 +727,7 @@ export default function SpraakhjelpperClient({ user }: SpraakhjelpperClientProps
               <div className="px-6 pt-6 pb-4 border-b border-gray-200">
                 <div className="flex items-start justify-between">
                   <div className="cursor-pointer hover:opacity-80 transition-opacity flex-1" onClick={showInputForm}>
-                    <h2 className="text-2xl font-bold text-gray-900 mb-1">Språkhjelperen</h2>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-1">Skrivehjelp</h2>
                     <p className="text-sm text-gray-600">
                       Få tilbakemeldinger fra KI på teksten din.
                     </p>
@@ -849,7 +849,7 @@ export default function SpraakhjelpperClient({ user }: SpraakhjelpperClientProps
               <div className="px-6 pt-6 pb-4 border-b border-gray-200">
                 <div className="flex items-start justify-between">
                   <div className="cursor-pointer hover:opacity-80 transition-opacity flex-1" onClick={showInputForm}>
-                    <h2 className="text-2xl font-bold text-gray-900 mb-1">Språkhjelperen</h2>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-1">Skrivehjelp</h2>
                     <p className="text-sm text-gray-600">
                       Få tilbakemeldinger fra KI på teksten din.
                     </p>
@@ -915,7 +915,7 @@ export default function SpraakhjelpperClient({ user }: SpraakhjelpperClientProps
               <div className="px-6 pt-6 pb-4 border-b border-gray-200">
                 <div className="flex items-start justify-between">
                   <div className="cursor-pointer hover:opacity-80 transition-opacity flex-1" onClick={showInputForm}>
-                    <h2 className="text-2xl font-bold text-gray-900 mb-1">Språkhjelperen</h2>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-1">Skrivehjelp</h2>
                     <p className="text-sm text-gray-600">
                       Få tilbakemeldinger fra KI på teksten din.
                     </p>
@@ -951,7 +951,7 @@ export default function SpraakhjelpperClient({ user }: SpraakhjelpperClientProps
               <div className="px-6 pt-4 pb-4 border-b border-gray-200 flex-shrink-0">
                 <div className="flex items-start justify-between">
                   <div className="cursor-pointer hover:opacity-80 transition-opacity flex-1" onClick={showInputForm}>
-                    <h2 className="text-2xl font-bold text-gray-900 mb-1">Språkhjelperen</h2>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-1">Skrivehjelp</h2>
                     <p className="text-sm text-gray-600">
                       Få tilbakemeldinger fra KI på teksten din.
                     </p>
@@ -1174,7 +1174,7 @@ export default function SpraakhjelpperClient({ user }: SpraakhjelpperClientProps
               <div className="px-6 pt-6 pb-4 border-b border-gray-200">
                 <div className="flex items-start justify-between">
                   <div className="cursor-pointer hover:opacity-80 transition-opacity flex-1" onClick={showInputForm}>
-                    <h2 className="text-2xl font-bold text-gray-900 mb-1">Språkhjelperen</h2>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-1">Skrivehjelp</h2>
                     <p className="text-sm text-gray-600">
                       Få tilbakemeldinger fra KI på teksten din.
                     </p>

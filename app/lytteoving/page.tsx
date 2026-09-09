@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { getUser, createClient } from '@/lib/supabase/server'
 import { isTeacher } from '@/lib/auth/roles'
-import { previewText, type SavedListeningExercise } from '@/lib/lytteoving'
+import { mapSavedExercise, type ListeningExerciseListRow, type SavedListeningExercise } from '@/lib/lytteoving'
 import { JoinExerciseCard } from '@/components/lytteoving/join-exercise-card'
 import { ListeningPageShell } from '@/components/lytteoving/page-shell'
 import { TeacherHomeClient } from '@/components/lytteoving/teacher-home'
@@ -15,18 +15,13 @@ export default async function LytteovingPage() {
     const supabase = await createClient()
     const { data, error: queryError } = await supabase
       .from('listening_exercises')
-      .select('id, access_code, original_text, created_at')
+      .select('id, access_code, created_at, listening_tasks(position, original_text)')
       .eq('created_by', user.id)
       .order('created_at', { ascending: false })
 
     const savedExercises: SavedListeningExercise[] = queryError
       ? []
-      : (data ?? []).map((row) => ({
-          id: row.id,
-          accessCode: row.access_code,
-          originalText: previewText(row.original_text),
-          createdAt: row.created_at,
-        }))
+      : ((data ?? []) as ListeningExerciseListRow[]).map(mapSavedExercise)
 
     return (
       <TeacherHomeClient

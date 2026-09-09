@@ -14,7 +14,7 @@ import {
 const tools = [
   {
     href: '/spraakhjelper',
-    title: 'Språkhjelperen',
+    title: 'Skrivehjelp',
     icon: PenLine,
     description:
       'Lim inn eller skriv en tekst. KI-en gir forklaringer og forslag på bokmål og på elevens morsmål, uten å bare rette teksten for eleven.',
@@ -43,11 +43,11 @@ const tools = [
     title: 'Lytteøving',
     icon: Headphones,
     description:
-      'Læreren lager en lytteøving av en tekst. Elevene hører lyden, svarer på spørsmål og får tilbakemelding ut fra innholdet i teksten.',
+      'Læreren lager en lytteøving med inntil tre oppgaver. Elevene hører lyden, svarer på spørsmål og får tilbakemelding ut fra innholdet i teksten.',
     points: [
+      'Inntil tre oppgaver med egen lyd og spørsmål',
       'Lærer lager øving og får en kort kode',
       'Elever åpner øvingen uten å logge inn',
-      'Svarene sjekkes mot originalteksten',
     ],
   },
 ]
@@ -158,7 +158,7 @@ export default function OmPage() {
                 </h3>
                 <ul className="list-disc pl-5 space-y-2">
                   <li>
-                    <strong>Språkhjelperen:</strong> Teksten sendes til en
+                    <strong>Skrivehjelp:</strong> Teksten sendes til en
                     KI-tjeneste for å lage tilbakemelding. Resultatet lagres
                     bare i nettleseren din i økten, og forsvinner når du lukker
                     den.
@@ -170,9 +170,9 @@ export default function OmPage() {
                   </li>
                   <li>
                     <strong>Lytteøving:</strong> Læreren lagrer tekst, lyd og
-                    spørsmål. Elever åpner øvingen med en kort kode, uten
-                    konto. Svarene sjekkes av KI mot originalteksten og lagres
-                    ikke som en elevbesvarelse hos oss.
+                    spørsmål for inntil tre oppgaver. Elever åpner øvingen med
+                    en kort kode, uten konto. Svarene sjekkes av KI mot
+                    originalteksten og lagres ikke som en elevbesvarelse hos oss.
                   </li>
                 </ul>
               </div>
@@ -202,7 +202,7 @@ export default function OmPage() {
           <div className="flex justify-center">
             <Image
               src="/images/vestland_team.jpg"
-              alt="Teamet bak Språkhjelperen"
+              alt="Teamet bak Språkhjelp"
               width={600}
               height={400}
               className="object-contain rounded-lg shadow-md"

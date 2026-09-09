@@ -25,7 +25,7 @@ export default function Error({
         <CardHeader>
           <div className="flex items-center gap-2">
             <AlertCircle className="h-6 w-6 text-red-600" />
-            <CardTitle>Noe gikk galt med språkhjelperen</CardTitle>
+            <CardTitle>Noe gikk galt med Skrivehjelp</CardTitle>
           </div>
           <CardDescription>
             En uventet feil oppstod under analysen. Prøv igjen eller start på nytt.

@@ -2,7 +2,11 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { checkRateLimit } from '@/lib/api-helpers'
 import { requireTeacher } from '@/lib/auth/require-teacher'
-import { isValidAccessCode, normalizeAccessCode } from '@/lib/lytteoving'
+import {
+  isValidAccessCode,
+  MAX_LISTENING_TASKS,
+  normalizeAccessCode,
+} from '@/lib/lytteoving'
 import { sanitizeContent } from '@/lib/sanitize'
 import { createClient, getUser } from '@/lib/supabase/server'
 
@@ -10,6 +14,30 @@ const codeSchema = z.string().transform(normalizeAccessCode).refine(isValidAcces
 
 interface RouteContext {
   params: Promise<{ code: string }>
+}
+
+interface RpcTask {
+  position: number
+  original_text: string
+  audio_base64: string
+  audio_mime_type: string
+  questions: { question: string }[]
+}
+
+function mapTasks(tasks: RpcTask[] | undefined, isOwner: boolean) {
+  return (tasks ?? [])
+    .slice()
+    .sort((a, b) => a.position - b.position)
+    .map((task) => ({
+      position: task.position,
+      originalText: isOwner ? task.original_text : undefined,
+      questions: (task.questions ?? [])
+        .map((item) => ({ question: item.question?.trim() ?? '' }))
+        .filter((item) => item.question.length > 0),
+      audioBase64: task.audio_base64,
+      audioMimeType: task.audio_mime_type,
+    }))
+    .filter((task) => Boolean(task.audioBase64) && task.questions.length > 0)
 }
 
 export async function GET(_req: Request, { params }: RouteContext) {
@@ -45,10 +73,7 @@ export async function GET(_req: Request, { params }: RouteContext) {
     | {
         id: number
         access_code: string
-        original_text: string
-        audio_base64: string
-        audio_mime_type: string
-        questions: { question: string }[]
+        tasks: RpcTask[]
       }
     | undefined
 
@@ -71,19 +96,23 @@ export async function GET(_req: Request, { params }: RouteContext) {
     isOwner = Boolean(owned)
   }
 
+  const tasks = mapTasks(exercise.tasks, isOwner)
+  if (tasks.length === 0) {
+    return NextResponse.json(
+      { error: 'Fant ingen lytteøving med denne koden.' },
+      { status: 404 }
+    )
+  }
+
   return NextResponse.json({
     accessCode: exercise.access_code,
-    originalText: isOwner ? exercise.original_text : undefined,
-    questions: (exercise.questions ?? [])
-      .map((item) => ({ question: item.question?.trim() ?? '' }))
-      .filter((item) => item.question.length > 0),
-    audioBase64: exercise.audio_base64,
-    audioMimeType: exercise.audio_mime_type,
+    tasks,
     isOwner,
   })
 }
 
 const updateQuestionsSchema = z.object({
+  taskPosition: z.number().int().min(1).max(MAX_LISTENING_TASKS).default(1),
   questions: z
     .array(
       z.object({
@@ -117,6 +146,7 @@ export async function PATCH(req: Request, { params }: RouteContext) {
 
     const { error } = await supabase.rpc('update_listening_exercise_questions', {
       p_access_code: parsedCode.data,
+      p_task_position: parsed.taskPosition,
       p_questions: parsed.questions.map((item) => ({
         question: sanitizeContent(item.question),
       })),
