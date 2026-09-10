@@ -11,7 +11,13 @@ import {
   type DraftListeningTask,
 } from '@/components/lytteoving/task-editor'
 import { fetchWithTimeout } from '@/lib/fetch-with-timeout'
-import { MAX_LISTENING_TASKS, type ListeningQuestion } from '@/lib/lytteoving'
+import {
+  MAX_LISTENING_TASKS,
+  QUESTION_TYPE,
+  isStatementQuestion,
+  type ListeningQuestion,
+  type QuestionType,
+} from '@/lib/lytteoving'
 
 const GENERATE_TIMEOUT_MS = 60000
 
@@ -28,11 +34,12 @@ function base64ToObjectUrl(base64: string, mimeType: string): string {
   return URL.createObjectURL(new Blob([bytes], { type: mimeType }))
 }
 
-function createEmptyTask(): DraftListeningTask {
+function createEmptyTask(id = crypto.randomUUID()): DraftListeningTask {
   return {
-    id: crypto.randomUUID(),
+    id,
     text: '',
-    questionCount: 5,
+    questionCount: 3,
+    questionType: QUESTION_TYPE.open,
     originalText: '',
     questions: [],
     audioBase64: null,
@@ -46,14 +53,22 @@ function isTaskComplete(task: DraftListeningTask): boolean {
   return (
     Boolean(task.audioBase64) &&
     task.questions.length > 0 &&
-    task.questions.every((item) => item.question.trim().length > 0)
+    task.questions.every((item) => {
+      if (item.question.trim().length === 0) return false
+      if (isStatementQuestion(item) && typeof item.isTrue !== 'boolean') {
+        return false
+      }
+      return true
+    })
   )
 }
 
 export function CreateListeningClient({
   userEmail = null,
 }: CreateListeningClientProps) {
-  const [tasks, setTasks] = useState<DraftListeningTask[]>([createEmptyTask()])
+  const [tasks, setTasks] = useState<DraftListeningTask[]>(() => [
+    createEmptyTask('task-1'),
+  ])
   const [taskErrors, setTaskErrors] = useState<Record<string, string | null>>({})
   const [isSaving, setIsSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
@@ -106,6 +121,7 @@ export function CreateListeningClient({
           body: JSON.stringify({
             text: task.text.trim(),
             questionCount: task.questionCount,
+            questionType: task.questionType,
           }),
         },
         GENERATE_TIMEOUT_MS
@@ -232,7 +248,8 @@ export function CreateListeningClient({
             <h2 className="text-2xl font-bold text-gray-900 mb-1">Ny lytteøving</h2>
             <p className="text-sm text-gray-600">
               Lag inntil {MAX_LISTENING_TASKS} oppgaver med hver sin tekst, lyd
-              og spørsmål. Elevene åpner hele øvingen med én kode.
+              og spørsmål. Av teksten du legger inn blir det generert en lydfil.
+              Elevene åpner hele øvingen med én kode.
             </p>
           </div>
           <Button asChild variant="outline">
@@ -253,7 +270,10 @@ export function CreateListeningClient({
               onQuestionCountChange={(value) =>
                 updateTask(task.id, { questionCount: value })
               }
-              onQuestionChange={(questionIndex, value) => {
+              onQuestionTypeChange={(value: QuestionType) =>
+                updateTask(task.id, { questionType: value })
+              }
+              onQuestionChange={(questionIndex, patch) => {
                 setTasks((current) =>
                   current.map((item) =>
                     item.id === task.id
@@ -261,7 +281,7 @@ export function CreateListeningClient({
                           ...item,
                           questions: item.questions.map((question, itemIndex) =>
                             itemIndex === questionIndex
-                              ? { ...question, question: value }
+                              ? { ...question, ...patch }
                               : question
                           ),
                         }
@@ -305,7 +325,7 @@ export function CreateListeningClient({
                   onClick={handleAddTask}
                 >
                   <Plus className="h-4 w-4" />
-                  Legg til oppgave ({tasks.length}/{MAX_LISTENING_TASKS})
+                  Legg til oppgave
                 </Button>
               )}
               <Button

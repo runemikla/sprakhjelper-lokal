@@ -16,7 +16,12 @@ import { QuestionList } from '@/components/lytteoving/question-list'
 import { StudentQuestionList } from '@/components/lytteoving/student-question-list'
 import { Confetti } from '@/components/ui/confetti'
 import { fetchWithTimeout } from '@/lib/fetch-with-timeout'
-import type { AnswerCheckResult, ListeningQuestion } from '@/lib/lytteoving'
+import {
+  isStatementQuestion,
+  isStatementTask,
+  type AnswerCheckResult,
+  type ListeningQuestion,
+} from '@/lib/lytteoving'
 
 interface LytteovingPlayClientProps {
   code: string
@@ -63,6 +68,9 @@ export function LytteovingPlayClient({
   const [teacherVersion] = useState<1 | 2>(() => (Math.random() < 0.5 ? 1 : 2))
 
   const currentTask = tasks[currentIndex]
+  const currentIsStatementTask = currentTask
+    ? isStatementTask(currentTask.questions)
+    : false
   const currentAnswers = studentAnswers[currentIndex] ?? []
   const currentResults = results[currentIndex] ?? null
   const hasMultipleTasks = tasks.length > 1
@@ -71,7 +79,13 @@ export function LytteovingPlayClient({
     isOwner &&
     Boolean(currentTask) &&
     currentTask.questions.length > 0 &&
-    currentTask.questions.every((item) => item.question.trim().length > 0) &&
+    currentTask.questions.every((item) => {
+      if (item.question.trim().length === 0) return false
+      if (isStatementQuestion(item) && typeof item.isTrue !== 'boolean') {
+        return false
+      }
+      return true
+    }) &&
     !isSaving
 
   const hasAnsweredAllCurrentQuestions =
@@ -272,9 +286,11 @@ export function LytteovingPlayClient({
             </p>
             {!isLoading && !isOwner && currentTask && (
               <p className="mt-2 text-sm text-gray-600">
-                Lytt til teksten og skriv svaret ditt under hvert spørsmål.
+                {currentIsStatementTask
+                  ? 'Lytt til teksten og velg om hver påstand er sant eller usant.'
+                  : 'Lytt til teksten og skriv svaret ditt under hvert spørsmål.'}
                 {hasMultipleTasks
-                  ? ' Svar på alle spørsmålene før du går til neste oppgave.'
+                  ? ' Svar på alle før du går til neste oppgave.'
                   : ''}{' '}
                 Trykk «Sjekk svar» når du er ferdig.
               </p>
@@ -322,21 +338,21 @@ export function LytteovingPlayClient({
 
               <div>
                 <h2 className="mb-3 text-lg font-semibold text-gray-900">
-                  Spørsmål
+                  {currentIsStatementTask ? 'Påstander' : 'Spørsmål'}
                 </h2>
                 {isOwner ? (
                   <QuestionList
                     questions={currentTask.questions}
                     editable
                     idPrefix={`play-task-${currentTask.position}-question`}
-                    onChange={(index, value) => {
+                    onChange={(index, patch) => {
                       setTasks((current) =>
                         current.map((task, taskIndex) =>
                           taskIndex === currentIndex
                             ? {
                                 ...task,
                                 questions: task.questions.map((item, itemIndex) =>
-                                  itemIndex === index ? { ...item, question: value } : item
+                                  itemIndex === index ? { ...item, ...patch } : item
                                 ),
                               }
                             : task

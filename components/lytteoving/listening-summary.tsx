@@ -5,7 +5,11 @@ import Image from 'next/image'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
-import type { AnswerCheckResult, ListeningQuestion } from '@/lib/lytteoving'
+import {
+  formatListeningAnswer,
+  type AnswerCheckResult,
+  type ListeningQuestion,
+} from '@/lib/lytteoving'
 
 export interface ListeningSummaryItem {
   taskLabel: string | null
@@ -34,7 +38,10 @@ function buildSummaryItems(
       return {
         taskLabel: hasMultipleTasks ? `Oppgave ${taskIndex + 1}` : null,
         question: item.question,
-        answer: answers[taskIndex]?.[questionIndex]?.trim() || '(tomt svar)',
+        answer: formatListeningAnswer(
+          item,
+          answers[taskIndex]?.[questionIndex] ?? ''
+        ),
         isCorrect: Boolean(result?.isCorrect),
       }
     })

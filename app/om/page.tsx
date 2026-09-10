@@ -6,7 +6,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   ArrowDownUp,
   Headphones,
-  Languages,
   PenLine,
   ShieldCheck,
 } from 'lucide-react'
@@ -64,31 +63,9 @@ export default function OmPage() {
               Om Språkhjelp
             </h1>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Et sett KI-verktøy som hjelper elever med norsk som andrespråk å
-              skrive, øve på grammatikk og lytte.
+            Språkhjelp er en prototype utviklet av Rune Mikal Birkeland, som del av et større prosjekt i Vestland fylkeskommune. Målet er å utvikle KI-verktøy som kan støtte språklæringen til elever med norsk som andrespråk.
             </p>
           </div>
-
-          <Card className="mb-8">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Languages className="h-6 w-6 text-[#9ADBE8]" />
-                Hvorfor finnes dette?
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4 text-gray-700 leading-relaxed">
-              <p>
-                Språkhjelp er en prototype utviklet av Rune Mikal Birkeland,
-                som del av et større prosjekt i Vestland fylkeskommune. Målet er
-                å lage KI-verktøy tilpasset elever med norsk som andrespråk.
-              </p>
-              <p>
-                Verktøyene skal forklare, ikke gjøre arbeidet for eleven. De
-                brukes i opplæringen og er laget for klasserommet, ikke som en
-                åpen chatbot.
-              </p>
-            </CardContent>
-          </Card>
 
           <h2 className="text-2xl font-bold text-gray-900 mb-4">
             Verktøyene
@@ -138,7 +115,8 @@ export default function OmPage() {
             <CardContent className="space-y-6 text-gray-700 leading-relaxed">
               <p>
                 Vestland fylkeskommune er behandlingsansvarlig. Tjenesten er laget
-                for opplæring og samler inn så lite som mulig data. All data blir behandlet i EU.
+                for opplæring og samler inn så lite som mulig data. Data behandles
+                i EU, med unntak av tekst til tale i lytteøving (se under). Dette er generiske tekster som ikke inneholder personlig informasjon.
               </p>
 
               <div>
@@ -182,14 +160,22 @@ export default function OmPage() {
                   Hvem behandler data på våre vegne?
                 </h3>
                 <p>
-                  For å levere tjenesten bruker vi databehandlere. Alle databehandlere er i EU.
+                  For å levere tjenesten bruker vi databehandlere. De fleste
+                  behandler data i EU.
                 </p>
                 <ul className="list-disc pl-5 mt-2 space-y-1">
-                  <li>Microsoft Azure OpenAI — språkanalyse og tilbakemelding</li>
-                  <li>ElevenLabs — tale av lytteøvingstekster</li>
-                  <li>Supabase — innlogging og lagring av lærerens lytteøvinger</li>
-                  <li>Hetzner — drift av nettsiden</li>
+                  <li>Microsoft Azure OpenAI — språkanalyse og tilbakemelding (EU)</li>
+                  <li>Supabase — innlogging og lagring av lærerens lytteøvinger (EU)</li>
+                  <li>Hetzner — drift av nettsiden (EU)</li>
+                  <li>ElevenLabs — tekst til tale for lytteøvinger (USA)</li>
                 </ul>
+                <p className="mt-4">
+                  ElevenLabs behandler data utenfor EU når lærerens tekst gjøres
+                  om til tale. Det gjelder bare tekster som skal brukes i
+                  lytteøving, og det er bare lærere som kan opprette lytteøvinger.
+                  ElevenLabs er valgt fordi de har naturlige stemmer som egner
+                  seg til denne typen øving. Det arbeides med alternativer innenfor EU.
+                </p>
                 <p className="mt-2">
                   All trafikk til appen går over HTTPS. Vi bruker bare nødvendige
                   informasjonskapsler til tilgang og innlogging, ikke til sporing

@@ -13,15 +13,21 @@ import {
 } from '@/components/ui/select'
 import { AudioPlayer } from '@/components/lytteoving/audio-player'
 import { QuestionList } from '@/components/lytteoving/question-list'
-import type { ListeningQuestion } from '@/lib/lytteoving'
+import {
+  QUESTION_TYPE,
+  isStatementTask,
+  type ListeningQuestion,
+  type QuestionType,
+} from '@/lib/lytteoving'
 
 const MAX_CHARS = 1000
-const QUESTION_COUNTS = [3, 5]
+const QUESTION_COUNTS = [1, 2, 3, 4, 5]
 
 export interface DraftListeningTask {
   id: string
   text: string
   questionCount: number
+  questionType: QuestionType
   originalText: string
   questions: ListeningQuestion[]
   audioBase64: string | null
@@ -38,7 +44,8 @@ interface TaskEditorProps {
   error?: string | null
   onTextChange: (value: string) => void
   onQuestionCountChange: (value: number) => void
-  onQuestionChange: (questionIndex: number, value: string) => void
+  onQuestionTypeChange: (value: QuestionType) => void
+  onQuestionChange: (questionIndex: number, patch: Partial<ListeningQuestion>) => void
   onGenerate: () => void
   onRemove: () => void
 }
@@ -51,12 +58,14 @@ export function TaskEditor({
   error = null,
   onTextChange,
   onQuestionCountChange,
+  onQuestionTypeChange,
   onQuestionChange,
   onGenerate,
   onRemove,
 }: TaskEditorProps) {
   const canGenerate = task.text.trim().length > 0 && !task.isGenerating && !isLocked
   const taskNumber = index + 1
+  const generatedAsStatements = isStatementTask(task.questions)
 
   return (
     <div className="space-y-4 rounded-xl border border-gray-200 bg-white p-4">
@@ -78,34 +87,72 @@ export function TaskEditor({
         )}
       </div>
 
-      <div>
-        <Label
-          htmlFor={`question-count-${task.id}`}
-          className="text-lg font-semibold"
-        >
-          Hvor mange spørsmål vil du ha?
-        </Label>
-        <Select
-          value={String(task.questionCount)}
-          onValueChange={(value) => onQuestionCountChange(Number(value))}
+      <div className="flex items-end gap-4">
+        <fieldset
+          className="min-w-0 flex-1 border-0 p-0"
           disabled={task.isGenerating || isLocked}
         >
-          <SelectTrigger id={`question-count-${task.id}`}>
-            <SelectValue placeholder="Velg antall spørsmål" />
-          </SelectTrigger>
-          <SelectContent>
-            {QUESTION_COUNTS.map((count) => (
-              <SelectItem key={count} value={String(count)}>
-                {count} spørsmål
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          <legend className="mb-1 text-sm font-semibold text-gray-900">
+            Type spørsmål
+          </legend>
+          <div className="flex h-9 items-center gap-6">
+            <label className="flex cursor-pointer items-center gap-2 text-sm text-gray-900">
+              <input
+                type="radio"
+                name={`question-type-${task.id}`}
+                value={QUESTION_TYPE.open}
+                checked={task.questionType === QUESTION_TYPE.open}
+                onChange={() => onQuestionTypeChange(QUESTION_TYPE.open)}
+                className="size-4 accent-gray-900"
+              />
+              Åpent svar
+            </label>
+            <label className="flex cursor-pointer items-center gap-2 text-sm text-gray-900">
+              <input
+                type="radio"
+                name={`question-type-${task.id}`}
+                value={QUESTION_TYPE.statement}
+                checked={task.questionType === QUESTION_TYPE.statement}
+                onChange={() => onQuestionTypeChange(QUESTION_TYPE.statement)}
+                className="size-4 accent-gray-900"
+              />
+              Påstand
+            </label>
+          </div>
+        </fieldset>
+
+        <div className="w-1/4 min-w-0">
+          <Label
+            htmlFor={`question-count-${task.id}`}
+            className="mb-1 block text-sm font-semibold"
+          >
+            Antall
+          </Label>
+          <Select
+            value={String(task.questionCount)}
+            onValueChange={(value) => onQuestionCountChange(Number(value))}
+            disabled={task.isGenerating || isLocked}
+          >
+            <SelectTrigger
+              id={`question-count-${task.id}`}
+              className="w-full max-w-none"
+            >
+              <SelectValue placeholder="Velg antall" />
+            </SelectTrigger>
+            <SelectContent>
+              {QUESTION_COUNTS.map((count) => (
+                <SelectItem key={count} value={String(count)}>
+                  {count}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       <div>
-        <Label htmlFor={`listening-text-${task.id}`} className="text-lg font-semibold">
-          Lim inn teksten din her:
+        <Label htmlFor={`listening-text-${task.id}`} className="text-sm font-semibold">
+          Tekst
         </Label>
         <div className="relative">
           <Textarea
@@ -168,7 +215,7 @@ export function TaskEditor({
 
           <div>
             <h4 className="mb-3 text-lg font-semibold text-gray-900">
-              Spørsmål
+              {generatedAsStatements ? 'Påstander' : 'Spørsmål'}
             </h4>
             <QuestionList
               questions={task.questions}

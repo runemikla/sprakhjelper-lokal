@@ -7,8 +7,31 @@ import { createClient } from '@/lib/supabase/server'
 import {
   mapSavedExercise,
   MAX_LISTENING_TASKS,
+  QUESTION_TYPE,
+  normalizeQuestionType,
   type ListeningExerciseListRow,
 } from '@/lib/lytteoving'
+
+const listeningQuestionSchema = z
+  .object({
+    question: z.string().trim().min(1),
+    questionType: z
+      .enum([QUESTION_TYPE.open, QUESTION_TYPE.statement])
+      .optional(),
+    isTrue: z.boolean().optional().nullable(),
+  })
+  .superRefine((item, ctx) => {
+    if (
+      normalizeQuestionType(item.questionType) === QUESTION_TYPE.statement &&
+      typeof item.isTrue !== 'boolean'
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Påstander må ha fasit (sant eller usant).',
+        path: ['isTrue'],
+      })
+    }
+  })
 
 const taskSchema = z.object({
   originalText: z
@@ -18,14 +41,7 @@ const taskSchema = z.object({
     .max(1000, 'Teksten kan være maks 1000 tegn'),
   audioBase64: z.string().min(1, 'Lyd er påkrevd'),
   audioMimeType: z.string().default('audio/mpeg'),
-  questions: z
-    .array(
-      z.object({
-        question: z.string().trim().min(1),
-      })
-    )
-    .min(1)
-    .max(10),
+  questions: z.array(listeningQuestionSchema).min(1).max(10),
 })
 
 const saveExerciseSchema = z.object({
@@ -77,9 +93,15 @@ export async function POST(req: Request) {
           original_text: sanitizeContent(task.originalText),
           audio_base64: task.audioBase64,
           audio_mime_type: task.audioMimeType,
-          questions: task.questions.map((item) => ({
-            question: sanitizeContent(item.question),
-          })),
+          questions: task.questions.map((item) => {
+            const questionType = normalizeQuestionType(item.questionType)
+            return {
+              question: sanitizeContent(item.question),
+              question_type: questionType,
+              is_true:
+                questionType === QUESTION_TYPE.statement ? item.isTrue : null,
+            }
+          }),
         })),
       }
     )
