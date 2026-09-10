@@ -23,7 +23,7 @@ async function getOrigin() {
 
 function safeNextPath(value: FormDataEntryValue | null) {
   const next = typeof value === 'string' ? value : '/'
-  return next.startsWith('/') ? next : '/spraakhjelper'
+  return next.startsWith('/') ? next : '/'
 }
 
 export async function login(formData: FormData) {
@@ -119,7 +119,7 @@ export async function updatePassword(formData: FormData) {
   }
 
   revalidatePath('/', 'layout')
-  redirect('/spraakhjelper')
+  redirect('/')
 }
 
 export async function logout() {

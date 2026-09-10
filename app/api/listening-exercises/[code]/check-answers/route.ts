@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { checkRateLimit, validateResponseSize } from '@/lib/api-helpers'
-import { isValidAccessCode, normalizeAccessCode } from '@/lib/lytteoving'
+import { isValidAccessCode, normalizeAccessCode, QUESTION_TYPE, normalizeQuestionType } from '@/lib/lytteoving'
 import { sanitizeContent } from '@/lib/sanitize'
 import { createClient } from '@/lib/supabase/server'
 
@@ -27,20 +27,31 @@ interface ExerciseRow {
   tasks: {
     position: number
     original_text: string
-    questions: { question: string }[]
+    questions: {
+      question: string
+      question_type?: string
+      is_true?: boolean | null
+    }[]
   }[]
+}
+
+function scoreStatement(
+  isTrue: boolean | null | undefined,
+  studentAnswer: string
+): { isCorrect: boolean; feedback: string } {
+  const expected = isTrue ? 'true' : 'false'
+  const isCorrect = studentAnswer === expected
+  return {
+    isCorrect,
+    feedback: isCorrect
+      ? 'Riktig!'
+      : `Feil. Påstanden er ${isTrue ? 'sant' : 'usant'}.`,
+  }
 }
 
 export async function POST(req: Request, { params }: RouteContext) {
   const rateLimitError = checkRateLimit(req, 10, 60000)
   if (rateLimitError) return rateLimitError
-
-  if (!AZURE_ENDPOINT || !AZURE_API_KEY) {
-    return NextResponse.json(
-      { error: 'Azure OpenAI configuration missing.' },
-      { status: 500 }
-    )
-  }
 
   const { code } = await params
   const parsedCode = codeSchema.safeParse(code)
@@ -83,8 +94,12 @@ export async function POST(req: Request, { params }: RouteContext) {
       (item) => item.position === taskPosition
     )
     const questions = (task?.questions ?? [])
-      .map((item) => item.question)
-      .filter((question) => question.length > 0)
+      .map((item) => ({
+        question: item.question,
+        questionType: normalizeQuestionType(item.question_type),
+        isTrue: item.is_true,
+      }))
+      .filter((item) => item.question.length > 0)
 
     if (!task || questions.length === 0) {
       return NextResponse.json(
@@ -100,14 +115,35 @@ export async function POST(req: Request, { params }: RouteContext) {
       )
     }
 
-    const numberedQuestions = questions
-      .map((question, index) => {
-        const studentAnswer = studentAnswers[index] || '(tomt svar)'
-        return `${index + 1}. Spørsmål: ${question}\n   Elevens svar: ${studentAnswer}`
-      })
-      .join('\n')
+    const results: { isCorrect: boolean; feedback: string }[] = questions.map(
+      (item, index) => {
+        if (item.questionType === QUESTION_TYPE.statement) {
+          return scoreStatement(item.isTrue, studentAnswers[index] ?? '')
+        }
+        return { isCorrect: false, feedback: '' }
+      }
+    )
 
-    const systemPrompt = `Du vurderer svar fra elever som lærer norsk som andrespråk. Eleven har hørt en tekst og svart på spørsmål om innholdet.
+    const openQuestions = questions
+      .map((item, index) => ({ item, index }))
+      .filter(({ item }) => item.questionType === QUESTION_TYPE.open)
+
+    if (openQuestions.length > 0) {
+      if (!AZURE_ENDPOINT || !AZURE_API_KEY) {
+        return NextResponse.json(
+          { error: 'Azure OpenAI configuration missing.' },
+          { status: 500 }
+        )
+      }
+
+      const numberedQuestions = openQuestions
+        .map(({ item, index }) => {
+          const studentAnswer = studentAnswers[index] || '(tomt svar)'
+          return `${index + 1}. Spørsmål: ${item.question}\n   Elevens svar: ${studentAnswer}`
+        })
+        .join('\n')
+
+      const systemPrompt = `Du vurderer svar fra elever som lærer norsk som andrespråk. Eleven har hørt en tekst og svart på spørsmål om innholdet.
 
 ##Oppgave
 Vurder hvert elevsvar opp mot originalteksten. Det finnes ikke et lagret fasitsvar.
@@ -126,94 +162,95 @@ Returner JSON med "results": en liste med nøyaktig ett objekt per spørsmål, i
 - "isCorrect": true eller false
 - "feedback": kort tilbakemelding til eleven`
 
-    const responseSchema = {
-      type: 'object',
-      properties: {
-        results: {
-          type: 'array',
-          minItems: questions.length,
-          maxItems: questions.length,
-          items: {
-            type: 'object',
-            properties: {
-              isCorrect: {
-                type: 'boolean',
-                description: 'Om elevens svar er riktig ut fra originalteksten.',
+      const responseSchema = {
+        type: 'object',
+        properties: {
+          results: {
+            type: 'array',
+            minItems: openQuestions.length,
+            maxItems: openQuestions.length,
+            items: {
+              type: 'object',
+              properties: {
+                isCorrect: {
+                  type: 'boolean',
+                  description: 'Om elevens svar er riktig ut fra originalteksten.',
+                },
+                feedback: {
+                  type: 'string',
+                  description: 'Kort, vennlig tilbakemelding på bokmål.',
+                },
               },
-              feedback: {
-                type: 'string',
-                description: 'Kort, vennlig tilbakemelding på bokmål.',
-              },
+              required: ['isCorrect', 'feedback'],
+              additionalProperties: false,
             },
-            required: ['isCorrect', 'feedback'],
-            additionalProperties: false,
           },
         },
-      },
-      required: ['results'],
-      additionalProperties: false,
-    }
+        required: ['results'],
+        additionalProperties: false,
+      }
 
-    const azureUrl = `${AZURE_ENDPOINT}/openai/deployments/${AZURE_DEPLOYMENT_NAME}/chat/completions?api-version=${AZURE_API_VERSION}`
+      const azureUrl = `${AZURE_ENDPOINT}/openai/deployments/${AZURE_DEPLOYMENT_NAME}/chat/completions?api-version=${AZURE_API_VERSION}`
 
-    const response = await fetch(azureUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'api-key': AZURE_API_KEY,
-      },
-      body: JSON.stringify({
-        messages: [
-          { role: 'system', content: systemPrompt },
-          {
-            role: 'user',
-            content: `Originaltekst:\n${task.original_text}\n\n${numberedQuestions}`,
-          },
-        ],
-        temperature: 0.2,
-        max_completion_tokens: 1500,
-        response_format: {
-          type: 'json_schema',
-          json_schema: {
-            name: 'listening_answer_check',
-            strict: true,
-            schema: responseSchema,
-          },
+      const response = await fetch(azureUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'api-key': AZURE_API_KEY,
         },
-      }),
-    })
+        body: JSON.stringify({
+          messages: [
+            { role: 'system', content: systemPrompt },
+            {
+              role: 'user',
+              content: `Originaltekst:\n${task.original_text}\n\n${numberedQuestions}`,
+            },
+          ],
+          temperature: 0.2,
+          max_completion_tokens: 1500,
+          response_format: {
+            type: 'json_schema',
+            json_schema: {
+              name: 'listening_answer_check',
+              strict: true,
+              schema: responseSchema,
+            },
+          },
+        }),
+      })
 
-    if (!response.ok) {
-      if (process.env.NODE_ENV === 'development') {
-        console.error('Azure OpenAI error status:', response.status)
+      if (!response.ok) {
+        if (process.env.NODE_ENV === 'development') {
+          console.error('Azure OpenAI error status:', response.status)
+        }
+        throw new Error(
+          `Azure OpenAI API error: ${response.status} ${response.statusText}`
+        )
       }
-      throw new Error(
-        `Azure OpenAI API error: ${response.status} ${response.statusText}`
-      )
-    }
 
-    const dataJson = await response.json()
-    const aiResponse = dataJson.choices?.[0]?.message?.content?.trim()
-    if (!aiResponse) {
-      throw new Error('Empty response from Azure OpenAI')
-    }
-
-    validateResponseSize(aiResponse, 20000)
-
-    const parsed = JSON.parse(aiResponse) as {
-      results: { isCorrect: boolean; feedback: string }[]
-    }
-
-    const results = questions.map((_, index) => {
-      const item = parsed.results?.[index]
-      return {
-        isCorrect: Boolean(item?.isCorrect),
-        feedback: sanitizeContent(
-          item?.feedback?.trim() ||
-            (item?.isCorrect ? 'Flott!' : 'Prøv å lytte én gang til.')
-        ),
+      const dataJson = await response.json()
+      const aiResponse = dataJson.choices?.[0]?.message?.content?.trim()
+      if (!aiResponse) {
+        throw new Error('Empty response from Azure OpenAI')
       }
-    })
+
+      validateResponseSize(aiResponse, 20000)
+
+      const parsed = JSON.parse(aiResponse) as {
+        results: { isCorrect: boolean; feedback: string }[]
+      }
+
+      openQuestions.forEach(({ index }, resultIndex) => {
+        const item = parsed.results?.[resultIndex]
+        results[index] = {
+          isCorrect: Boolean(item?.isCorrect),
+          feedback: sanitizeContent(
+            item?.feedback?.trim() ||
+              (item?.isCorrect ? 'Flott!' : 'Prøv å lytte én gang til.')
+          ),
+        }
+      })
+    }
 
     const correctCount = results.filter((item) => item.isCorrect).length
 

@@ -1,5 +1,10 @@
 import { Textarea } from '@/components/ui/textarea'
-import type { AnswerCheckResult, ListeningQuestion } from '@/lib/lytteoving'
+import { TrueFalseButtons } from '@/components/lytteoving/true-false-buttons'
+import {
+  isStatementQuestion,
+  type AnswerCheckResult,
+  type ListeningQuestion,
+} from '@/lib/lytteoving'
 
 interface StudentQuestionListProps {
   questions: ListeningQuestion[]
@@ -8,6 +13,12 @@ interface StudentQuestionListProps {
   disabled?: boolean
   idPrefix?: string
   onAnswerChange: (index: number, value: string) => void
+}
+
+function parseStatementAnswer(value: string): boolean | null {
+  if (value === 'true') return true
+  if (value === 'false') return false
+  return null
 }
 
 export function StudentQuestionList({
@@ -27,6 +38,7 @@ export function StudentQuestionList({
             ? 'border-green-300 bg-green-50'
             : 'border-red-200 bg-red-50'
           : 'border-gray-200 bg-white'
+        const isStatement = isStatementQuestion(item)
 
         return (
           <li
@@ -36,16 +48,25 @@ export function StudentQuestionList({
             <p className="font-medium text-gray-900">
               {index + 1}. {item.question}
             </p>
-            <Textarea
-              id={`${idPrefix}-${index}`}
-              value={answers[index] ?? ''}
-              disabled={disabled}
-              autosize
-              maxLength={500}
-              placeholder="Skriv svaret ditt her..."
-              aria-label={`Svar på spørsmål ${index + 1}`}
-              onChange={(event) => onAnswerChange(index, event.target.value)}
-            />
+            {isStatement ? (
+              <TrueFalseButtons
+                name={`Sant eller usant for påstand ${index + 1}`}
+                value={parseStatementAnswer(answers[index] ?? '')}
+                disabled={disabled}
+                onChange={(value) => onAnswerChange(index, String(value))}
+              />
+            ) : (
+              <Textarea
+                id={`${idPrefix}-${index}`}
+                value={answers[index] ?? ''}
+                disabled={disabled}
+                autosize
+                maxLength={500}
+                placeholder="Skriv svaret ditt her..."
+                aria-label={`Svar på spørsmål ${index + 1}`}
+                onChange={(event) => onAnswerChange(index, event.target.value)}
+              />
+            )}
             {result && (
               <p
                 className={`text-sm ${

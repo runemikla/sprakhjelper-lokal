@@ -5,7 +5,9 @@ import { requireTeacher } from '@/lib/auth/require-teacher'
 import {
   isValidAccessCode,
   MAX_LISTENING_TASKS,
+  QUESTION_TYPE,
   normalizeAccessCode,
+  normalizeQuestionType,
 } from '@/lib/lytteoving'
 import { sanitizeContent } from '@/lib/sanitize'
 import { createClient, getUser } from '@/lib/supabase/server'
@@ -21,7 +23,11 @@ interface RpcTask {
   original_text: string
   audio_base64: string
   audio_mime_type: string
-  questions: { question: string }[]
+  questions: {
+    question: string
+    question_type?: string
+    is_true?: boolean | null
+  }[]
 }
 
 function mapTasks(tasks: RpcTask[] | undefined, isOwner: boolean) {
@@ -32,7 +38,17 @@ function mapTasks(tasks: RpcTask[] | undefined, isOwner: boolean) {
       position: task.position,
       originalText: isOwner ? task.original_text : undefined,
       questions: (task.questions ?? [])
-        .map((item) => ({ question: item.question?.trim() ?? '' }))
+        .map((item) => {
+          const question = item.question?.trim() ?? ''
+          const questionType = normalizeQuestionType(item.question_type)
+          return {
+            question,
+            questionType,
+            ...(isOwner && questionType === QUESTION_TYPE.statement
+              ? { isTrue: Boolean(item.is_true) }
+              : {}),
+          }
+        })
         .filter((item) => item.question.length > 0),
       audioBase64: task.audio_base64,
       audioMimeType: task.audio_mime_type,
@@ -115,9 +131,26 @@ const updateQuestionsSchema = z.object({
   taskPosition: z.number().int().min(1).max(MAX_LISTENING_TASKS).default(1),
   questions: z
     .array(
-      z.object({
-        question: z.string().trim().min(1),
-      })
+      z
+        .object({
+          question: z.string().trim().min(1),
+          questionType: z
+            .enum([QUESTION_TYPE.open, QUESTION_TYPE.statement])
+            .optional(),
+          isTrue: z.boolean().optional().nullable(),
+        })
+        .superRefine((item, ctx) => {
+          if (
+            normalizeQuestionType(item.questionType) === QUESTION_TYPE.statement &&
+            typeof item.isTrue !== 'boolean'
+          ) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              message: 'Påstander må ha fasit (sant eller usant).',
+              path: ['isTrue'],
+            })
+          }
+        })
     )
     .min(1)
     .max(10),
@@ -147,9 +180,15 @@ export async function PATCH(req: Request, { params }: RouteContext) {
     const { error } = await supabase.rpc('update_listening_exercise_questions', {
       p_access_code: parsedCode.data,
       p_task_position: parsed.taskPosition,
-      p_questions: parsed.questions.map((item) => ({
-        question: sanitizeContent(item.question),
-      })),
+      p_questions: parsed.questions.map((item) => {
+        const questionType = normalizeQuestionType(item.questionType)
+        return {
+          question: sanitizeContent(item.question),
+          question_type: questionType,
+          is_true:
+            questionType === QUESTION_TYPE.statement ? item.isTrue : null,
+        }
+      }),
     })
 
     if (error) {

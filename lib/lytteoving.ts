@@ -2,8 +2,45 @@ export const ACCESS_CODE_LENGTH = 4
 export const ACCESS_CODE_PATTERN = /^[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{4}$/
 export const MAX_LISTENING_TASKS = 3
 
+export const QUESTION_TYPE = {
+  open: 'open',
+  statement: 'statement',
+} as const
+
+export type QuestionType = (typeof QUESTION_TYPE)[keyof typeof QUESTION_TYPE]
+
 export interface ListeningQuestion {
   question: string
+  questionType?: QuestionType
+  isTrue?: boolean | null
+}
+
+export function normalizeQuestionType(value: unknown): QuestionType {
+  return value === QUESTION_TYPE.statement
+    ? QUESTION_TYPE.statement
+    : QUESTION_TYPE.open
+}
+
+export function isStatementQuestion(question: ListeningQuestion): boolean {
+  return normalizeQuestionType(question.questionType) === QUESTION_TYPE.statement
+}
+
+export function isStatementTask(questions: ListeningQuestion[]): boolean {
+  return (
+    questions.length > 0 && questions.every((item) => isStatementQuestion(item))
+  )
+}
+
+export function formatListeningAnswer(
+  question: ListeningQuestion,
+  answer: string
+): string {
+  if (isStatementQuestion(question)) {
+    if (answer === 'true') return 'Sant'
+    if (answer === 'false') return 'Usant'
+    return answer.trim() || '(tomt svar)'
+  }
+  return answer.trim() || '(tomt svar)'
 }
 
 export interface AnswerCheckResult {

@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Loader2 } from 'lucide-react'
+import { Loader2, Pencil, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { ListeningPageShell } from '@/components/lytteoving/page-shell'
@@ -116,18 +116,26 @@ export function TeacherHomeClient({
                     )}
                   </div>
                   <div className="flex shrink-0 items-center gap-2">
-                    <Button asChild variant="outline">
-                      <Link href={`/lytteoving/${exercise.accessCode}`}>Åpne</Link>
+                    <Button asChild variant="outline" size="icon">
+                      <Link
+                        href={`/lytteoving/${exercise.accessCode}`}
+                        aria-label={`Rediger lytteøving ${exercise.accessCode}`}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Link>
                     </Button>
                     <Button
                       variant="destructive"
+                      size="icon"
                       onClick={() => void handleDelete(exercise)}
                       disabled={deletingId === exercise.id}
+                      aria-label={`Slett lytteøving ${exercise.accessCode}`}
                     >
-                      {deletingId === exercise.id && (
+                      {deletingId === exercise.id ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Trash2 className="h-4 w-4" />
                       )}
-                      Slett
                     </Button>
                   </div>
                 </li>
