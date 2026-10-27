@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { checkRateLimit, validateResponseSize } from '@/lib/api-helpers'
 import { isValidAccessCode, normalizeAccessCode, QUESTION_TYPE, normalizeQuestionType } from '@/lib/lytteoving'
 import { sanitizeContent } from '@/lib/sanitize'
-import { LISTENING_ANSWER_CHECK_SYSTEM_PROMPT } from '@/lib/ai/instructions'
+import { getInstruction } from '@/lib/ai/instruction-store'
 import { createClient } from '@/lib/supabase/server'
 
 export const maxDuration = 60
@@ -144,7 +144,7 @@ export async function POST(req: Request, { params }: RouteContext) {
         })
         .join('\n')
 
-      const systemPrompt = LISTENING_ANSWER_CHECK_SYSTEM_PROMPT
+      const systemPrompt = await getInstruction('lytteoving_vurdering')
 
       const responseSchema = {
         type: 'object',

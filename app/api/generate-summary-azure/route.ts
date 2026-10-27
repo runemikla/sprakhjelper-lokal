@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { checkRateLimit, validateResponseSize } from '@/lib/api-helpers';
-import { buildSummarySystemPrompt } from '@/lib/ai/instructions';
+import { getInstruction } from '@/lib/ai/instruction-store';
 
 // Input validation schema
 const summarySchema = z.object({
@@ -32,8 +32,9 @@ export async function POST(req: Request) {
 
     console.log('Generating summary for language:', morsmaal);
 
-    // Build system prompt for comprehensive analysis from the shared catalog
-    const systemPrompt = buildSummarySystemPrompt(morsmaal);
+    // Build system prompt for comprehensive analysis from the active instruction
+    // version (or the default)
+    const systemPrompt = await getInstruction('skrivehjelp_sammendrag', { morsmaal });
 
     // Define JSON Schema for structured output
     const responseSchema = {

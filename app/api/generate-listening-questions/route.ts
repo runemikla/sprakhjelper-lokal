@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { checkRateLimit, validateResponseSize } from '@/lib/api-helpers'
 import { requireTeacher } from '@/lib/auth/require-teacher'
-import { buildOpenQuestionsPrompt, buildStatementPrompt } from '@/lib/ai/instructions'
+import { getInstruction } from '@/lib/ai/instruction-store'
 import { textToSpeech, ElevenLabsError } from '@/lib/elevenlabs'
 import {
   QUESTION_TYPE,
@@ -101,9 +101,10 @@ async function generateQuestions(
   questionType: QuestionType
 ): Promise<ListeningQuestion[]> {
   const isStatement = questionType === QUESTION_TYPE.statement
-  const systemPrompt = isStatement
-    ? buildStatementPrompt(questionCount)
-    : buildOpenQuestionsPrompt(questionCount)
+  const systemPrompt = await getInstruction(
+    isStatement ? 'lytteoving_pastander' : 'lytteoving_aapne_sporsmal',
+    { antall: questionCount }
+  )
   const userPrompt = isStatement
     ? `Lag ${questionCount} påstander (sant/usant) til denne teksten:\n\n${originalText}`
     : `Lag ${questionCount} forståelsesspørsmål til denne teksten:\n\n${originalText}`

@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { checkRateLimit, validateResponseSize } from '@/lib/api-helpers';
-import { LEVEL_SPECS, buildWordOrderSystemPrompt } from '@/lib/ai/instructions';
+import { LEVEL_SPECS } from '@/lib/ai/instructions';
+import { getInstruction } from '@/lib/ai/instruction-store';
 
 // Input validation schema (7 difficulty levels)
 const generateSentenceSchema = z.object({
@@ -96,8 +97,12 @@ export async function POST(req: Request) {
       previousSection = `\n\n##Tidligere brukte setninger (IKKE gjenta disse eller lag for like setninger)\n${list}`;
     }
 
-    // Build system prompt for word-order exercise generation from the catalog
-    const systemPrompt = buildWordOrderSystemPrompt(instruction, previousSection);
+    // Build system prompt for word-order exercise generation from the active
+    // instruction version (or the default)
+    const systemPrompt = await getInstruction('grammatikk_setningsgenerator', {
+      nivaa: instruction,
+      tidligere_setninger: previousSection,
+    });
 
     // JSON Schema for structured output
     const responseSchema = {
