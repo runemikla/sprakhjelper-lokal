@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { checkRateLimit, validateResponseSize } from '@/lib/api-helpers';
-import { SPLIT_SENTENCES_SYSTEM_PROMPT } from '@/lib/ai/instructions';
+import { getInstruction } from '@/lib/ai/instruction-store';
 
 // Input validation schema
 const splitSentencesSchema = z.object({
@@ -33,8 +33,9 @@ export async function POST(req: Request) {
     console.log('Splitting sentences for language:', morsmaal);
     console.log('Using Azure OpenAI endpoint:', AZURE_ENDPOINT);
 
-    // Build system prompt for sentence splitting from the shared catalog
-    const systemPrompt = SPLIT_SENTENCES_SYSTEM_PROMPT;
+    // Build system prompt for sentence splitting from the active instruction
+    // version (or the default)
+    const systemPrompt = await getInstruction('skrivehjelp_setningsdeling');
 
     // Build Azure OpenAI URL
     const azureUrl = `${AZURE_ENDPOINT}/openai/deployments/${AZURE_DEPLOYMENT_NAME}/chat/completions?api-version=${AZURE_API_VERSION}`;

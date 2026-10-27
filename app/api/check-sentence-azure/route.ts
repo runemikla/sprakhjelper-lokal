@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { checkRateLimit, validateResponseSize } from '@/lib/api-helpers';
-import { buildCheckSentenceSystemPrompt } from '@/lib/ai/instructions';
+import { getInstruction } from '@/lib/ai/instruction-store';
 
 // Input validation schema
 const checkSentenceSchema = z.object({
@@ -34,8 +34,12 @@ export async function POST(req: Request) {
     console.log('Checking sentence for language:', morsmaal);
     console.log('Using Azure OpenAI endpoint:', AZURE_ENDPOINT);
 
-    // Build system prompt from the shared instruction catalog
-    const systemPrompt = buildCheckSentenceSystemPrompt(morsmaal, sentence, correctSentence);
+    // Build system prompt from the active instruction version (or the default)
+    const systemPrompt = await getInstruction('skrivehjelp_setningssjekk', {
+      morsmaal,
+      elevens_setning: sentence,
+      fasitsetning: correctSentence,
+    });
 
     // Define JSON Schema for structured output
     const responseSchema = {

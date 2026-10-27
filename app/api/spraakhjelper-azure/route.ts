@@ -2,7 +2,8 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { checkRateLimit, validateResponseSize } from '@/lib/api-helpers';
 import { TRANSFER_ERRORS } from '@/lib/ai/transfer-errors';
-import { buildSpraakhjelperSystemPrompt } from '@/lib/ai/instructions';
+import { transferErrorVariables } from '@/lib/ai/instructions';
+import { getInstruction } from '@/lib/ai/instruction-store';
 
 // Input validation schema
 const spraakhjelpperSchema = z.object({
@@ -37,8 +38,11 @@ export async function POST(req: Request) {
     // Get transfer errors for this specific language
     const transferErrors = TRANSFER_ERRORS[morsmaal] || '';
 
-    // Build system prompt (v5) from the shared instruction catalog
-    const systemPrompt = buildSpraakhjelperSystemPrompt(morsmaal, transferErrors);
+    // Build system prompt from the active instruction version (or the default)
+    const systemPrompt = await getInstruction('skrivehjelp_analyse', {
+      morsmaal,
+      ...transferErrorVariables(morsmaal, transferErrors),
+    });
 
     // Define JSON Schema for structured output (Azure requires object at top level)
     const responseSchema = {
