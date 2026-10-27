@@ -12,6 +12,8 @@ import { type SavedListeningExercise } from '@/lib/lytteoving'
 interface TeacherHomeClientProps {
   userEmail?: string | null
   savedExercises: SavedListeningExercise[]
+  // Forwarded to the navbar so admins see the "Instrukser" menu entry.
+  isAdmin?: boolean
 }
 
 function formatCreatedAt(value: string): string {
@@ -27,6 +29,7 @@ function formatCreatedAt(value: string): string {
 export function TeacherHomeClient({
   userEmail = null,
   savedExercises,
+  isAdmin = false,
 }: TeacherHomeClientProps) {
   const router = useRouter()
   const [exercises, setExercises] = useState(savedExercises)
@@ -66,7 +69,7 @@ export function TeacherHomeClient({
   }
 
   return (
-    <ListeningPageShell userEmail={userEmail}>
+    <ListeningPageShell userEmail={userEmail} isAdmin={isAdmin}>
       <Card className="bg-white/95 backdrop-blur-sm border-white/20 shadow-xl">
         <div className="flex items-start justify-between gap-4 px-6 pt-6 pb-4 border-b border-gray-200">
           <div>

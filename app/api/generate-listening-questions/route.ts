@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { checkRateLimit, validateResponseSize } from '@/lib/api-helpers'
 import { requireTeacher } from '@/lib/auth/require-teacher'
+import { buildOpenQuestionsPrompt, buildStatementPrompt } from '@/lib/ai/instructions'
 import { textToSpeech, ElevenLabsError } from '@/lib/elevenlabs'
 import {
   QUESTION_TYPE,
@@ -29,49 +30,6 @@ const AZURE_ENDPOINT = process.env.AZURE_OPENAI_ENDPOINT!
 const AZURE_API_KEY = process.env.AZURE_OPENAI_API_KEY!
 const AZURE_DEPLOYMENT_NAME = process.env.AZURE_OPENAI_DEPLOYMENT_NAME || 'gpt-4o'
 const AZURE_API_VERSION = process.env.AZURE_OPENAI_API_VERSION || '2024-08-01-preview'
-
-function openQuestionsPrompt(questionCount: number): string {
-  return `Du lager lytteøvinger for elever som lærer norsk som andrespråk. Eleven skal høre en tekst og svare på spørsmål som sjekker om de har forstått innholdet.
-
-##Oppgave
-Lag nøyaktig ${questionCount} spørsmål på bokmål til teksten eleven limer inn.
-
-##Krav
-- Spørsmålene skal teste forståelse av innholdet, ikke grammatikk.
-- Bruk enkelt, tydelig språk.
-- Spørsmålene skal kunne besvares ut fra teksten alene.
-- Varier spørsmålstypene (hvem, hva, hvor, når, hvorfor) når teksten gir grunnlag for det.
-- Ikke lag spørsmål som krever kunnskap utenfor teksten.
-- Ikke lag fasitsvar. Returner bare spørsmålene.
-
-##Utdata
-Returner JSON med:
-- "originalText": den opprinnelige teksten uendret
-- "questions": en liste med nøyaktig ${questionCount} objekter, hvert med "question"`
-}
-
-function statementPrompt(questionCount: number): string {
-  return `Du lager lytteøvinger for elever som lærer norsk som andrespråk. Eleven skal høre en tekst og avgjøre om påstander er sant eller usant.
-
-##Oppgave
-Lag nøyaktig ${questionCount} påstander på bokmål til teksten eleven limer inn.
-
-##Krav
-- Påstandene skal teste forståelse av innholdet, ikke grammatikk.
-- Bruk enkelt, tydelig språk.
-- Eleven skal kunne avgjøre sant/usant ut fra teksten alene.
-- Lag både sanne og usanne påstander. Minst én av hver når det er mer enn én påstand.
-- Fordel sant og usant jevnt. Ikke la alle sanne komme først.
-- En sann påstand er noe som stemmer med teksten.
-- En usann påstand høres mulig ut, men stemmer ikke med teksten. Unngå bare å sette inn ordet «ikke».
-- Ikke lag påstander som krever kunnskap utenfor teksten.
-- Skriv påstanden som en hel setning, ikke som et spørsmål.
-
-##Utdata
-Returner JSON med:
-- "originalText": den opprinnelige teksten uendret
-- "questions": en liste med nøyaktig ${questionCount} objekter, hvert med "question" (påstanden) og "isTrue"`
-}
 
 function openQuestionsSchema() {
   return {
@@ -144,8 +102,8 @@ async function generateQuestions(
 ): Promise<ListeningQuestion[]> {
   const isStatement = questionType === QUESTION_TYPE.statement
   const systemPrompt = isStatement
-    ? statementPrompt(questionCount)
-    : openQuestionsPrompt(questionCount)
+    ? buildStatementPrompt(questionCount)
+    : buildOpenQuestionsPrompt(questionCount)
   const userPrompt = isStatement
     ? `Lag ${questionCount} påstander (sant/usant) til denne teksten:\n\n${originalText}`
     : `Lag ${questionCount} forståelsesspørsmål til denne teksten:\n\n${originalText}`

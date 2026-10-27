@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { checkRateLimit, validateResponseSize } from '@/lib/api-helpers';
+import { SPLIT_SENTENCES_SYSTEM_PROMPT } from '@/lib/ai/instructions';
 
 // Input validation schema
 const splitSentencesSchema = z.object({
@@ -32,30 +33,8 @@ export async function POST(req: Request) {
     console.log('Splitting sentences for language:', morsmaal);
     console.log('Using Azure OpenAI endpoint:', AZURE_ENDPOINT);
 
-    // Build system prompt for sentence splitting
-    const systemPrompt = `Du er en hjelpsom skriveassistent som hjelper brukeren med å dele tekst i setninger og korrigere tegnsetting.
-
-# Instruksjoner
-1. Del teksten inn i separate setninger. 
-2. Legg til punktum, spørsmålstegn eller utropstegn på slutten av hver setning hvis det mangler. 
-3. Start hver setning med stor bokstav. 
-4. IKKE endre noen ord, bøyninger eller grammatikk.
-
-Svar med kun én JSON-struktur på toppnivå – et array hvor hvert objekt representerer én setning:
-- "original": Den opprinnelige setningen som brukeren skrev (med korrigert tegnsetting og stor bokstav)
-- "corrected": Identisk med "original" (samme verdi)
-
-###OBS!
-Returner kun et JSON-objekt (gyldig JSON, uten kodeblokker eller ekstra tekst).
-
-Eksempel:
-Input: "Vi danset og holdt på hele natta, jeg tror aldri jeg har hatt det så gøy. Klokka ble alt for mye og jeg glemte helt å dra hjem i tide haha."
-Output:
-[
-  {"original": "Vi danset og holdt på hele natta.", "corrected": "Vi danset og holdt på hele natta."},
-  {"original": "Jeg tror aldri jeg har hatt det så gøy.", "corrected": "Jeg tror aldri jeg har hatt det så gøy."},
-  {"original": "Klokka ble alt for mye og jeg glemte helt å dra hjem i tide haha.", "corrected": "Klokka ble alt for mye og jeg glemte helt å dra hjem i tide haha."}
-]`;
+    // Build system prompt for sentence splitting from the shared catalog
+    const systemPrompt = SPLIT_SENTENCES_SYSTEM_PROMPT;
 
     // Build Azure OpenAI URL
     const azureUrl = `${AZURE_ENDPOINT}/openai/deployments/${AZURE_DEPLOYMENT_NAME}/chat/completions?api-version=${AZURE_API_VERSION}`;

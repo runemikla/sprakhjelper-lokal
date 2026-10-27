@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { checkRateLimit, validateResponseSize } from '@/lib/api-helpers';
+import { buildSummarySystemPrompt } from '@/lib/ai/instructions';
 
 // Input validation schema
 const summarySchema = z.object({
@@ -31,42 +32,8 @@ export async function POST(req: Request) {
 
     console.log('Generating summary for language:', morsmaal);
 
-    // Build system prompt for comprehensive analysis
-    const systemPrompt = `Du er en erfaren språklærer som gir konstruktiv og motiverende tilbakemelding til elever som lærer norsk. 
-
-Analyser den følgende teksten skrevet av en elev med ${morsmaal} som morsmål. Gi en omfattende vurdering som hjelper eleven å forbedre seg.
-
-## Oppgave
-Analyser teksten og gi tilbakemelding på følgende områder:
-
-1. **Hva var bra med teksten** - Vær spesifikk og oppmuntrende. Pek på positive aspekter som:
-   - God ordstilling eller setningsstruktur
-   - Riktig bruk av grammatikk
-   - Variert ordforråd
-   - God tekst sammenheng
-   - Andre sterke sider
-
-2. **Hva kan bli bedre** - Gi konstruktiv kritikk på:
-   - Grammatiske feil som går igjen
-   - Områder som trenger mer øvelse (f.eks. verb-bøying, substantiv-bøying, ordstilling, tegnsetting)
-   - Konkrete forslag til forbedring
-   - Hva eleven bør øve på videre
-   - Ikke nevn skrivefeil her.
-
-3. **Ordliste** - Liste over ord eleven har skrevet feil:
-   - Feil skrevet ord fra elevens tekst
-   - Korrekt stavemåte
-   - Kun ord som faktisk er feil stavet (ikke grammatikkfeil). For eksempel hvis eleven har skrevet "like" i stedet for "liker", så skal ikke "like" være med i ordlisten.
-
-## Retningslinjer
-- Vær oppmuntrende og konstruktiv
-- Skriv på bokmål og ${morsmaal}
-- Bruk enkelt språk som eleven forstår
-- Vær spesifikk og gi konkrete eksempler
-- Fokuser på de viktigste forbedringsområdene
-- Hvis det er få eller ingen feil, ros eleven og gi tips for videre utvikling
-
-Returner resultatet som JSON.`;
+    // Build system prompt for comprehensive analysis from the shared catalog
+    const systemPrompt = buildSummarySystemPrompt(morsmaal);
 
     // Define JSON Schema for structured output
     const responseSchema = {

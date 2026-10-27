@@ -20,9 +20,11 @@ function openTool(href: string, clearsSession: boolean, router: ReturnType<typeo
 
 interface KiToolsMenuProps {
   onNavigate?: () => void
+  // When true, an admin-only "Instrukser" entry is shown in the menu.
+  isAdmin?: boolean
 }
 
-export function KiToolsMenu({ onNavigate }: KiToolsMenuProps) {
+export function KiToolsMenu({ onNavigate, isAdmin = false }: KiToolsMenuProps) {
   const [isOpen, setIsOpen] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
@@ -94,6 +96,23 @@ export function KiToolsMenu({ onNavigate }: KiToolsMenuProps) {
               {tool.label}
             </a>
           ))}
+          {/* Admin-only: view the system instructions behind the AI tools */}
+          {isAdmin && (
+            <>
+              <div className="my-1 border-t border-gray-100" role="separator" />
+              <Link
+                href="/instrukser"
+                role="menuitem"
+                className="block px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-blue-600"
+                onClick={() => {
+                  setIsOpen(false)
+                  onNavigate?.()
+                }}
+              >
+                Instrukser
+              </Link>
+            </>
+          )}
         </div>
       )}
     </div>
@@ -102,9 +121,11 @@ export function KiToolsMenu({ onNavigate }: KiToolsMenuProps) {
 
 interface KiToolsMobileLinksProps {
   onNavigate: () => void
+  // When true, an admin-only "Instrukser" entry is shown in the menu.
+  isAdmin?: boolean
 }
 
-export function KiToolsMobileLinks({ onNavigate }: KiToolsMobileLinksProps) {
+export function KiToolsMobileLinks({ onNavigate, isAdmin = false }: KiToolsMobileLinksProps) {
   const router = useRouter()
 
   return (
@@ -136,6 +157,16 @@ export function KiToolsMobileLinks({ onNavigate }: KiToolsMobileLinksProps) {
             {tool.label}
           </Link>
         )
+      )}
+      {/* Admin-only: view the system instructions behind the AI tools */}
+      {isAdmin && (
+        <Link
+          href="/instrukser"
+          className="block px-4 text-gray-700 hover:text-blue-600 transition-colors font-medium"
+          onClick={onNavigate}
+        >
+          Instrukser
+        </Link>
       )}
     </div>
   )

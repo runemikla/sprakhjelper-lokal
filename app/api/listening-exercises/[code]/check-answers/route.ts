@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { checkRateLimit, validateResponseSize } from '@/lib/api-helpers'
 import { isValidAccessCode, normalizeAccessCode, QUESTION_TYPE, normalizeQuestionType } from '@/lib/lytteoving'
 import { sanitizeContent } from '@/lib/sanitize'
+import { LISTENING_ANSWER_CHECK_SYSTEM_PROMPT } from '@/lib/ai/instructions'
 import { createClient } from '@/lib/supabase/server'
 
 export const maxDuration = 60
@@ -143,24 +144,7 @@ export async function POST(req: Request, { params }: RouteContext) {
         })
         .join('\n')
 
-      const systemPrompt = `Du vurderer svar fra elever som lærer norsk som andrespråk. Eleven har hørt en tekst og svart på spørsmål om innholdet.
-
-##Oppgave
-Vurder hvert elevsvar opp mot originalteksten. Det finnes ikke et lagret fasitsvar.
-
-##Krav
-- Et svar er riktig hvis det viser at eleven har forstått det spørsmålet spør om, ut fra teksten.
-- Godta meningslike svar, korte svar og små skrivefeil.
-- Et tomt svar er alltid feil.
-- Ikke krev identisk ordlyd med teksten.
-- Skriv tilbakemelding på enkelt bokmål. Maks 25 ord.
-- Vær vennlig og oppmuntrende.
-- Hvis svaret er feil: hint mot hva i teksten eleven skal lytte etter. Ikke skriv av hele den relevante setningen fra originalteksten.
-
-##Utdata
-Returner JSON med "results": en liste med nøyaktig ett objekt per spørsmål, i samme rekkefølge, hvert med:
-- "isCorrect": true eller false
-- "feedback": kort tilbakemelding til eleven`
+      const systemPrompt = LISTENING_ANSWER_CHECK_SYSTEM_PROMPT
 
       const responseSchema = {
         type: 'object',

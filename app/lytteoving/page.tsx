@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { getUser, createClient } from '@/lib/supabase/server'
-import { isTeacher } from '@/lib/auth/roles'
+import { isTeacher, isAdmin } from '@/lib/auth/roles'
 import { mapSavedExercise, type ListeningExerciseListRow, type SavedListeningExercise } from '@/lib/lytteoving'
 import { JoinExerciseCard } from '@/components/lytteoving/join-exercise-card'
 import { ListeningPageShell } from '@/components/lytteoving/page-shell'
@@ -10,6 +10,7 @@ import { Card, CardContent } from '@/components/ui/card'
 export default async function LytteovingPage() {
   const user = await getUser()
   const teacher = await isTeacher(user)
+  const admin = await isAdmin(user)
 
   if (user && teacher) {
     const supabase = await createClient()
@@ -27,12 +28,13 @@ export default async function LytteovingPage() {
       <TeacherHomeClient
         userEmail={user.email ?? null}
         savedExercises={savedExercises}
+        isAdmin={admin}
       />
     )
   }
 
   return (
-    <ListeningPageShell userEmail={user?.email ?? null}>
+    <ListeningPageShell userEmail={user?.email ?? null} isAdmin={admin}>
       <JoinExerciseCard />
       <Card className="bg-white/95 backdrop-blur-sm border-white/20 shadow-xl">
         <CardContent className="pt-6">
