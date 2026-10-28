@@ -4,7 +4,7 @@ import { checkRateLimit, validateResponseSize } from '@/lib/api-helpers'
 import { requireTeacher } from '@/lib/auth/require-teacher'
 import { getInstruction } from '@/lib/ai/instruction-store'
 import { azureChatCompletion, isAzureConfigured } from '@/lib/ai/azure'
-import { textToSpeech, ElevenLabsError } from '@/lib/elevenlabs'
+import { textToSpeech, TextToSpeechError } from '@/lib/tts'
 import {
   QUESTION_TYPE,
   normalizeQuestionType,
@@ -25,6 +25,7 @@ const generateQuestionsSchema = z.object({
   questionType: z
     .enum([QUESTION_TYPE.open, QUESTION_TYPE.statement])
     .default(QUESTION_TYPE.open),
+  speakingRate: z.number().min(0.5).max(1.2).default(1),
 })
 
 function openQuestionsSchema() {
@@ -180,7 +181,7 @@ export async function POST(req: Request) {
 
     const [questions, audioBuffer] = await Promise.all([
       generateQuestions(originalText, parsed.questionCount, questionType),
-      textToSpeech(originalText),
+      textToSpeech(originalText, parsed.speakingRate),
     ])
 
     return NextResponse.json({
@@ -205,7 +206,7 @@ export async function POST(req: Request) {
       )
     }
 
-    if (error instanceof ElevenLabsError) {
+    if (error instanceof TextToSpeechError) {
       return NextResponse.json(
         { error: error.message, message: error.message },
         { status: error.status }

@@ -12,6 +12,7 @@ import {
 } from '@/components/lytteoving/task-editor'
 import { fetchWithTimeout } from '@/lib/fetch-with-timeout'
 import {
+  DEFAULT_SPEAKING_RATE,
   MAX_LISTENING_TASKS,
   QUESTION_TYPE,
   isStatementQuestion,
@@ -42,6 +43,7 @@ function createEmptyTask(id = crypto.randomUUID()): DraftListeningTask {
     text: '',
     questionCount: 3,
     questionType: QUESTION_TYPE.open,
+    speakingRate: DEFAULT_SPEAKING_RATE,
     originalText: '',
     questions: [],
     audioBase64: null,
@@ -125,6 +127,7 @@ export function CreateListeningClient({
             text: task.text.trim(),
             questionCount: task.questionCount,
             questionType: task.questionType,
+            speakingRate: task.speakingRate,
           }),
         },
         GENERATE_TIMEOUT_MS
@@ -275,6 +278,9 @@ export function CreateListeningClient({
               }
               onQuestionTypeChange={(value: QuestionType) =>
                 updateTask(task.id, { questionType: value })
+              }
+              onSpeakingRateChange={(value) =>
+                updateTask(task.id, { speakingRate: value })
               }
               onQuestionChange={(questionIndex, patch) => {
                 setTasks((current) =>
