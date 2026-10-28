@@ -2,6 +2,15 @@ export const ACCESS_CODE_LENGTH = 4
 export const ACCESS_CODE_PATTERN = /^[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{4}$/
 export const MAX_LISTENING_TASKS = 3
 
+// Reading speeds the teacher can pick when the audio is generated.
+export const SPEAKING_RATES = [
+  { value: 1, label: 'Normal' },
+  { value: 0.85, label: 'Litt saktere' },
+  { value: 0.7, label: 'Sakte' },
+] as const
+
+export const DEFAULT_SPEAKING_RATE = 1
+
 export const QUESTION_TYPE = {
   open: 'open',
   statement: 'statement',
