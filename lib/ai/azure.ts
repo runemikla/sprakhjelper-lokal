@@ -1,111 +1,86 @@
-// Single place for the language model ("språkmodell") configuration. Every AI
-// route calls azureChatCompletion() instead of building its own Azure URL, so
-// switching model is a matter of changing environment variables in Coolify.
-// See docs/BYTTE_SPRAKMODELL.md for the step-by-step guide.
-//
-// Environment variables:
-//   AZURE_OPENAI_ENDPOINT          https://<ressurs>.openai.azure.com (or .services.ai.azure.com)
-//   AZURE_OPENAI_API_KEY           key for the Azure AI Foundry resource
-//   AZURE_OPENAI_DEPLOYMENT_NAME   deployment name in Azure AI Foundry (default gpt-4o)
-//   AZURE_OPENAI_API_VERSION       e.g. 2024-08-01-preview, or "v1" for the
-//                                  Foundry v1 API (needed for non-OpenAI models)
-//   AZURE_OPENAI_MODEL_TYPE        "standard" or "reasoning" (optional, guessed
-//                                  from the deployment name when unset)
-//   AZURE_OPENAI_REASONING_EFFORT  minimal | low | medium | high (reasoning
-//                                  models only, default low)
-//
-// This file has no imports so scripts/sjekk-modell.mjs can load it directly
-// with Node.
+import { createClient as createSupabaseClient } from '@supabase/supabase-js'
+import { getSupabaseEnv } from '@/lib/supabase/env'
+import {
+  getEnvModelConfig,
+  sendChatCompletion,
+  type AzureModelConfig,
+  type ChatCompletionBody,
+  type ModelSettings,
+} from '@/lib/ai/azure-core'
 
-export type ModelType = 'standard' | 'reasoning';
+// The language model every AI route uses: the model an admin has chosen on
+// the "Språkmodell" page (table ai_models in Supabase), or the model from the
+// AZURE_OPENAI_* environment variables when none is chosen or the lookup
+// fails. Routes call azureChatCompletion() and never build Azure URLs
+// themselves. See docs/BYTTE_SPRAKMODELL.md.
 
-export interface AzureModelConfig {
-  endpoint: string;
-  apiKey: string;
-  deployment: string;
-  apiVersion: string;
-  modelType: ModelType;
-  reasoningEffort: string;
+// Short in-memory cache so every AI request does not hit the database. A
+// change on the admin page clears it right away in this process.
+const CACHE_TTL_MS = 30_000
+
+let cache: { settings: ModelSettings | null; expiresAt: number } | null = null
+
+export function clearModelCache() {
+  cache = null
 }
 
-export interface ChatCompletionBody {
-  messages: { role: 'system' | 'user' | 'assistant'; content: string }[];
-  temperature?: number;
-  max_completion_tokens?: number;
-  response_format?: unknown;
-}
+// The tools are used by students who are not logged in, so this uses a plain
+// anon client (no cookies) and the get_active_ai_model() database function.
+async function fetchActiveModel(): Promise<ModelSettings | null> {
+  const { url, key } = getSupabaseEnv()
+  const supabase = createSupabaseClient(url, key, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  })
 
-// Reasoning models spend part of max_completion_tokens on hidden reasoning
-// before they write the answer, so they get this much extra room.
-const REASONING_TOKEN_HEADROOM = 4000;
+  const { data, error } = await supabase.rpc('get_active_ai_model')
+  if (error) throw error
+  if (!data) return null
 
-// o1, o3, o4-mini, gpt-5, gpt-5-mini ... are reasoning models. gpt-5-chat is not.
-function guessModelType(deployment: string): ModelType {
-  const name = deployment.toLowerCase();
-  if (name.includes('chat')) return 'standard';
-  return /^(o\d|gpt-5)/.test(name) ? 'reasoning' : 'standard';
-}
-
-export function getAzureModelConfig(): AzureModelConfig {
-  const deployment = process.env.AZURE_OPENAI_DEPLOYMENT_NAME || 'gpt-4o';
-  const modelTypeEnv = process.env.AZURE_OPENAI_MODEL_TYPE?.trim().toLowerCase();
+  const row = data as {
+    deployment: string
+    api_version: string
+    model_type: 'standard' | 'reasoning'
+    reasoning_effort: string
+  }
   return {
-    endpoint: (process.env.AZURE_OPENAI_ENDPOINT || '').replace(/\/+$/, ''),
-    apiKey: process.env.AZURE_OPENAI_API_KEY || '',
-    deployment,
-    apiVersion: process.env.AZURE_OPENAI_API_VERSION || '2024-08-01-preview',
-    modelType:
-      modelTypeEnv === 'reasoning' || modelTypeEnv === 'standard'
-        ? modelTypeEnv
-        : guessModelType(deployment),
-    reasoningEffort: process.env.AZURE_OPENAI_REASONING_EFFORT || 'low',
-  };
+    deployment: row.deployment,
+    apiVersion: row.api_version,
+    modelType: row.model_type,
+    reasoningEffort: row.reasoning_effort,
+  }
+}
+
+async function getActiveModel(): Promise<ModelSettings | null> {
+  if (cache && cache.expiresAt > Date.now()) return cache.settings
+
+  try {
+    const settings = await fetchActiveModel()
+    cache = { settings, expiresAt: Date.now() + CACHE_TTL_MS }
+    return settings
+  } catch (error) {
+    // Never break a tool because of the lookup: fall back to the environment
+    // variables and try the database again on the next request.
+    console.error(
+      'Could not load active AI model, using environment variables:',
+      error instanceof Error ? error.message : error
+    )
+    return null
+  }
+}
+
+// The model the tools use right now, with the endpoint and key from the
+// environment.
+export async function getActiveModelConfig(): Promise<AzureModelConfig> {
+  const envConfig = getEnvModelConfig()
+  const active = await getActiveModel()
+  return active ? { ...envConfig, ...active } : envConfig
 }
 
 export function isAzureConfigured(): boolean {
-  const { endpoint, apiKey } = getAzureModelConfig();
-  return Boolean(endpoint && apiKey);
+  const { endpoint, apiKey } = getEnvModelConfig()
+  return Boolean(endpoint && apiKey)
 }
 
-/**
- * Send a chat completion request to the configured Azure AI Foundry
- * deployment. Routes describe what they want (temperature, token budget,
- * JSON schema) and this function adapts the request to the model: reasoning
- * models get no temperature, more tokens and a reasoning effort, and the v1
- * API gets the deployment name in the body instead of the URL.
- */
 export async function azureChatCompletion(body: ChatCompletionBody): Promise<Response> {
-  const config = getAzureModelConfig();
-  if (!config.endpoint || !config.apiKey) {
-    throw new Error(
-      'Azure OpenAI configuration missing. Please set AZURE_OPENAI_ENDPOINT and AZURE_OPENAI_API_KEY in .env'
-    );
-  }
-
-  const requestBody: Record<string, unknown> = { ...body };
-
-  if (config.modelType === 'reasoning') {
-    delete requestBody.temperature;
-    if (typeof body.max_completion_tokens === 'number') {
-      requestBody.max_completion_tokens = body.max_completion_tokens + REASONING_TOKEN_HEADROOM;
-    }
-    requestBody.reasoning_effort = config.reasoningEffort;
-  }
-
-  let url: string;
-  if (config.apiVersion === 'v1') {
-    url = `${config.endpoint}/openai/v1/chat/completions`;
-    requestBody.model = config.deployment;
-  } else {
-    url = `${config.endpoint}/openai/deployments/${config.deployment}/chat/completions?api-version=${config.apiVersion}`;
-  }
-
-  return fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'api-key': config.apiKey,
-    },
-    body: JSON.stringify(requestBody),
-  });
+  return sendChatCompletion(await getActiveModelConfig(), body)
 }

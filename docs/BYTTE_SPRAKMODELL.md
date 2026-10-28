@@ -1,6 +1,28 @@
 # Bytte språkmodell
 
-Alle KI-verktøyene i Språkhjelp (skrivehjelp, setningsdeling, oppsummering, setningsgenerator, lytteøvelser og retting av lytteøvelser) bruker samme språkmodell. Modellen velges bare med miljøvariabler, og all kode som snakker med Azure ligger i `lib/ai/azure.ts`. Du trenger altså ikke endre kode for å bytte modell.
+Alle KI-verktøyene i Språkhjelp (skrivehjelp, setningsdeling, oppsummering, setningsgenerator, lytteøvelser og retting av lytteøvelser) bruker samme språkmodell. Du trenger ikke endre kode for å bytte modell.
+
+Det er to måter å velge modell på:
+
+1. **Admin-siden Språkmodell** (`/sprakmodell`, i KI-verktøy-menyen for administratorer). Her legger du til en deployment, tester den og tar den i bruk med ett klikk. Dette er den enkleste måten.
+2. **Miljøvariablene i Coolify.** Modellen herfra er «standardmodellen». Den brukes når ingen modell er valgt på admin-siden, og som reserve hvis databasen ikke svarer.
+
+Koden som snakker med Azure ligger i `lib/ai/azure-core.ts` (selve forespørselen) og `lib/ai/azure.ts` (velger modellen fra admin-siden eller miljøvariablene).
+
+## Bytte modell fra admin-siden
+
+1. Lag deploymenten i Azure AI Foundry (se steg 1 under) hvis den ikke finnes.
+2. Gå til **Språkmodell** i menyen og trykk **Legg til modell**.
+3. Skriv eller velg deployment-navnet. Modelltypen foreslås ut fra navnet (gpt-5 og nyere er reasoning). La API-versjonen stå på `v1`.
+4. Trykk **Test**. Den sender de samme forespørslene som verktøyene og viser om de virker og hvor lang tid de tar.
+5. Trykk **Lagre og ta i bruk**. Alle verktøyene bruker den nye modellen innen 30 sekunder.
+6. Prøv verktøyene på nettsiden. Er du ikke fornøyd, trykker du **Bruk denne** på en annen modell eller på «Standard fra Coolify».
+
+Siden testappen og produksjonsappen bruker samme database, gjelder valget på admin-siden **begge** stedene samtidig. Vil du teste en modell bare på test.sprakhjelp.no, bruk miljøvariablene på testappen i stedet (se under), mens admin-siden står på «Standard fra Coolify».
+
+Deploymentene må ligge i samme Azure-ressurs som `AZURE_OPENAI_ENDPOINT`, siden nøkkelen bare finnes i miljøvariablene.
+
+Admin-siden krever at migrasjonen `supabase/migrations/20261028100000_create_ai_models.sql` er kjørt. Før det viser siden en gul melding og verktøyene bruker miljøvariablene.
 
 ## Miljøvariablene
 
@@ -8,24 +30,24 @@ Alle KI-verktøyene i Språkhjelp (skrivehjelp, setningsdeling, oppsummering, se
 |---|---|---|
 | `AZURE_OPENAI_ENDPOINT` | Adressen til Azure AI Foundry-ressursen | `https://minressurs.openai.azure.com` |
 | `AZURE_OPENAI_API_KEY` | Nøkkelen til ressursen | (hemmelig) |
-| `AZURE_OPENAI_DEPLOYMENT_NAME` | Navnet du ga deploymenten i Foundry. Dette er variabelen du endrer når du bytter modell. | `gpt-4o`, `gpt-4.1`, `gpt-5-mini` |
+| `AZURE_OPENAI_DEPLOYMENT_NAME` | Navnet du ga deploymenten i Foundry. Standardmodellen, brukt når ingen modell er valgt på admin-siden. | `gpt-4o`, `gpt-4.1`, `gpt-5-mini` |
 | `AZURE_OPENAI_API_VERSION` | API-versjon. Bruk `v1` for nye modeller og for modeller som ikke er fra OpenAI. | `2024-08-01-preview`, `2025-04-01-preview`, `v1` |
 | `AZURE_OPENAI_MODEL_TYPE` | Valgfri. `standard` eller `reasoning`. Står den tom, gjetter appen ut fra deployment-navnet. | `reasoning` |
 | `AZURE_OPENAI_REASONING_EFFORT` | Valgfri, bare for reasoning-modeller. `minimal`, `low`, `medium` eller `high`. Standard er `low`. | `low` |
 
 ### Standard- og reasoning-modeller
 
-Reasoning-modeller (o1, o3, o4-mini, gpt-5, gpt-5-mini, gpt-5-nano) tenker før de svarer. De godtar ikke `temperature`, og de bruker en del av token-grensen på tenkingen. Når modelltypen er `reasoning`, gjør appen dette automatisk:
+Reasoning-modeller (o1, o3, o4-mini og gpt-5 og nyere) tenker før de svarer. De godtar ikke `temperature`, og de bruker en del av token-grensen på tenkingen. Når modelltypen er `reasoning`, gjør appen dette automatisk:
 
 - fjerner `temperature` fra forespørselen,
 - gir 4000 ekstra tokens så svaret ikke blir kuttet,
 - sender `reasoning_effort` (standard `low`, så elevene ikke må vente lenge).
 
-Appen gjetter `reasoning` når deployment-navnet starter med `o1`, `o3`, `o4` eller `gpt-5` (men ikke når navnet inneholder `chat`, som `gpt-5-chat`). Har du gitt deploymenten et annet navn, for eksempel `sprakhjelp-modell`, må du sette `AZURE_OPENAI_MODEL_TYPE` selv.
+Appen gjetter `reasoning` når deployment-navnet starter med `o1`, `o3`, `o4` eller `gpt-5` og nyere (`gpt-5.4`, `gpt-6.1-terra` osv.), men ikke når navnet inneholder `chat`, som `gpt-5-chat`. Har du gitt deploymenten et annet navn, for eksempel `sprakhjelp-modell`, må du sette `AZURE_OPENAI_MODEL_TYPE` selv.
 
 Reasoning-modeller med `low` er tregere enn gpt-4o. Test at ventetiden er grei for elevene før du bytter i produksjon.
 
-## Steg for steg
+## Steg for steg med miljøvariablene i Coolify
 
 ### 1. Lag en ny deployment i Azure AI Foundry
 
@@ -44,10 +66,10 @@ Bruker du en modell som ikke er fra OpenAI (Mistral, Llama, DeepSeek, Grok osv.)
 Med den nye deploymenten i `.env.local` (eller bare som variabel på kommandolinjen):
 
 ```bash
-AZURE_OPENAI_DEPLOYMENT_NAME=gpt-5-mini pnpm sjekk-modell
+AZURE_OPENAI_DEPLOYMENT_NAME=gpt-5.4 AZURE_OPENAI_API_VERSION=v1 pnpm sjekk-modell
 ```
 
-Skriptet sender en vanlig tekstforespørsel og en med JSON-skjema, akkurat som appen gjør, og sier om begge gikk bra og hvor lang tid de tok. Ikke gå videre før alle tester er OK.
+Skriptet gjør det samme som «Test»-knappen på admin-siden. Det sender en vanlig tekstforespørsel og en med JSON-skjema, akkurat som appen gjør, og sier om begge gikk bra og hvor lang tid de tok. Ikke gå videre før alle tester er OK.
 
 ### 3. Bytt på testappen i Coolify
 
@@ -68,7 +90,7 @@ Endring av modell krever ingen ny kode i main, bare at denne koden (`lib/ai/azur
 
 ### 5. Bytte tilbake
 
-Sett `AZURE_OPENAI_DEPLOYMENT_NAME` (og eventuelt de andre variablene) tilbake til de gamle verdiene i Coolify og redeploy. Derfor er det lurt å beholde den gamle deploymenten i Foundry en stund.
+På admin-siden: trykk **Bruk denne** på forrige modell eller på «Standard fra Coolify». Med miljøvariablene: sett `AZURE_OPENAI_DEPLOYMENT_NAME` (og eventuelt de andre variablene) tilbake til de gamle verdiene i Coolify og redeploy. Derfor er det lurt å beholde den gamle deploymenten i Foundry en stund.
 
 ## Feilsøking
 
