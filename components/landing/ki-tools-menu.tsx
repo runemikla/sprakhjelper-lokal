@@ -96,7 +96,7 @@ export function KiToolsMenu({ onNavigate, isAdmin = false }: KiToolsMenuProps) {
               {tool.label}
             </a>
           ))}
-          {/* Admin-only: view the system instructions behind the AI tools */}
+          {/* Admin-only: the system instructions and the language model behind the AI tools */}
           {isAdmin && (
             <>
               <div className="my-1 border-t border-gray-100" role="separator" />
@@ -110,6 +110,17 @@ export function KiToolsMenu({ onNavigate, isAdmin = false }: KiToolsMenuProps) {
                 }}
               >
                 Instrukser
+              </Link>
+              <Link
+                href="/sprakmodell"
+                role="menuitem"
+                className="block px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-blue-600"
+                onClick={() => {
+                  setIsOpen(false)
+                  onNavigate?.()
+                }}
+              >
+                Språkmodell
               </Link>
             </>
           )}
@@ -158,15 +169,24 @@ export function KiToolsMobileLinks({ onNavigate, isAdmin = false }: KiToolsMobil
           </Link>
         )
       )}
-      {/* Admin-only: view the system instructions behind the AI tools */}
+      {/* Admin-only: the system instructions and the language model behind the AI tools */}
       {isAdmin && (
-        <Link
-          href="/instrukser"
-          className="block px-4 text-gray-700 hover:text-blue-600 transition-colors font-medium"
-          onClick={onNavigate}
-        >
-          Instrukser
-        </Link>
+        <>
+          <Link
+            href="/instrukser"
+            className="block px-4 text-gray-700 hover:text-blue-600 transition-colors font-medium"
+            onClick={onNavigate}
+          >
+            Instrukser
+          </Link>
+          <Link
+            href="/sprakmodell"
+            className="block px-4 text-gray-700 hover:text-blue-600 transition-colors font-medium"
+            onClick={onNavigate}
+          >
+            Språkmodell
+          </Link>
+        </>
       )}
     </div>
   )

@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { checkRateLimit, validateResponseSize } from '@/lib/api-helpers'
 import { requireTeacher } from '@/lib/auth/require-teacher'
 import { getInstruction } from '@/lib/ai/instruction-store'
+import { azureChatCompletion, isAzureConfigured } from '@/lib/ai/azure'
 import { textToSpeech, ElevenLabsError } from '@/lib/elevenlabs'
 import {
   QUESTION_TYPE,
@@ -25,11 +26,6 @@ const generateQuestionsSchema = z.object({
     .enum([QUESTION_TYPE.open, QUESTION_TYPE.statement])
     .default(QUESTION_TYPE.open),
 })
-
-const AZURE_ENDPOINT = process.env.AZURE_OPENAI_ENDPOINT!
-const AZURE_API_KEY = process.env.AZURE_OPENAI_API_KEY!
-const AZURE_DEPLOYMENT_NAME = process.env.AZURE_OPENAI_DEPLOYMENT_NAME || 'gpt-4o'
-const AZURE_API_VERSION = process.env.AZURE_OPENAI_API_VERSION || '2024-08-01-preview'
 
 function openQuestionsSchema() {
   return {
@@ -109,30 +105,21 @@ async function generateQuestions(
     ? `Lag ${questionCount} påstander (sant/usant) til denne teksten:\n\n${originalText}`
     : `Lag ${questionCount} forståelsesspørsmål til denne teksten:\n\n${originalText}`
 
-  const azureUrl = `${AZURE_ENDPOINT}/openai/deployments/${AZURE_DEPLOYMENT_NAME}/chat/completions?api-version=${AZURE_API_VERSION}`
-
-  const response = await fetch(azureUrl, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'api-key': AZURE_API_KEY,
-    },
-    body: JSON.stringify({
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt },
-      ],
-      temperature: 0.4,
-      max_completion_tokens: 2000,
-      response_format: {
-        type: 'json_schema',
-        json_schema: {
-          name: isStatement ? 'listening_statements' : 'listening_questions',
-          strict: true,
-          schema: isStatement ? statementQuestionsSchema() : openQuestionsSchema(),
-        },
+  const response = await azureChatCompletion({
+    messages: [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: userPrompt },
+    ],
+    temperature: 0.4,
+    max_completion_tokens: 2000,
+    response_format: {
+      type: 'json_schema',
+      json_schema: {
+        name: isStatement ? 'listening_statements' : 'listening_questions',
+        strict: true,
+        schema: isStatement ? statementQuestionsSchema() : openQuestionsSchema(),
       },
-    }),
+    },
   })
 
   if (!response.ok) {
@@ -180,7 +167,7 @@ export async function POST(req: Request) {
     const { error: teacherError } = await requireTeacher()
     if (teacherError) return teacherError
 
-    if (!AZURE_ENDPOINT || !AZURE_API_KEY) {
+    if (!isAzureConfigured()) {
       throw new Error(
         'Azure OpenAI configuration missing. Please set AZURE_OPENAI_ENDPOINT and AZURE_OPENAI_API_KEY in .env'
       )

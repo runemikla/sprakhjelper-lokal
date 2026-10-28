@@ -4,18 +4,13 @@ import { checkRateLimit, validateResponseSize } from '@/lib/api-helpers';
 import { TRANSFER_ERRORS } from '@/lib/ai/transfer-errors';
 import { transferErrorVariables } from '@/lib/ai/instructions';
 import { getInstruction } from '@/lib/ai/instruction-store';
+import { azureChatCompletion, isAzureConfigured } from '@/lib/ai/azure';
 
 // Input validation schema
 const spraakhjelpperSchema = z.object({
   text: z.string().min(1, 'Text is required').max(5000, 'Text too long (max 5000 characters)'),
   morsmaal: z.string().min(1, 'Mother language is required').max(50, 'Language name too long'),
 });
-
-// Azure OpenAI configuration
-const AZURE_ENDPOINT = process.env.AZURE_OPENAI_ENDPOINT!;
-const AZURE_API_KEY = process.env.AZURE_OPENAI_API_KEY!;
-const AZURE_DEPLOYMENT_NAME = process.env.AZURE_OPENAI_DEPLOYMENT_NAME || 'gpt-4o';
-const AZURE_API_VERSION = process.env.AZURE_OPENAI_API_VERSION || '2024-08-01-preview';
 
 export async function POST(req: Request) {
   try {
@@ -24,7 +19,7 @@ export async function POST(req: Request) {
     if (rateLimitError) return rateLimitError;
 
     // Validate Azure configuration
-    if (!AZURE_ENDPOINT || !AZURE_API_KEY) {
+    if (!isAzureConfigured()) {
       throw new Error('Azure OpenAI configuration missing. Please set AZURE_OPENAI_ENDPOINT and AZURE_OPENAI_API_KEY in .env');
     }
 
@@ -33,7 +28,6 @@ export async function POST(req: Request) {
     const { text, morsmaal } = spraakhjelpperSchema.parse(body);
 
     console.log('Processing spraakhjelper request for language:', morsmaal);
-    console.log('Using Azure OpenAI endpoint:', AZURE_ENDPOINT);
 
     // Get transfer errors for this specific language
     const transferErrors = TRANSFER_ERRORS[morsmaal] || '';
@@ -84,33 +78,23 @@ export async function POST(req: Request) {
       additionalProperties: false
     };
 
-    // Build Azure OpenAI URL
-    const azureUrl = `${AZURE_ENDPOINT}/openai/deployments/${AZURE_DEPLOYMENT_NAME}/chat/completions?api-version=${AZURE_API_VERSION}`;
-
     // Make API call to Azure OpenAI with structured output
     console.log('Calling Azure OpenAI with structured output...');
-    const response = await fetch(azureUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'api-key': AZURE_API_KEY,
-      },
-      body: JSON.stringify({
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: `Tekst fra eleven: ${text}` }
-        ],
-        temperature: 0,
-        max_completion_tokens: 4000,
-        response_format: {
-          type: "json_schema",
-          json_schema: {
-            name: "sentence_analysis",
-            strict: true,
-            schema: responseSchema
-          }
+    const response = await azureChatCompletion({
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: `Tekst fra eleven: ${text}` }
+      ],
+      temperature: 0,
+      max_completion_tokens: 4000,
+      response_format: {
+        type: "json_schema",
+        json_schema: {
+          name: "sentence_analysis",
+          strict: true,
+          schema: responseSchema
         }
-      }),
+      }
     });
 
     if (!response.ok) {
