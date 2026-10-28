@@ -50,12 +50,13 @@ export async function googleTextToSpeech(
       // Keep the status text when the error body is not JSON.
     }
 
-    if (process.env.NODE_ENV === 'development') {
-      console.error('Google TTS error status:', response.status, detail)
-    }
+    // Logged in production too, so the reason shows up in the server logs.
+    console.error('Google TTS error:', response.status, detail)
 
+    // Only teachers can generate audio, so the provider's reason is shown to help
+    // fix setup problems such as a disabled API, missing billing or a wrong voice.
     throw new TextToSpeechError(
-      'Kunne ikke lage lyd av teksten. Prøv igjen.',
+      `Kunne ikke lage lyd av teksten. Google svarte: ${detail}`,
       response.status
     )
   }
