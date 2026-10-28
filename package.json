@@ -9,7 +9,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "sjekk-modell": "node --no-warnings --env-file-if-exists=.env.local scripts/sjekk-modell.mjs"
   },
   "dependencies": {
     "@anthropic-ai/vertex-sdk": "^0.14.0",

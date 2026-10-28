@@ -2,18 +2,13 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { checkRateLimit, validateResponseSize } from '@/lib/api-helpers';
 import { getInstruction } from '@/lib/ai/instruction-store';
+import { azureChatCompletion, isAzureConfigured } from '@/lib/ai/azure';
 
 // Input validation schema
 const splitSentencesSchema = z.object({
   text: z.string().min(1, 'Text is required').max(5000, 'Text too long (max 5000 characters)'),
   morsmaal: z.string().min(1, 'Mother language is required').max(50, 'Language name too long'),
 });
-
-// Azure OpenAI configuration
-const AZURE_ENDPOINT = process.env.AZURE_OPENAI_ENDPOINT!;
-const AZURE_API_KEY = process.env.AZURE_OPENAI_API_KEY!;
-const AZURE_DEPLOYMENT_NAME = process.env.AZURE_OPENAI_DEPLOYMENT_NAME || 'gpt-4o';
-const AZURE_API_VERSION = process.env.AZURE_OPENAI_API_VERSION || '2024-08-01-preview';
 
 export async function POST(req: Request) {
   try {
@@ -22,7 +17,7 @@ export async function POST(req: Request) {
     if (rateLimitError) return rateLimitError;
     
     // Validate Azure configuration
-    if (!AZURE_ENDPOINT || !AZURE_API_KEY) {
+    if (!isAzureConfigured()) {
       throw new Error('Azure OpenAI configuration missing. Please set AZURE_OPENAI_ENDPOINT and AZURE_OPENAI_API_KEY in .env');
     }
 
@@ -31,30 +26,19 @@ export async function POST(req: Request) {
     const { text, morsmaal } = splitSentencesSchema.parse(body);
 
     console.log('Splitting sentences for language:', morsmaal);
-    console.log('Using Azure OpenAI endpoint:', AZURE_ENDPOINT);
 
     // Build system prompt for sentence splitting from the active instruction
     // version (or the default)
     const systemPrompt = await getInstruction('skrivehjelp_setningsdeling');
 
-    // Build Azure OpenAI URL
-    const azureUrl = `${AZURE_ENDPOINT}/openai/deployments/${AZURE_DEPLOYMENT_NAME}/chat/completions?api-version=${AZURE_API_VERSION}`;
-
     // Make API call to Azure OpenAI
     console.log('Calling Azure OpenAI...');
-    const response = await fetch(azureUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'api-key': AZURE_API_KEY,
-      },
-      body: JSON.stringify({
-        messages: [
-          { role: 'user', content: `${systemPrompt}\n\nTekst: ${text}` }
-        ],
-        temperature: 0,
-        max_completion_tokens: 4000,
-      }),
+    const response = await azureChatCompletion({
+      messages: [
+        { role: 'user', content: `${systemPrompt}\n\nTekst: ${text}` }
+      ],
+      temperature: 0,
+      max_completion_tokens: 4000,
     });
 
     if (!response.ok) {

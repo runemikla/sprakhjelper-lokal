@@ -3,18 +3,13 @@ import { z } from 'zod';
 import { checkRateLimit, validateResponseSize } from '@/lib/api-helpers';
 import { LEVEL_SPECS } from '@/lib/ai/instructions';
 import { getInstruction } from '@/lib/ai/instruction-store';
+import { azureChatCompletion, isAzureConfigured } from '@/lib/ai/azure';
 
 // Input validation schema (7 difficulty levels)
 const generateSentenceSchema = z.object({
   level: z.number().int().min(1).max(7),
   previousSentences: z.array(z.string()).max(10).optional(),
 });
-
-// Azure OpenAI configuration
-const AZURE_ENDPOINT = process.env.AZURE_OPENAI_ENDPOINT!;
-const AZURE_API_KEY = process.env.AZURE_OPENAI_API_KEY!;
-const AZURE_DEPLOYMENT_NAME = process.env.AZURE_OPENAI_DEPLOYMENT_NAME || 'gpt-4o';
-const AZURE_API_VERSION = process.env.AZURE_OPENAI_API_VERSION || '2024-08-01-preview';
 
 // Themes used to force topical variety between requests. One is picked at
 // random per request so the model does not keep defaulting to food/drink.
@@ -76,7 +71,7 @@ export async function POST(req: Request) {
     if (rateLimitError) return rateLimitError;
 
     // Validate Azure configuration
-    if (!AZURE_ENDPOINT || !AZURE_API_KEY) {
+    if (!isAzureConfigured()) {
       throw new Error(
         'Azure OpenAI configuration missing. Please set AZURE_OPENAI_ENDPOINT and AZURE_OPENAI_API_KEY in .env'
       );
@@ -117,35 +112,25 @@ export async function POST(req: Request) {
       additionalProperties: false,
     };
 
-    // Build Azure OpenAI URL
-    const azureUrl = `${AZURE_ENDPOINT}/openai/deployments/${AZURE_DEPLOYMENT_NAME}/chat/completions?api-version=${AZURE_API_VERSION}`;
-
-    const response = await fetch(azureUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'api-key': AZURE_API_KEY,
-      },
-      body: JSON.stringify({
-        messages: [
-          { role: 'system', content: systemPrompt },
-          {
-            role: 'user',
-            content: `Lag en ny setning på vanskelighetsnivå ${level} av 7.\nTema: ${topic}.\nLa setningen handle om dette temaet, og bruk gjerne "${subject}" som subjekt.\nVelg friske, varierte verb.`,
-          },
-        ],
-        // Some randomness so sentences vary between requests
-        temperature: 1,
-        max_completion_tokens: 500,
-        response_format: {
-          type: 'json_schema',
-          json_schema: {
-            name: 'word_order_exercise',
-            strict: true,
-            schema: responseSchema,
-          },
+    const response = await azureChatCompletion({
+      messages: [
+        { role: 'system', content: systemPrompt },
+        {
+          role: 'user',
+          content: `Lag en ny setning på vanskelighetsnivå ${level} av 7.\nTema: ${topic}.\nLa setningen handle om dette temaet, og bruk gjerne "${subject}" som subjekt.\nVelg friske, varierte verb.`,
         },
-      }),
+      ],
+      // Some randomness so sentences vary between requests
+      temperature: 1,
+      max_completion_tokens: 500,
+      response_format: {
+        type: 'json_schema',
+        json_schema: {
+          name: 'word_order_exercise',
+          strict: true,
+          schema: responseSchema,
+        },
+      },
     });
 
     if (!response.ok) {
