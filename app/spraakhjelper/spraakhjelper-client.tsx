@@ -9,13 +9,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
-import { ChevronLeft, ChevronRight, Languages, Copy, BarChart3, Volume2, VolumeX } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Languages, Copy, BarChart3 } from 'lucide-react'
 import { toast } from 'sonner'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { LoadingAnimation } from '@/components/ui/loading-animation'
 import { Confetti } from '@/components/ui/confetti'
-import { useAudio } from '@/hooks/use-audio'
 import { Navbar } from '@/components/landing/navbar'
 import { sanitizeMarkdown } from '@/lib/sanitize'
 import { fetchWithTimeout } from '@/lib/fetch-with-timeout'
@@ -130,7 +129,6 @@ export default function SpraakhjelpperClient({ user, isAdmin = false }: Spraakhj
   const [showForm, setShowForm] = useState(true)
   const [isCheckingAnswer, setIsCheckingAnswer] = useState(false)
   const [activeTextView, setActiveTextView] = useState<'original' | 'user'>('user')
-  const [soundEnabled, setSoundEnabled] = useState(true)
   const [showConfetti, setShowConfetti] = useState(false)
 
   // Text analysis state
@@ -140,11 +138,6 @@ export default function SpraakhjelpperClient({ user, isAdmin = false }: Spraakhj
 
   // PDF generation state
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false)
-
-  const successSound = useAudio('/audio/success-fanfare.mp3', {
-    volume: 0.7,
-    preload: true
-  })
 
   // Load from sessionStorage (more secure - data cleared when browser closes)
   useEffect(() => {
@@ -386,9 +379,6 @@ export default function SpraakhjelpperClient({ user, isAdmin = false }: Spraakhj
 
       if (data.er_riktig) {
         toast.success('Riktig! Godt jobbet! 🎉')
-        if (soundEnabled) {
-          successSound.play().catch(error => console.error('Audio error:', error))
-        }
       } else {
         toast.info('Se forklaringen for tips!')
       }
@@ -734,21 +724,6 @@ export default function SpraakhjelpperClient({ user, isAdmin = false }: Spraakhj
                       Få tilbakemeldinger fra KI på teksten din.
                     </p>
                   </div>
-                  {/* Sound toggle button */}
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      setSoundEnabled(!soundEnabled)
-                    }}
-                    className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
-                    aria-label={soundEnabled ? "Skru av lyd" : "Skru på lyd"}
-                  >
-                    {soundEnabled ? (
-                      <Volume2 className="h-6 w-6 text-gray-700" />
-                    ) : (
-                      <VolumeX className="h-6 w-6 text-gray-400" />
-                    )}
-                  </button>
                 </div>
               </div>
 
@@ -856,21 +831,6 @@ export default function SpraakhjelpperClient({ user, isAdmin = false }: Spraakhj
                       Få tilbakemeldinger fra KI på teksten din.
                     </p>
                   </div>
-                  {/* Sound toggle button */}
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      setSoundEnabled(!soundEnabled)
-                    }}
-                    className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
-                    aria-label={soundEnabled ? "Skru av lyd" : "Skru på lyd"}
-                  >
-                    {soundEnabled ? (
-                      <Volume2 className="h-6 w-6 text-gray-700" />
-                    ) : (
-                      <VolumeX className="h-6 w-6 text-gray-400" />
-                    )}
-                  </button>
                 </div>
               </div>
 
@@ -922,21 +882,6 @@ export default function SpraakhjelpperClient({ user, isAdmin = false }: Spraakhj
                       Få tilbakemeldinger fra KI på teksten din.
                     </p>
                   </div>
-                  {/* Sound toggle button */}
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      setSoundEnabled(!soundEnabled)
-                    }}
-                    className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
-                    aria-label={soundEnabled ? "Skru av lyd" : "Skru på lyd"}
-                  >
-                    {soundEnabled ? (
-                      <Volume2 className="h-6 w-6 text-gray-700" />
-                    ) : (
-                      <VolumeX className="h-6 w-6 text-gray-400" />
-                    )}
-                  </button>
                 </div>
               </div>
 
@@ -958,21 +903,6 @@ export default function SpraakhjelpperClient({ user, isAdmin = false }: Spraakhj
                       Få tilbakemeldinger fra KI på teksten din.
                     </p>
                   </div>
-                  {/* Sound toggle button */}
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      setSoundEnabled(!soundEnabled)
-                    }}
-                    className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
-                    aria-label={soundEnabled ? "Skru av lyd" : "Skru på lyd"}
-                  >
-                    {soundEnabled ? (
-                      <Volume2 className="h-6 w-6 text-gray-700" />
-                    ) : (
-                      <VolumeX className="h-6 w-6 text-gray-400" />
-                    )}
-                  </button>
                 </div>
               </div>
 
@@ -1181,21 +1111,6 @@ export default function SpraakhjelpperClient({ user, isAdmin = false }: Spraakhj
                       Få tilbakemeldinger fra KI på teksten din.
                     </p>
                   </div>
-                  {/* Sound toggle button */}
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      setSoundEnabled(!soundEnabled)
-                    }}
-                    className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
-                    aria-label={soundEnabled ? "Skru av lyd" : "Skru på lyd"}
-                  >
-                    {soundEnabled ? (
-                      <Volume2 className="h-6 w-6 text-gray-700" />
-                    ) : (
-                      <VolumeX className="h-6 w-6 text-gray-400" />
-                    )}
-                  </button>
                 </div>
               </div>
 
