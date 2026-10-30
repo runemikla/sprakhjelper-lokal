@@ -10,20 +10,21 @@ Settes i både testappen (dev) og produksjonsappen (main).
 
 | Variabel | Påkrevd | Forklaring | Eksempel |
 |---|---|---|---|
-| `GOOGLE_TTS_API_KEY` | Ja | API-nøkkel fra Google Cloud med tilgang til Cloud Text-to-Speech API | (hemmelig) |
+| `GOOGLE_TTS_CREDENTIALS` | Ja (anbefalt) | Hele JSON-nøkkelfilen til en tjenestekonto, limt inn som den er (eller som base64) | `{"type":"service_account",...}` |
+| `GOOGLE_TTS_API_KEY` | Alternativ | API-nøkkel. Brukes bare hvis `GOOGLE_TTS_CREDENTIALS` mangler. Noen Google-prosjekter avviser API-nøkler for Text-to-Speech («API keys are not supported by this API»); bruk da tjenestekonto. | (hemmelig) |
 | `GOOGLE_TTS_VOICE` | Nei | Stemmen som brukes. Standard er `nb-NO-Chirp3-HD-Leda`. | `nb-NO-Chirp3-HD-Charon`, `nb-NO-Wavenet-A` |
 | `GOOGLE_TTS_ENDPOINT` | Nei | Annen API-adresse, for eksempel EU-endepunktet. Standard er `https://texttospeech.googleapis.com`. | `https://eu-texttospeech.googleapis.com` |
 | `TTS_PROVIDER` | Nei | Sett til `elevenlabs` for å bruke ElevenLabs i stedet for Google. | `elevenlabs` |
 | `ELEVENLABS_API_KEY` | Bare med `TTS_PROVIDER=elevenlabs` | Nøkkelen til ElevenLabs | (hemmelig) |
 
-## Slik lager du API-nøkkelen
+## Slik lager du tjenestekonto-nøkkelen
 
-1. Gå til [console.cloud.google.com](https://console.cloud.google.com) og velg eller lag et prosjekt.
-2. Slå på fakturering for prosjektet (Text-to-Speech har en gratiskvote, men krever betalingskort).
-3. Gå til **APIs & Services → Library**, søk etter **Cloud Text-to-Speech API** og trykk **Enable**.
-4. Gå til **APIs & Services → Credentials → Create credentials → API key**.
-5. Trykk **Edit API key** på den nye nøkkelen. Under **API restrictions** velger du **Restrict key** og krysser bare av for **Cloud Text-to-Speech API**. La **Application restrictions** stå på **None**, siden nøkkelen bare brukes fra serveren.
-6. Kopier nøkkelen inn i `GOOGLE_TTS_API_KEY` i Coolify og deploy appen på nytt.
+1. Gå til [console.cloud.google.com](https://console.cloud.google.com) og velg prosjektet der **Cloud Text-to-Speech API** er slått på (og fakturering er aktiv).
+2. Gå til **IAM & Admin → Service Accounts → Create service account**. Gi den et navn, for eksempel `sprakhjelp-tts`, og trykk **Done**. Den trenger ingen roller for Text-to-Speech.
+3. Klikk på tjenestekontoen, gå til fanen **Keys → Add key → Create new key → JSON**. En JSON-fil lastes ned.
+4. Åpne filen, kopier hele innholdet og lim det inn som verdien til `GOOGLE_TTS_CREDENTIALS` i Coolify. Deploy appen på nytt.
+
+Hvis organisasjonen din blokkerer nøkkelfiler («Service account key creation is disabled»), må policyen `iam.disableServiceAccountKeyCreation` slås av for prosjektet.
 
 ## Stemmer
 
