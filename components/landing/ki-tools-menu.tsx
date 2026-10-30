@@ -9,6 +9,7 @@ export const KI_TOOLS = [
   { href: '/spraakhjelper', label: 'Skrivehjelp', clearsSession: true },
   { href: '/grammatikk', label: 'Grammatikk øving', clearsSession: false },
   { href: '/lytteoving', label: 'Lytteøving', clearsSession: false },
+  { href: '/laer-ord', label: 'Lær ord', clearsSession: false },
 ] as const
 
 function openTool(href: string, clearsSession: boolean, router: ReturnType<typeof useRouter>) {

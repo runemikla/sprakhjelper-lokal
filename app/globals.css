@@ -103,5 +103,19 @@
   .animate-fade-in-up {
     animation: fade-in-up 0.8s ease-out forwards;
   }
+
+  /* Short wiggle for a wrong answer (Lær ord) */
+  @keyframes shake {
+    25% {
+      transform: translateX(-4px);
+    }
+    75% {
+      transform: translateX(4px);
+    }
+  }
+
+  .animate-shake {
+    animation: shake 0.3s;
+  }
 }
 
