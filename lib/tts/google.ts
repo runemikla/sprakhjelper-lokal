@@ -1,20 +1,23 @@
 import { TextToSpeechError } from './errors'
+import { getServiceAccountToken } from './google-auth'
 
 const DEFAULT_ENDPOINT = 'https://texttospeech.googleapis.com'
 const DEFAULT_VOICE = 'nb-NO-Chirp3-HD-Leda'
 
 /**
  * Convert text to MP3 speech with Google Cloud Text-to-Speech.
- * The API key stays on the server and is never sent to the browser.
+ * Uses the service account in GOOGLE_TTS_CREDENTIALS when set, otherwise
+ * GOOGLE_TTS_API_KEY. Credentials stay on the server.
  */
 export async function googleTextToSpeech(
   text: string,
   speakingRate: number
 ): Promise<Buffer> {
+  const accessToken = await getServiceAccountToken()
   const apiKey = process.env.GOOGLE_TTS_API_KEY
-  if (!apiKey) {
+  if (!accessToken && !apiKey) {
     throw new Error(
-      'Google TTS configuration missing. Please set GOOGLE_TTS_API_KEY in .env'
+      'Google TTS configuration missing. Please set GOOGLE_TTS_CREDENTIALS or GOOGLE_TTS_API_KEY in .env'
     )
   }
 
@@ -29,7 +32,9 @@ export async function googleTextToSpeech(
   const response = await fetch(`${endpoint}/v1/text:synthesize`, {
     method: 'POST',
     headers: {
-      'X-Goog-Api-Key': apiKey,
+      ...(accessToken
+        ? { Authorization: `Bearer ${accessToken}` }
+        : { 'X-Goog-Api-Key': apiKey as string }),
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
