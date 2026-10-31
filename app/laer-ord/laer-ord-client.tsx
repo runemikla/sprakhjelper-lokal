@@ -15,6 +15,7 @@ import { ListenPick } from '@/components/laer-ord/listen-pick'
 import { ListenWrite } from '@/components/laer-ord/listen-write'
 import { MatchSentences } from '@/components/laer-ord/match-sentences'
 import { Flashcards } from '@/components/laer-ord/flashcards'
+import { JoinWordListForm } from '@/components/ordlister/join-form'
 
 // Competence goals (kompetansemål) that each activity trains.
 const GOALS: Record<number, string> = {
@@ -170,6 +171,8 @@ export default function LaerOrdClient({ userEmail = null, isAdmin = false }: Lae
           <p className="mt-4 text-sm text-white/80 drop-shadow">
             {theme.ord.length} ord i temaet «{theme.navn}».
           </p>
+
+          <JoinWordListForm />
         </div>
       </div>
     </div>
