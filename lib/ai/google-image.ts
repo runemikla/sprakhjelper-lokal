@@ -4,15 +4,15 @@
 // Environment variables:
 //   GEMINI_API_KEY      API key from Google AI Studio (required to turn
 //                       pictures on). GOOGLE_API_KEY is accepted as well.
-//   GEMINI_IMAGE_MODEL  defaults to gemini-2.5-flash-image. Imagen models
-//                       (for example imagen-4.0-fast-generate-001) also work.
+//   GEMINI_IMAGE_MODEL  defaults to gemini-3.1-flash-lite-image, the model
+//                       the built-in «Lær ord» pictures were made with.
 
 const API_BASE = 'https://generativelanguage.googleapis.com/v1beta/models'
 
 function imageConfig() {
   return {
     apiKey: process.env.GEMINI_API_KEY?.trim() || process.env.GOOGLE_API_KEY?.trim() || '',
-    model: process.env.GEMINI_IMAGE_MODEL?.trim() || 'gemini-2.5-flash-image',
+    model: process.env.GEMINI_IMAGE_MODEL?.trim() || 'gemini-3.1-flash-lite-image',
   }
 }
 

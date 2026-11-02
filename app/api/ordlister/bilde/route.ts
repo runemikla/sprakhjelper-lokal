@@ -8,8 +8,11 @@ import { requireTeacher } from '@/lib/ordlister/require-teacher'
 
 const schema = z.object({
   word: z.string().trim().min(1).max(80),
-  meaning: z.string().trim().max(80).optional(),
-  description: z.string().trim().max(300).optional(),
+  // The list's title, e.g. «Lunsj i kantinen».
+  theme: z.string().trim().max(120).optional(),
+  // Concrete English description of what to draw (written by the language
+  // model from the word, the theme and the teacher's description).
+  motif: z.string().trim().min(1).max(400),
 })
 
 // Lets the editor tell the teacher whether pictures can be made at all.
@@ -24,13 +27,14 @@ export async function POST(req: Request) {
   if (limited) return limited
 
   try {
-    const { word, meaning, description } = schema.parse(await req.json())
-    const subject = meaning ? `«${word}» (${meaning})` : `«${word}»`
+    const { word, theme, motif } = schema.parse(await req.json())
+    // Same style prompt as the built-in «Lær ord» pictures (see
+    // «Slik lages ordbildene»), so teachers' pictures match the set.
     const prompt = [
-      `A simple, friendly illustration for a vocabulary card that teaches the Norwegian word ${subject}.`,
-      description ? `What the picture should show: ${description}.` : '',
-      'Flat, clear style with soft colours, one main subject in the centre, plain white background.',
-      'No text, letters or numbers anywhere in the picture.',
+      'A simple, friendly flat vector illustration for a language-learning flashcard.',
+      theme ? `Theme: ${theme}.` : '',
+      `Show: ${motif} (Norwegian word: '${word}').`,
+      'One clear subject centered, soft pastel colors, plain white background, no text, no letters, no numbers, no logos. Consistent style for teenagers.',
     ]
       .filter(Boolean)
       .join(' ')

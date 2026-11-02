@@ -64,7 +64,7 @@ Når læreren lagrer, lager nettleseren det som mangler for hvert ord via tre AP
   eksempelsetning (Azure OpenAI, `gpt-6.1-terra`; kan overstyres med `ORDLISTER_DEPLOYMENT`).
 - `POST /api/ordlister/lyd`: ordet og setningen lest opp (Google TTS).
 - `POST /api/ordlister/bilde`: bilde ut fra ordet og beskrivelsen (Googles bildemodell
-  via Gemini API, `GEMINI_API_KEY` og valgfritt `GEMINI_IMAGE_MODEL`).
+  via Gemini API, `gemini-3.1-flash-lite-image`, samme modell og stilprompt som de faste Lær ord-bildene; `GEMINI_API_KEY` og valgfritt `GEMINI_IMAGE_MODEL`). Språkmodellen skriver en engelsk motivbeskrivelse per ord ut fra tema og lærerens beskrivelse.
 
 Foreløpig lagres tekst i localStorage og filer i IndexedDB. Med database flyttes
 tekstfeltene til `word_list_items`/`word_list_translations`, og filene til en
