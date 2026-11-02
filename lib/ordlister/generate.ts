@@ -65,13 +65,14 @@ export async function generateList(start: WordList, options: GenerateOptions): P
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          theme: list.title,
           languages: list.languages,
           words: batch.map((w) => ({ word: w.word, description: w.imageDescription || undefined })),
         }),
       })
       if (!response.ok) throw new Error(await errorText(response))
       const { words } = (await response.json()) as {
-        words: { boying: string; en: string; oversettelser: Record<string, string>; s: string }[]
+        words: { boying: string; en: string; oversettelser: Record<string, string>; s: string; motiv: string }[]
       }
       const byId = new Map(batch.map((w, n) => [w.id, words[n]]))
       commit(
@@ -86,6 +87,7 @@ export async function generateList(start: WordList, options: GenerateOptions): P
               en: made.en,
               translations: made.oversettelser,
               s: made.s,
+              motif: made.motiv,
             },
           }
         })
@@ -118,8 +120,8 @@ export async function generateList(start: WordList, options: GenerateOptions): P
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 word: item.word,
-                meaning: item.content.en,
-                description: item.imageDescription || undefined,
+                theme: list.title,
+                motif: (item.content.motif || item.imageDescription || item.content.en).slice(0, 400),
               }),
             })
           : await fetch('/api/ordlister/lyd', {

@@ -26,6 +26,8 @@ export interface ItemContent {
   translations: Record<string, string>
   // Example sentence with the word in [brackets].
   s: string
+  // English description of what the picture shows (for the image model).
+  motif?: string
 }
 
 // img: picture, w: the word read aloud, s: the example sentence read aloud.
