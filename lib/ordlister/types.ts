@@ -34,17 +34,32 @@ export function contentSig(item: Pick<WordListItem, 'word' | 'imageDescription'>
   return JSON.stringify([item.word, item.imageDescription, [...languages].sort()])
 }
 
-export function mediaSig(item: WordListItem, kind: MediaKind): string | null {
+// Recordings carry the voice in their version, so choosing another voice
+// makes them again.
+export function mediaSig(item: WordListItem, kind: MediaKind, voice: string): string | null {
   if (kind === 'img') return JSON.stringify([item.word, item.imageDescription])
-  if (kind === 'w') return item.word
-  return item.content?.s ?? null
+  const text = kind === 'w' ? item.word : item.content?.s
+  return text ? JSON.stringify([text, voice]) : null
+}
+
+// The voice the list's recordings were made with, if any.
+export function listVoice(list: Pick<WordList, 'words'>): string | null {
+  for (const item of list.words) {
+    try {
+      const parsed = JSON.parse(item.media?.w ?? '')
+      if (Array.isArray(parsed) && typeof parsed[1] === 'string') return parsed[1]
+    } catch {
+      // Older recordings store only the word.
+    }
+  }
+  return null
 }
 
 // True when the word has everything «Lær ord» uses.
-export function isItemReady(item: WordListItem, languages: string[], withImages: boolean) {
+export function isItemReady(item: WordListItem, languages: string[], withImages: boolean, voice: string) {
   if (item.content?.sig !== contentSig(item, languages)) return false
   const kinds: MediaKind[] = withImages ? ['w', 's', 'img'] : ['w', 's']
-  return kinds.every((k) => item.media?.[k] === mediaSig(item, k))
+  return kinds.every((k) => item.media?.[k] === mediaSig(item, k, voice))
 }
 
 export interface WordList {

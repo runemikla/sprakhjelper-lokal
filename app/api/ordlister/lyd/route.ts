@@ -2,10 +2,16 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { checkRateLimit } from '@/lib/api-helpers'
 import { textToSpeech, TextToSpeechError } from '@/lib/tts'
+import { geminiTextToSpeech, isGeminiTtsConfigured } from '@/lib/tts/gemini'
 import { requireTeacher } from '@/lib/ordlister/require-teacher'
 
-// Reads a word or an example sentence aloud (MP3) for a teacher's list.
-const schema = z.object({ text: z.string().trim().min(1).max(200) })
+// Reads a word or an example sentence aloud for a teacher's list. Uses Gemini
+// (same as the built-in «Lær ord» recordings) when GEMINI_API_KEY is set,
+// otherwise Google Cloud Text-to-Speech.
+const schema = z.object({
+  text: z.string().trim().min(1).max(200),
+  voice: z.string().trim().max(40).optional(),
+})
 
 export async function POST(req: Request) {
   const denied = await requireTeacher()
@@ -14,10 +20,14 @@ export async function POST(req: Request) {
   if (limited) return limited
 
   try {
-    const { text } = schema.parse(await req.json())
-    const audio = await textToSpeech(text, 0.9)
+    const { text, voice } = schema.parse(await req.json())
+    const gemini = isGeminiTtsConfigured()
+    const audio = gemini ? await geminiTextToSpeech(text, voice) : await textToSpeech(text, 0.9)
     return new NextResponse(new Uint8Array(audio), {
-      headers: { 'Content-Type': 'audio/mpeg', 'Cache-Control': 'no-store' },
+      headers: {
+        'Content-Type': gemini ? 'audio/wav' : 'audio/mpeg',
+        'Cache-Control': 'no-store',
+      },
     })
   } catch (error) {
     if (error instanceof z.ZodError) {

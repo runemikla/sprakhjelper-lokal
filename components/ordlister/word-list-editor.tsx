@@ -12,7 +12,9 @@ import { Textarea } from '@/components/ui/textarea'
 import { ListeningPageShell } from '@/components/lytteoving/page-shell'
 import { LanguagePicker } from '@/components/ordlister/language-picker'
 import { groupStore, wordListStore } from '@/lib/ordlister/db-store'
-import { isItemReady, type Group, type WordList, type WordListItem } from '@/lib/ordlister/types'
+import { isItemReady, listVoice, type Group, type WordList, type WordListItem } from '@/lib/ordlister/types'
+import { VoicePicker } from '@/components/ordlister/voice-picker'
+import { DEFAULT_GEMINI_VOICE, isGeminiVoice } from '@/lib/tts/gemini-voices'
 import { generateList, imagesAvailable, type ItemStatus } from '@/lib/ordlister/generate'
 import { GenerationPanel } from '@/components/ordlister/generation-panel'
 import { ItemThumb } from '@/components/ordlister/item-thumb'
@@ -53,11 +55,31 @@ export function WordListEditor({ listId, userEmail = null, isAdmin = false }: Wo
   const newWordRef = useRef<HTMLInputElement>(null)
 
   const [imagesOn, setImagesOn] = useState(true)
+  // Gemini voice for the recordings. A list keeps the voice it was made with;
+  // a new list starts with the teacher's last choice.
+  const [voice, setVoice] = useState(DEFAULT_GEMINI_VOICE)
+
+  function chooseVoice(next: string) {
+    setVoice(next)
+    try {
+      localStorage.setItem('ordlister:stemme', next)
+    } catch {
+      // Ignore: the choice is just not remembered.
+    }
+  }
   const [running, setRunning] = useState(false)
   const [statuses, setStatuses] = useState<Record<string, { status: ItemStatus; error?: string }>>({})
   const autoStarted = useRef(false)
 
   useEffect(() => {
+    if (!listId) {
+      try {
+        const remembered = localStorage.getItem('ordlister:stemme')
+        if (remembered && isGeminiVoice(remembered)) setVoice(remembered)
+      } catch {
+        // Ignore: use the default voice.
+      }
+    }
     void imagesAvailable().then(setImagesOn)
     void groupStore
       .list()
@@ -74,6 +96,7 @@ export function WordListEditor({ listId, userEmail = null, isAdmin = false }: Wo
       setImagesOn(withImages)
       await generateList(list, {
         withImages,
+        voice,
         onStatus: (id, status, error) =>
           setStatuses((current) => ({ ...current, [id]: { status, error } })),
         onList: (updated) => {
@@ -116,6 +139,8 @@ export function WordListEditor({ listId, userEmail = null, isAdmin = false }: Wo
           setLanguages(list.languages)
           setWords(list.words)
           setGroupIds(list.groupIds)
+          const used = listVoice(list)
+          if (used && isGeminiVoice(used)) setVoice(used)
           setOpenDescriptions(new Set(list.words.filter((w) => w.imageDescription).map((w) => w.id)))
           setJustSaved(new URLSearchParams(globalThis.location.search).has('generer'))
         }
@@ -270,7 +295,7 @@ export function WordListEditor({ listId, userEmail = null, isAdmin = false }: Wo
               running={running}
               statuses={statuses}
               imagesOn={imagesOn}
-              readyCount={saved.words.filter((w) => isItemReady(w, saved.languages, imagesOn)).length}
+              readyCount={saved.words.filter((w) => isItemReady(w, saved.languages, imagesOn, voice)).length}
               onStart={() => void runGeneration(saved)}
             />
           </CardContent>
@@ -298,6 +323,19 @@ export function WordListEditor({ listId, userEmail = null, isAdmin = false }: Wo
               Velg ett eller flere språk. Ordene oversettes til disse språkene.
             </p>
             <LanguagePicker value={languages} onChange={setLanguages} />
+          </div>
+
+          <div className="space-y-2">
+            <p className="text-base font-semibold text-gray-900">Stemme</p>
+            <p className="text-sm text-gray-600">
+              Stemmen som leser ordene og setningene. Bytter du stemme på en ferdig liste, lages lyden
+              på nytt når du trykker «Lag det som mangler» eller lagrer.
+            </p>
+            <VoicePicker
+              value={voice}
+              onChange={chooseVoice}
+              sample={words.find((w) => w.content?.s)?.content?.s.replace(/[[\]]/g, '')}
+            />
           </div>
 
           <div className="space-y-2">

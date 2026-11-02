@@ -19,6 +19,8 @@ export type ItemStatus = 'venter' | 'tekst' | 'lyd' | 'bilde' | 'ferdig' | 'feil
 
 export interface GenerateOptions {
   withImages: boolean
+  // Gemini voice for the recordings.
+  voice: string
   onStatus: (itemId: string, status: ItemStatus, error?: string) => void
   onList: (list: WordList) => void
 }
@@ -107,7 +109,7 @@ export async function generateList(start: WordList, options: GenerateOptions): P
     for (const kind of kinds) {
       const item = list.words.find((w) => w.id === id)
       if (!item?.content) return
-      const sig = mediaSig(item, kind)
+      const sig = mediaSig(item, kind, options.voice)
       if (!sig || item.media?.[kind] === sig) continue
 
       options.onStatus(id, kind === 'img' ? 'bilde' : 'lyd')
@@ -127,6 +129,7 @@ export async function generateList(start: WordList, options: GenerateOptions): P
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 text: kind === 'w' ? item.word : plainSentence(item.content.s),
+                voice: options.voice,
               }),
             })
       if (!response.ok) throw new Error(await errorText(response))

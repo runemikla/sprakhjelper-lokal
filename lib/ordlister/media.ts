@@ -35,7 +35,12 @@ export async function uploadMedia(listId: string, itemId: string, kind: MediaKin
   const supabase = createClient()
   const { error } = await supabase.storage
     .from(BUCKET)
-    .upload(mediaPath(listId, itemId, kind), blob, { upsert: true, contentType: TYPE[kind] })
+    // Recordings are WAV from Gemini or MP3 from Google Cloud; the stored
+    // content type decides how the browser plays them, not the file name.
+    .upload(mediaPath(listId, itemId, kind), blob, {
+      upsert: true,
+      contentType: blob.type || TYPE[kind],
+    })
   if (error) throw new Error(error.message || 'Kunne ikke lagre filen.')
 }
 
