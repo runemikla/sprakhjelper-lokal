@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { THEMES } from '@/lib/laer-ord/data'
 import { wordListStore } from '@/lib/ordlister/db-store'
+import { mediaUrl } from '@/lib/ordlister/media'
 import type { WordList } from '@/lib/ordlister/types'
 
 const card = 'bg-white/95 backdrop-blur-sm border-white/20 shadow-xl'
@@ -180,13 +181,29 @@ function ListGroup({
     <ul className="space-y-3">
       {lists.map((list) => {
         const ready = list.words.filter((w) => w.content).length
+        const pictured = list.words.find((w) => w.media?.img)
+        const picture = pictured && mediaUrl(list.id, pictured, 'img')
         return (
           <li
             key={list.id}
-            className="flex flex-col gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+            className="group relative flex items-center gap-4 rounded-xl border border-gray-200 bg-white px-4 py-3 transition-colors hover:border-blue-300 hover:bg-blue-50/50"
           >
-            <div className="min-w-0">
-              <Link href={`/laer-ord/${list.id}`} className="text-lg font-semibold text-gray-900 hover:text-blue-700">
+            <div className="h-16 w-16 shrink-0 overflow-hidden rounded-lg border border-gray-100 bg-white sm:h-20 sm:w-20">
+              {picture ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={picture} alt="" loading="lazy" className="h-full w-full object-contain" />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-blue-50 to-cyan-50">
+                  <BookOpen className="h-1/3 w-1/3 text-blue-900/40" aria-hidden="true" />
+                </div>
+              )}
+            </div>
+            <div className="min-w-0 flex-1">
+              {/* The link covers the whole box, so a tap anywhere opens the list. */}
+              <Link
+                href={`/laer-ord/${list.id}`}
+                className="text-lg font-semibold text-gray-900 after:absolute after:inset-0 after:rounded-xl after:content-[''] group-hover:text-blue-700"
+              >
                 {list.title}
               </Link>
               <p className="mt-0.5 truncate text-sm text-gray-600">
@@ -205,28 +222,24 @@ function ListGroup({
                 {canEdit && ready < list.words.length && ` · ${ready} av ${list.words.length} ord er klare`}
               </p>
             </div>
-            <div className="flex shrink-0 items-center gap-2">
-              <Button asChild variant={canEdit ? 'outline' : 'default'}>
-                <Link href={`/laer-ord/${list.id}`}>Øv</Link>
-              </Button>
-              {canEdit && (
-                <>
-                  <Button asChild variant="outline" size="icon">
-                    <Link href={`/laer-ord/${list.id}/rediger`} aria-label={`Rediger ${list.title}`}>
-                      <Pencil className="h-4 w-4" />
-                    </Link>
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    size="icon"
-                    onClick={() => onDelete(list)}
-                    aria-label={`Slett ${list.title}`}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </>
-              )}
-            </div>
+            {canEdit && (
+              // Above the covering link, so these buttons still work.
+              <div className="relative z-10 flex shrink-0 items-center gap-2">
+                <Button asChild variant="outline" size="icon">
+                  <Link href={`/laer-ord/${list.id}/rediger`} aria-label={`Rediger ${list.title}`}>
+                    <Pencil className="h-4 w-4" />
+                  </Link>
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="icon"
+                  onClick={() => onDelete(list)}
+                  aria-label={`Slett ${list.title}`}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
           </li>
         )
       })}
