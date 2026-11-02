@@ -912,7 +912,7 @@ export default function SpraakhjelpperClient({ user, isAdmin = false }: Spraakhj
                 <div className="space-y-4 sm:space-y-6 flex-1 overflow-y-auto">
                   {/* Din setning section with teacher image */}
                   <div className="flex items-start gap-4">
-                    <div className="flex-1">
+                    <div className="flex-1 min-w-0">
                       <p className="text-lg font-semibold mb-1 sm:mb-3">Din setning:</p>
                       <div className={`rounded-lg p-2 sm:p-4 border-2 ${currentSentence.setning_status === 'feil'
                         ? 'bg-red-50 border-red-300'
