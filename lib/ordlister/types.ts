@@ -1,9 +1,6 @@
-// Teacher-made word lists («Ordlister»).
-//
-// For now (UI preview only) the lists live in the teacher's browser via
-// localStorage. The shapes below match the planned Supabase tables
-// `word_lists` and `word_list_items`, so the storage layer can be swapped
-// without touching the components.
+// Teacher-made word lists for «Lær ord», stored in Supabase (tables
+// word_lists, word_list_items and word_list_groups; files in the
+// word-lists storage bucket). See lib/ordlister/db-store.ts.
 
 export interface WordListItem {
   id: string
@@ -15,7 +12,7 @@ export interface WordListItem {
   // are made again.
   content?: ItemContent
   // Which version of each recording/picture is stored (same idea as `sig`).
-  // The files themselves are in IndexedDB (see media-store.ts).
+  // The files themselves are in the word-lists storage bucket (see media.ts).
   media?: Partial<Record<MediaKind, string>>
 }
 
@@ -53,13 +50,27 @@ export function isItemReady(item: WordListItem, languages: string[], withImages:
 export interface WordList {
   id: string
   title: string
-  // Four-character code students type to open the list.
-  accessCode: string
   // The students' first languages (morsmål). Several can be chosen.
   languages: string[]
   words: WordListItem[]
+  // Groups the list is shared with. Students in these groups see it.
+  groupIds: string[]
+  createdBy: string
   createdAt: string
   updatedAt: string
+}
+
+// A group a teacher made (see /grupper).
+export interface Group {
+  id: string
+  name: string
+  // Only shown to the owner and admins.
+  accessCode: string | null
+  ownerEmail: string | null
+  memberCount: number
+  isOwner: boolean
+  isMember: boolean
+  createdAt: string
 }
 
 // Common first languages among students learning Norwegian as a second
@@ -97,20 +108,10 @@ export const COMMON_LANGUAGES = [
   'Portugisisk',
 ] as const
 
-const CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
-
-export function generateAccessCode(): string {
-  let code = ''
-  for (let i = 0; i < 4; i++) {
-    code += CODE_ALPHABET[Math.floor(Math.random() * CODE_ALPHABET.length)]
-  }
-  return code
-}
-
-export function normalizeAccessCode(value: string): string {
+export function normalizeGroupCode(value: string): string {
   return value.trim().toUpperCase().replace(/[^A-Z0-9]/g, '')
 }
 
-export function isValidAccessCode(value: string): boolean {
-  return /^[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{4}$/.test(value)
+export function isValidGroupCode(value: string): boolean {
+  return /^[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{6}$/.test(value)
 }

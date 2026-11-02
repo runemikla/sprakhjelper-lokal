@@ -11,10 +11,8 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { ListeningPageShell } from '@/components/lytteoving/page-shell'
 import { LanguagePicker } from '@/components/ordlister/language-picker'
-import { PreviewNotice } from '@/components/ordlister/preview-notice'
-import { ShareBox } from '@/components/ordlister/share-box'
-import { wordListStore } from '@/lib/ordlister/local-store'
-import { isItemReady, type WordList, type WordListItem } from '@/lib/ordlister/types'
+import { groupStore, wordListStore } from '@/lib/ordlister/db-store'
+import { isItemReady, type Group, type WordList, type WordListItem } from '@/lib/ordlister/types'
 import { generateList, imagesAvailable, type ItemStatus } from '@/lib/ordlister/generate'
 import { GenerationPanel } from '@/components/ordlister/generation-panel'
 import { ItemThumb } from '@/components/ordlister/item-thumb'
@@ -42,6 +40,9 @@ export function WordListEditor({ listId, userEmail = null, isAdmin = false }: Wo
   const [title, setTitle] = useState('')
   const [languages, setLanguages] = useState<string[]>([])
   const [words, setWords] = useState<WordListItem[]>([])
+  // Groups the list is shared with, and the teacher's groups to pick from.
+  const [groupIds, setGroupIds] = useState<string[]>([])
+  const [groups, setGroups] = useState<Group[] | null>(null)
   const [openDescriptions, setOpenDescriptions] = useState<Set<string>>(new Set())
 
   const [newWord, setNewWord] = useState('')
@@ -58,6 +59,10 @@ export function WordListEditor({ listId, userEmail = null, isAdmin = false }: Wo
 
   useEffect(() => {
     void imagesAvailable().then(setImagesOn)
+    void groupStore
+      .list()
+      .then((all) => setGroups(all.filter((g) => g.isOwner || g.accessCode !== null)))
+      .catch(() => setGroups([]))
   }, [])
 
   async function runGeneration(list: WordList) {
@@ -90,7 +95,7 @@ export function WordListEditor({ listId, userEmail = null, isAdmin = false }: Wo
     if (!saved || autoStarted.current) return
     if (new URLSearchParams(globalThis.location.search).has('generer')) {
       autoStarted.current = true
-      globalThis.history.replaceState(null, '', `/ordlister/${saved.id}`)
+      globalThis.history.replaceState(null, '', `/laer-ord/${saved.id}/rediger`)
       void runGeneration(saved)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -98,19 +103,37 @@ export function WordListEditor({ listId, userEmail = null, isAdmin = false }: Wo
 
   useEffect(() => {
     if (!listId) return
-    const list = wordListStore.get(listId)
-    if (!list) {
-      setNotFound(true)
-    } else {
-      setSaved(list)
-      setTitle(list.title)
-      setLanguages(list.languages)
-      setWords(list.words)
-      setOpenDescriptions(new Set(list.words.filter((w) => w.imageDescription).map((w) => w.id)))
-      setJustSaved(new URLSearchParams(globalThis.location.search).has('generer'))
+    let cancelled = false
+    wordListStore
+      .get(listId)
+      .then((list) => {
+        if (cancelled) return
+        if (!list) {
+          setNotFound(true)
+        } else {
+          setSaved(list)
+          setTitle(list.title)
+          setLanguages(list.languages)
+          setWords(list.words)
+          setGroupIds(list.groupIds)
+          setOpenDescriptions(new Set(list.words.filter((w) => w.imageDescription).map((w) => w.id)))
+          setJustSaved(new URLSearchParams(globalThis.location.search).has('generer'))
+        }
+        setLoaded(true)
+      })
+      .catch((e: unknown) => {
+        if (cancelled) return
+        setErrors([e instanceof Error ? e.message : 'Kunne ikke hente ordlisten.'])
+        setLoaded(true)
+      })
+    return () => {
+      cancelled = true
     }
-    setLoaded(true)
   }, [listId])
+
+  function toggleGroup(id: string) {
+    setGroupIds((current) => (current.includes(id) ? current.filter((g) => g !== id) : [...current, id]))
+  }
 
   function addWord() {
     const word = newWord.trim()
@@ -148,7 +171,7 @@ export function WordListEditor({ listId, userEmail = null, isAdmin = false }: Wo
     })
   }
 
-  function handleSave() {
+  async function handleSave() {
     const cleaned = words
       .map((w) => ({ ...w, word: w.word.trim(), imageDescription: w.imageDescription.trim() }))
       .filter((w) => w.word)
@@ -160,10 +183,23 @@ export function WordListEditor({ listId, userEmail = null, isAdmin = false }: Wo
     if (problems.length > 0) return
 
     setSaving(true)
-    const result = wordListStore.save({ id: saved?.id, title: title.trim(), languages, words: cleaned })
+    let result: WordList
+    try {
+      result = await wordListStore.save({
+        id: saved?.id,
+        title: title.trim(),
+        languages,
+        words: cleaned,
+        groupIds,
+      })
+    } catch (e) {
+      setErrors([e instanceof Error ? e.message : 'Kunne ikke lagre ordlisten.'])
+      setSaving(false)
+      return
+    }
     setSaving(false)
     if (!saved) {
-      router.push(`/ordlister/${result.id}?generer=1`)
+      router.push(`/laer-ord/${result.id}/rediger?generer=1`)
       return
     }
     setSaved(result)
@@ -194,7 +230,7 @@ export function WordListEditor({ listId, userEmail = null, isAdmin = false }: Wo
           <CardContent className="space-y-4 pt-6">
             <p className="text-gray-700">Fant ikke ordlisten. Den kan være slettet.</p>
             <Button asChild variant="outline">
-              <Link href="/ordlister">Tilbake til ordlistene</Link>
+              <Link href="/laer-ord">Tilbake til ordlistene</Link>
             </Button>
           </CardContent>
         </Card>
@@ -206,18 +242,18 @@ export function WordListEditor({ listId, userEmail = null, isAdmin = false }: Wo
     <ListeningPageShell userEmail={userEmail} isAdmin={isAdmin}>
       <div>
         <Link
-          href="/ordlister"
+          href="/laer-ord"
           className="mb-3 inline-flex items-center gap-1 text-sm font-medium text-white/90 hover:text-white"
         >
-          <ArrowLeft className="h-4 w-4" /> Mine ordlister
+          <ArrowLeft className="h-4 w-4" /> Alle ordlister
         </Link>
         <h1 className="text-3xl font-bold text-white drop-shadow">
           {saved ? 'Rediger ordliste' : 'Lag ny ordliste'}
         </h1>
         <p className="mt-1 text-white/90 drop-shadow">
-          Velg elevenes morsmål og skriv inn ordene. Når du lagrer, lager KI bilde, lyd, setning og
-          oversettelse til hvert ord, og listen blir et tema i Lær ord. Beskrivelsen hjelper KI-en å
-          lage bildet slik du vil ha det.
+          Velg elevenes morsmål, skriv inn ordene og velg hvilke grupper som skal se listen. Når du
+          lagrer, lager KI bilde, lyd, setning og oversettelse til hvert ord. Beskrivelsen hjelper
+          KI-en å lage bildet slik du vil ha det.
         </p>
       </div>
 
@@ -237,15 +273,12 @@ export function WordListEditor({ listId, userEmail = null, isAdmin = false }: Wo
               readyCount={saved.words.filter((w) => isItemReady(w, saved.languages, imagesOn)).length}
               onStart={() => void runGeneration(saved)}
             />
-            <ShareBox code={saved.accessCode} />
           </CardContent>
         </Card>
       )}
 
       <Card className={card}>
         <CardContent className="space-y-8 pt-6">
-          <PreviewNotice />
-
           <div className="space-y-2">
             <Label htmlFor="title" className="text-base font-semibold text-gray-900">
               Navn på ordlisten
@@ -265,6 +298,52 @@ export function WordListEditor({ listId, userEmail = null, isAdmin = false }: Wo
               Velg ett eller flere språk. Ordene oversettes til disse språkene.
             </p>
             <LanguagePicker value={languages} onChange={setLanguages} />
+          </div>
+
+          <div className="space-y-2">
+            <p className="text-base font-semibold text-gray-900">Del med grupper</p>
+            <p className="text-sm text-gray-600">
+              Elevene i gruppene du velger, ser ordlisten i Lær ord.{' '}
+              <Link href="/grupper" className="font-medium text-blue-700 hover:underline">
+                Lag og administrer grupper
+              </Link>
+            </p>
+            {groups === null ? (
+              <p className="flex items-center gap-2 text-sm text-gray-500">
+                <Loader2 className="h-4 w-4 animate-spin" /> Henter gruppene dine …
+              </p>
+            ) : groups.length === 0 ? (
+              <p className="rounded-xl border border-dashed border-gray-300 px-4 py-4 text-sm text-gray-600">
+                Du har ingen grupper ennå. Du kan lagre listen nå og dele den senere.
+              </p>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {groups.map((group) => {
+                  const checked = groupIds.includes(group.id)
+                  return (
+                    <label
+                      key={group.id}
+                      className={`inline-flex cursor-pointer items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
+                        checked
+                          ? 'border-blue-600 bg-blue-600 text-white'
+                          : 'border-gray-300 bg-white text-gray-800 hover:border-blue-400'
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        className="sr-only"
+                        checked={checked}
+                        onChange={() => toggleGroup(group.id)}
+                      />
+                      {group.name}
+                      <span className={checked ? 'text-white/80' : 'text-gray-500'}>
+                        ({group.memberCount})
+                      </span>
+                    </label>
+                  )
+                })}
+              </div>
+            )}
           </div>
 
           <div className="space-y-3">
@@ -289,7 +368,7 @@ export function WordListEditor({ listId, userEmail = null, isAdmin = false }: Wo
                         <span className="w-6 shrink-0 text-right text-sm tabular-nums text-gray-400">
                           {index + 1}
                         </span>
-                        {saved && <ItemThumb itemId={item.id} version={item.media?.img} />}
+                        {saved && <ItemThumb listId={saved.id} item={item} />}
                         <Input
                           value={item.word}
                           onChange={(e) => updateWord(item.id, { word: e.target.value })}
@@ -410,7 +489,7 @@ export function WordListEditor({ listId, userEmail = null, isAdmin = false }: Wo
 
           <div className="flex flex-wrap justify-end gap-2 border-t border-gray-200 pt-6">
             <Button asChild variant="outline">
-              <Link href="/ordlister">Avbryt</Link>
+              <Link href="/laer-ord">Avbryt</Link>
             </Button>
             <Button type="button" onClick={handleSave} disabled={saving || running}>
               {(saving || running) && <Loader2 className="h-4 w-4 animate-spin" />}
