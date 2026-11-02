@@ -28,6 +28,16 @@ interface WordListEditorProps {
   isAdmin?: boolean
 }
 
+// The voice the teacher picked last, kept in this browser.
+function rememberedVoice(): string | null {
+  try {
+    const remembered = localStorage.getItem('ordlister:stemme')
+    return remembered && isGeminiVoice(remembered) ? remembered : null
+  } catch {
+    return null
+  }
+}
+
 function newItem(word = '', imageDescription = ''): WordListItem {
   return { id: crypto.randomUUID(), word, imageDescription }
 }
@@ -73,12 +83,8 @@ export function WordListEditor({ listId, userEmail = null, isAdmin = false }: Wo
 
   useEffect(() => {
     if (!listId) {
-      try {
-        const remembered = localStorage.getItem('ordlister:stemme')
-        if (remembered && isGeminiVoice(remembered)) setVoice(remembered)
-      } catch {
-        // Ignore: use the default voice.
-      }
+      const remembered = rememberedVoice()
+      if (remembered) setVoice(remembered)
     }
     void imagesAvailable().then(setImagesOn)
     void groupStore
@@ -139,8 +145,11 @@ export function WordListEditor({ listId, userEmail = null, isAdmin = false }: Wo
           setLanguages(list.languages)
           setWords(list.words)
           setGroupIds(list.groupIds)
+          // The voice the recordings were made with; a new list (nothing
+          // recorded yet) uses the voice the teacher picked before saving.
           const used = listVoice(list)
-          if (used && isGeminiVoice(used)) setVoice(used)
+          const next = used && isGeminiVoice(used) ? used : rememberedVoice()
+          if (next) setVoice(next)
           setOpenDescriptions(new Set(list.words.filter((w) => w.imageDescription).map((w) => w.id)))
           setJustSaved(new URLSearchParams(globalThis.location.search).has('generer'))
         }
