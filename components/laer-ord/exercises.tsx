@@ -21,30 +21,17 @@ import { wordListStore } from '@/lib/ordlister/db-store'
 import { listWords } from '@/lib/ordlister/to-words'
 import type { WordList as TeacherWordList } from '@/lib/ordlister/types'
 
-// Competence goals (kompetansemål) that each activity trains.
-const GOALS: Record<number, string> = {
-  1: 'strategier for språklæring',
-  2: 'språklyder og uttale',
-  3: 'likheter med andre språk',
-  4: 'rettskriving og grammatikk',
-  5: 'digitale ressurser',
-  7: 'hverdagslige og faglige ord',
-  9: 'lese svært enkle tekster',
-  14: 'grammatiske strukturer',
-}
-
 const ACTIVITIES: {
   key: string
   label: string
-  goals: number[]
   component: ComponentType<{ words: Word[] }>
 }[] = [
-  { key: 'ord', label: 'Ordliste', goals: [2, 5, 7], component: WordList },
-  { key: 'bilde', label: 'Velg riktig ord', goals: [5, 7], component: PickWord },
-  { key: 'lytt', label: 'Lytt og velg', goals: [2, 7], component: ListenPick },
-  { key: 'skriv', label: 'Hør og skriv', goals: [2, 4], component: ListenWrite },
-  { key: 'match', label: 'Match ord og setning', goals: [7, 9, 14], component: MatchSentences },
-  { key: 'kort', label: 'Flashcards', goals: [1, 2, 3, 7], component: Flashcards },
+  { key: 'ord', label: 'Ordliste', component: WordList },
+  { key: 'bilde', label: 'Velg riktig ord', component: PickWord },
+  { key: 'lytt', label: 'Lytt og velg', component: ListenPick },
+  { key: 'skriv', label: 'Hør og skriv', component: ListenWrite },
+  { key: 'match', label: 'Match ord og setning', component: MatchSentences },
+  { key: 'kort', label: 'Flashcards', component: Flashcards },
 ]
 
 function activityFromHash() {
@@ -137,10 +124,7 @@ export function Exercises({ userEmail = null, isAdmin = false, canEdit = false, 
           </Link>
           <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
             <div>
-              <h1 className="mb-2 text-3xl font-bold text-white drop-shadow">{title}</h1>
-              <p className="text-white/90 drop-shadow">
-                Lær nye ord med bilde, lyd og setninger. Trykk på et ord for å høre det.
-              </p>
+              <h1 className="text-3xl font-bold text-white drop-shadow">{title}</h1>
             </div>
             <div className="flex flex-wrap items-center gap-3">
               {list && list.languages.length > 0 && (
@@ -192,15 +176,6 @@ export function Exercises({ userEmail = null, isAdmin = false, canEdit = false, 
               ))}
             </div>
           </nav>
-
-          <p className="mb-4 flex flex-wrap items-center gap-1.5 text-xs text-white/90">
-            Kompetansemål:
-            {activity.goals.map((n) => (
-              <span key={n} className="rounded-md bg-white/15 px-2 py-0.5 text-white">
-                <b>{n}</b> {GOALS[n]}
-              </span>
-            ))}
-          </p>
 
           <Card className="border-white/20 bg-white/95 shadow-xl backdrop-blur-sm">
             <CardContent className="pt-6">
