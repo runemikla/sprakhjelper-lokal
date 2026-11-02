@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
-import { ChevronLeft, ChevronRight, Languages, Copy, BarChart3 } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Languages, Copy, BarChart3, Check, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
@@ -686,6 +686,9 @@ export default function SpraakhjelpperClient({ user, isAdmin = false }: Spraakhj
     }
   }
 
+  const motherTongueName =
+    (result?.morsmaal && languages.find((lang) => lang.code === result.morsmaal)?.name) || 'Morsmål'
+
   return (
     <div className="min-h-screen relative">
       {/* Background Image with Overlay */}
@@ -710,7 +713,7 @@ export default function SpraakhjelpperClient({ user, isAdmin = false }: Spraakhj
       <Navbar userEmail={user.email ?? null} isAdmin={isAdmin} />
 
       {/* Content */}
-      <div className="relative z-10 container mx-auto pt-24 pb-8 px-4 max-w-4xl">
+      <div className="relative z-10 container mx-auto pt-24 pb-2 px-2 sm:pb-8 sm:px-4 max-w-4xl">
         <div className="space-y-8">
           {showForm && (
             <Card className="bg-white/95 backdrop-blur-sm border-white/20 shadow-xl">
@@ -894,29 +897,29 @@ export default function SpraakhjelpperClient({ user, isAdmin = false }: Spraakhj
           {result && result.results && result.results.length > 0 && !showSummary && currentSentence && (
             <Card className="flex flex-col h-[calc(100vh-8rem)] bg-white/95 backdrop-blur-sm border-white/20 shadow-xl">
               {/* Mini Header */}
-              <div className="px-6 pt-4 pb-4 border-b border-gray-200 flex-shrink-0">
+              <div className="px-3 py-2 sm:px-6 sm:pt-4 sm:pb-4 border-b border-gray-200 flex-shrink-0">
                 <div className="flex items-start justify-between">
                   <div className="cursor-pointer hover:opacity-80 transition-opacity flex-1" onClick={showInputForm}>
-                    <h2 className="text-2xl font-bold text-gray-900 mb-1">Skrivehjelp</h2>
-                    <p className="text-sm text-gray-600">
+                    <h2 className="text-xl sm:text-2xl font-bold text-gray-900 sm:mb-1">Skrivehjelp</h2>
+                    <p className="hidden sm:block text-sm text-gray-600">
                       Få tilbakemeldinger fra KI på teksten din.
                     </p>
                   </div>
                 </div>
               </div>
 
-              <CardContent className="flex-1 flex flex-col overflow-hidden p-6">
-                <div className="space-y-6 flex-1 overflow-y-auto">
+              <CardContent className="flex-1 flex flex-col overflow-hidden p-3 sm:p-6">
+                <div className="space-y-4 sm:space-y-6 flex-1 overflow-y-auto">
                   {/* Din setning section with teacher image */}
                   <div className="flex items-start gap-4">
                     <div className="flex-1">
-                      <p className="text-lg font-semibold mb-3">Din setning:</p>
-                      <div className={`rounded-lg p-4 border-2 ${currentSentence.setning_status === 'feil'
+                      <p className="text-lg font-semibold mb-1 sm:mb-3">Din setning:</p>
+                      <div className={`rounded-lg p-2 sm:p-4 border-2 ${currentSentence.setning_status === 'feil'
                         ? 'bg-red-50 border-red-300'
                         : 'bg-green-50 border-green-300'
                         }`}>
                         {currentSentence.setning_status === 'feil' ? (
-                          <div className="space-y-3">
+                          <div className="space-y-2 sm:space-y-3">
                             <Textarea
                               autosize
                               autosizeProps={{ minRows: 1, maxRows: 8 }}
@@ -934,7 +937,7 @@ export default function SpraakhjelpperClient({ user, isAdmin = false }: Spraakhj
                               className="resize-none bg-white border-red-300 focus:border-red-500 text-base"
                               placeholder="Skriv setningen din på nytt her..."
                             />
-                            <div className="flex items-center justify-between">
+                            <div className="flex items-center justify-between gap-2">
                               <p className="text-sm text-gray-600">
                                 Setningen er ikke helt riktig. Kan du prøve å rette feilene?
                               </p>
@@ -942,9 +945,12 @@ export default function SpraakhjelpperClient({ user, isAdmin = false }: Spraakhj
                                 size="sm"
                                 onClick={handleCheckAnswer}
                                 disabled={!retryInput.trim() || isCheckingAnswer}
-                                className="whitespace-nowrap"
+                                className="whitespace-nowrap shrink-0"
+                                aria-label="Sjekk svar"
+                                title="Sjekk svar"
                               >
-                                {isCheckingAnswer ? 'Sjekker...' : 'Sjekk svar'}
+                                {isCheckingAnswer ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                                <span className="hidden sm:inline">{isCheckingAnswer ? 'Sjekker...' : 'Sjekk svar'}</span>
                               </Button>
                             </div>
                           </div>
@@ -954,8 +960,8 @@ export default function SpraakhjelpperClient({ user, isAdmin = false }: Spraakhj
                       </div>
                     </div>
 
-                    {/* Teacher image */}
-                    <div className="flex-shrink-0">
+                    {/* Teacher image (not on phones, to save space) */}
+                    <div className="hidden sm:block flex-shrink-0">
                       <Image
                         src={getTeacherImage(currentSentence.setning_status)}
                         alt="Lærer"
@@ -967,31 +973,35 @@ export default function SpraakhjelpperClient({ user, isAdmin = false }: Spraakhj
                     </div>
                   </div>
 
-                  <div className="space-y-2">
+                  <div className="space-y-1 sm:space-y-2">
                     {/* Header section with language buttons */}
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between gap-2">
                       <h3 className="text-lg font-semibold">Forslag til forbedringer:</h3>
                       <div className="flex items-center space-x-2">
                         <Button
                           variant={showNorwegianExplanation ? "default" : "outline"}
                           size="sm"
                           onClick={() => setShowNorwegianExplanation(true)}
+                          aria-label="Norsk"
+                          title="Norsk"
                         >
-                          <span className="mr-1">🇳🇴</span>
-                          Norsk
+                          <span className="sm:mr-1">🇳🇴</span>
+                          <span className="hidden sm:inline">Norsk</span>
                         </Button>
                         <Button
                           variant={!showNorwegianExplanation ? "default" : "outline"}
                           size="sm"
                           onClick={() => setShowNorwegianExplanation(false)}
+                          aria-label={motherTongueName}
+                          title={motherTongueName}
                         >
-                          <span className="mr-1">{result.morsmaal ? languages.find(lang => lang.code === result.morsmaal)?.flag : '🌐'}</span>
-                          {result.morsmaal ? languages.find(lang => lang.code === result.morsmaal)?.name : 'Morsmål'}
+                          <span className="sm:mr-1">{result.morsmaal ? languages.find(lang => lang.code === result.morsmaal)?.flag : '🌐'}</span>
+                          <span className="hidden sm:inline">{motherTongueName}</span>
                         </Button>
                       </div>
                     </div>
 
-                    <div className={`text-sm rounded-lg p-4 ${showNorwegianExplanation ? 'bg-blue-50 border border-blue-200' : 'bg-purple-50 border border-purple-200'
+                    <div className={`text-sm rounded-lg p-3 sm:p-4 ${showNorwegianExplanation ? 'bg-blue-50 border border-blue-200' : 'bg-purple-50 border border-purple-200'
                       }`}>
                       <div className="space-y-2">
                         {formatExplanation(showNorwegianExplanation ? currentSentence.forklaring : currentSentence.forklaring_morsmaal)
@@ -1049,7 +1059,7 @@ export default function SpraakhjelpperClient({ user, isAdmin = false }: Spraakhj
                 </div>
 
                 {/* Progress bar and navigation - fixed at bottom */}
-                <div className="mt-6 space-y-4">
+                <div className="mt-3 space-y-2 sm:mt-6 sm:space-y-4">
                   {/* Progress bar */}
                   <div className="w-full">
                     <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
@@ -1065,9 +1075,11 @@ export default function SpraakhjelpperClient({ user, isAdmin = false }: Spraakhj
                       variant="outline"
                       onClick={goToPrevious}
                       disabled={currentSentenceIndex === 0}
+                      aria-label="Forrige"
+                      title="Forrige"
                     >
-                      <ChevronLeft className="h-4 w-4 mr-2" />
-                      Forrige
+                      <ChevronLeft className="h-4 w-4 sm:mr-2" />
+                      <span className="hidden sm:inline">Forrige</span>
                     </Button>
 
                     <span className="text-sm text-gray-500">
@@ -1086,14 +1098,16 @@ export default function SpraakhjelpperClient({ user, isAdmin = false }: Spraakhj
                             }
                           }}
                           className="bg-white hover:bg-gray-50 text-gray-900 border border-gray-300"
+                          aria-label="Vis sammendrag"
+                          title="Vis sammendrag"
                         >
-                          <BarChart3 className="h-4 w-4 mr-2" />
-                          Vis sammendrag
+                          <BarChart3 className="h-4 w-4 sm:mr-2" />
+                          <span className="hidden sm:inline">Vis sammendrag</span>
                         </Button>
                       ) : (
-                        <Button variant="outline" onClick={goToNext}>
-                          Neste
-                          <ChevronRight className="h-4 w-4 ml-2" />
+                        <Button variant="outline" onClick={goToNext} aria-label="Neste" title="Neste">
+                          <span className="hidden sm:inline">Neste</span>
+                          <ChevronRight className="h-4 w-4 sm:ml-2" />
                         </Button>
                       )}
                     </div>
