@@ -1,14 +1,12 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { isValidAccessCode, normalizeAccessCode } from '@/lib/ordlister/types'
 
 // Students open a teacher's word list by typing its four-character code.
 export function JoinWordListForm() {
-  const router = useRouter()
   const [code, setCode] = useState('')
   const [error, setError] = useState(false)
 
@@ -22,7 +20,8 @@ export function JoinWordListForm() {
           setError(true)
           return
         }
-        router.push(`/ordlister/elev/${normalized}`)
+        // Full load so «Lær ord» picks up the list even when it is already open.
+        globalThis.location.assign(`/laer-ord?liste=${normalized}`)
       }}
     >
       <label htmlFor="ordliste-kode" className="text-sm font-semibold text-white">

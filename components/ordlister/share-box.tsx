@@ -47,7 +47,7 @@ export function ShareBox({ code }: { code: string }) {
         <CopyLinkButton code={code} />
       </div>
       <p className="mt-2 text-xs text-blue-900/70">
-        Elevene skriver koden på Lær ord-siden eller åpner lenken. De trenger ikke logge inn.
+        Ordlisten blir et eget tema i Lær ord med alle øvelsene. Elevene skriver koden nederst på Lær ord-siden eller åpner lenken. De trenger ikke logge inn.
       </p>
     </div>
   )

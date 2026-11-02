@@ -14,7 +14,10 @@ import { LanguagePicker } from '@/components/ordlister/language-picker'
 import { PreviewNotice } from '@/components/ordlister/preview-notice'
 import { ShareBox } from '@/components/ordlister/share-box'
 import { wordListStore } from '@/lib/ordlister/local-store'
-import type { WordList, WordListItem } from '@/lib/ordlister/types'
+import { isItemReady, type WordList, type WordListItem } from '@/lib/ordlister/types'
+import { generateList, imagesAvailable, type ItemStatus } from '@/lib/ordlister/generate'
+import { GenerationPanel } from '@/components/ordlister/generation-panel'
+import { ItemThumb } from '@/components/ordlister/item-thumb'
 
 const MAX_DESCRIPTION = 300
 
@@ -48,6 +51,51 @@ export function WordListEditor({ listId, userEmail = null, isAdmin = false }: Wo
   const [saving, setSaving] = useState(false)
   const newWordRef = useRef<HTMLInputElement>(null)
 
+  const [imagesOn, setImagesOn] = useState(true)
+  const [running, setRunning] = useState(false)
+  const [statuses, setStatuses] = useState<Record<string, { status: ItemStatus; error?: string }>>({})
+  const autoStarted = useRef(false)
+
+  useEffect(() => {
+    void imagesAvailable().then(setImagesOn)
+  }, [])
+
+  async function runGeneration(list: WordList) {
+    if (running) return
+    setRunning(true)
+    setStatuses({})
+    try {
+      const withImages = await imagesAvailable()
+      setImagesOn(withImages)
+      await generateList(list, {
+        withImages,
+        onStatus: (id, status, error) =>
+          setStatuses((current) => ({ ...current, [id]: { status, error } })),
+        onList: (updated) => {
+          setSaved(updated)
+          setWords((current) =>
+            current.map((w) => {
+              const fresh = updated.words.find((u) => u.id === w.id)
+              return fresh ? { ...w, content: fresh.content, media: fresh.media } : w
+            })
+          )
+        },
+      })
+    } finally {
+      setRunning(false)
+    }
+  }
+
+  useEffect(() => {
+    if (!saved || autoStarted.current) return
+    if (new URLSearchParams(globalThis.location.search).has('generer')) {
+      autoStarted.current = true
+      globalThis.history.replaceState(null, '', `/ordlister/${saved.id}`)
+      void runGeneration(saved)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [saved])
+
   useEffect(() => {
     if (!listId) return
     const list = wordListStore.get(listId)
@@ -59,7 +107,7 @@ export function WordListEditor({ listId, userEmail = null, isAdmin = false }: Wo
       setLanguages(list.languages)
       setWords(list.words)
       setOpenDescriptions(new Set(list.words.filter((w) => w.imageDescription).map((w) => w.id)))
-      setJustSaved(new URLSearchParams(globalThis.location.search).has('lagret'))
+      setJustSaved(new URLSearchParams(globalThis.location.search).has('generer'))
     }
     setLoaded(true)
   }, [listId])
@@ -115,13 +163,14 @@ export function WordListEditor({ listId, userEmail = null, isAdmin = false }: Wo
     const result = wordListStore.save({ id: saved?.id, title: title.trim(), languages, words: cleaned })
     setSaving(false)
     if (!saved) {
-      router.push(`/ordlister/${result.id}?lagret=1`)
+      router.push(`/ordlister/${result.id}?generer=1`)
       return
     }
     setSaved(result)
     setWords(cleaned)
     setJustSaved(true)
     globalThis.scrollTo({ top: 0, behavior: 'smooth' })
+    void runGeneration(result)
   }
 
   const card = 'bg-white/95 backdrop-blur-sm border-white/20 shadow-xl'
@@ -166,8 +215,9 @@ export function WordListEditor({ listId, userEmail = null, isAdmin = false }: Wo
           {saved ? 'Rediger ordliste' : 'Lag ny ordliste'}
         </h1>
         <p className="mt-1 text-white/90 drop-shadow">
-          Velg elevenes morsmål og skriv inn ordene. Beskrivelsen hjelper KI-en å lage bildet slik
-          du vil ha det.
+          Velg elevenes morsmål og skriv inn ordene. Når du lagrer, lager KI bilde, lyd, setning og
+          oversettelse til hvert ord, og listen blir et tema i Lær ord. Beskrivelsen hjelper KI-en å
+          lage bildet slik du vil ha det.
         </p>
       </div>
 
@@ -179,6 +229,14 @@ export function WordListEditor({ listId, userEmail = null, isAdmin = false }: Wo
                 Ordlisten er lagret.
               </p>
             )}
+            <GenerationPanel
+              list={saved}
+              running={running}
+              statuses={statuses}
+              imagesOn={imagesOn}
+              readyCount={saved.words.filter((w) => isItemReady(w, saved.languages, imagesOn)).length}
+              onStart={() => void runGeneration(saved)}
+            />
             <ShareBox code={saved.accessCode} />
           </CardContent>
         </Card>
@@ -231,6 +289,7 @@ export function WordListEditor({ listId, userEmail = null, isAdmin = false }: Wo
                         <span className="w-6 shrink-0 text-right text-sm tabular-nums text-gray-400">
                           {index + 1}
                         </span>
+                        {saved && <ItemThumb itemId={item.id} version={item.media?.img} />}
                         <Input
                           value={item.word}
                           onChange={(e) => updateWord(item.id, { word: e.target.value })}
@@ -353,9 +412,9 @@ export function WordListEditor({ listId, userEmail = null, isAdmin = false }: Wo
             <Button asChild variant="outline">
               <Link href="/ordlister">Avbryt</Link>
             </Button>
-            <Button type="button" onClick={handleSave} disabled={saving}>
-              {saving && <Loader2 className="h-4 w-4 animate-spin" />}
-              {saved ? 'Lagre endringer' : 'Lagre og del'}
+            <Button type="button" onClick={handleSave} disabled={saving || running}>
+              {(saving || running) && <Loader2 className="h-4 w-4 animate-spin" />}
+              {saved ? 'Lagre og oppdater øvelsene' : 'Lagre og lag øvelser'}
             </Button>
           </div>
         </CardContent>

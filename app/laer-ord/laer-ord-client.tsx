@@ -16,6 +16,9 @@ import { ListenWrite } from '@/components/laer-ord/listen-write'
 import { MatchSentences } from '@/components/laer-ord/match-sentences'
 import { Flashcards } from '@/components/laer-ord/flashcards'
 import { JoinWordListForm } from '@/components/ordlister/join-form'
+import { wordListStore } from '@/lib/ordlister/local-store'
+import { loadListWords } from '@/lib/ordlister/to-words'
+import type { WordList as TeacherWordList } from '@/lib/ordlister/types'
 
 // Competence goals (kompetansemål) that each activity trains.
 const GOALS: Record<number, string> = {
@@ -60,10 +63,26 @@ export default function LaerOrdClient({ userEmail = null, isAdmin = false }: Lae
   const [mounted, setMounted] = useState(false)
   const [themeId, setThemeId] = useState(THEMES[0].id)
   const [activity, setActivity] = useState(ACTIVITIES[0])
+  // Teachers' word lists («Ordlister»). Stored in this browser until the
+  // database is connected.
+  const [lists, setLists] = useState<TeacherWordList[]>([])
+  const [missingCode, setMissingCode] = useState<string | null>(null)
+  const [language, setLanguage] = useState('')
+  const [listWords, setListWords] = useState<Word[] | null>(null)
 
   useEffect(() => {
-    const saved = store.get('tema', THEMES[0].id)
-    if (THEMES.some((t) => t.id === saved)) setThemeId(saved)
+    const all = wordListStore.list().filter((l) => l.words.some((w) => w.content))
+    setLists(all)
+    const code = new URLSearchParams(globalThis.location.search).get('liste')?.toUpperCase()
+    const ids = [...THEMES.map((t) => t.id), ...all.map((l) => `liste:${l.accessCode}`)]
+    if (code) {
+      if (all.some((l) => l.accessCode === code)) setThemeId(`liste:${code}`)
+      else setMissingCode(code)
+    } else {
+      const saved = store.get('tema', THEMES[0].id)
+      if (ids.includes(saved)) setThemeId(saved)
+    }
+    setLanguage(store.get('sprak', ''))
     setActivity(activityFromHash())
     setMounted(true)
 
@@ -72,7 +91,36 @@ export default function LaerOrdClient({ userEmail = null, isAdmin = false }: Lae
     return () => globalThis.removeEventListener('hashchange', onHashChange)
   }, [])
 
-  const theme = THEMES.find((t) => t.id === themeId) ?? THEMES[0]
+  const teacherList = themeId.startsWith('liste:')
+    ? lists.find((l) => `liste:${l.accessCode}` === themeId)
+    : undefined
+  const listLanguage =
+    teacherList && (teacherList.languages.includes(language) ? language : teacherList.languages[0] ?? '')
+
+  useEffect(() => {
+    if (!teacherList) {
+      setListWords(null)
+      return
+    }
+    let release: (() => void) | undefined
+    let cancelled = false
+    setListWords(null)
+    void loadListWords(teacherList, listLanguage ?? '').then((loaded) => {
+      if (cancelled) return loaded.release()
+      release = loaded.release
+      setListWords(loaded.words)
+    })
+    return () => {
+      cancelled = true
+      release?.()
+    }
+  }, [teacherList, listLanguage])
+
+  const builtIn = THEMES.find((t) => t.id === themeId) ?? THEMES[0]
+  const theme = teacherList
+    ? { id: themeId, navn: teacherList.title, ord: listWords ?? [] }
+    : builtIn
+  const wordsReady = !teacherList || listWords !== null
   const Exercise = activity.component
 
   return (
@@ -104,23 +152,59 @@ export default function LaerOrdClient({ userEmail = null, isAdmin = false }: Lae
                 Lær nye ord med bilde, lyd og setninger. Trykk på et ord for å høre det.
               </p>
             </div>
+            <div className="flex flex-wrap items-center gap-3">
             <label className="flex items-center gap-2 text-sm font-semibold text-white">
               Tema
               <select
                 value={theme.id}
                 onChange={(event) => {
                   setThemeId(event.target.value)
+                  setMissingCode(null)
                   store.set('tema', event.target.value)
+                  if (globalThis.location.search) {
+                    globalThis.history.replaceState(null, '', `/laer-ord${globalThis.location.hash}`)
+                  }
                 }}
                 className="rounded-lg border border-white/40 bg-white px-3 py-2 text-base font-medium text-gray-900 shadow"
               >
-                {THEMES.map((t) => (
-                  <option key={t.id} value={t.id}>
-                    {t.navn}
-                  </option>
-                ))}
+                <optgroup label="Temaer">
+                  {THEMES.map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.navn}
+                    </option>
+                  ))}
+                </optgroup>
+                {lists.length > 0 && (
+                  <optgroup label="Ordlister fra læreren">
+                    {lists.map((l) => (
+                      <option key={l.id} value={`liste:${l.accessCode}`}>
+                        {l.title}
+                      </option>
+                    ))}
+                  </optgroup>
+                )}
               </select>
             </label>
+            {teacherList && teacherList.languages.length > 0 && (
+              <label className="flex items-center gap-2 text-sm font-semibold text-white">
+                Mitt språk
+                <select
+                  value={listLanguage}
+                  onChange={(event) => {
+                    setLanguage(event.target.value)
+                    store.set('sprak', event.target.value)
+                  }}
+                  className="rounded-lg border border-white/40 bg-white px-3 py-2 text-base font-medium text-gray-900 shadow"
+                >
+                  {teacherList.languages.map((l) => (
+                    <option key={l} value={l}>
+                      {l}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
+            </div>
           </div>
 
           {/* Activity tabs */}
@@ -155,9 +239,16 @@ export default function LaerOrdClient({ userEmail = null, isAdmin = false }: Lae
 
           <Card className="border-white/20 bg-white/95 shadow-xl backdrop-blur-sm">
             <CardContent className="pt-6">
-              {mounted ? (
+              {missingCode && (
+                <p className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                  Fant ingen ordliste med koden <b className="font-mono">{missingCode}</b>. Ordlistene
+                  lagres foreløpig bare i nettleseren der de ble laget, så koden virker bare der til
+                  databasen er koblet til.
+                </p>
+              )}
+              {mounted && wordsReady && theme.ord.length > 0 ? (
                 <PronunciationProvider>
-                  <Exercise key={`${theme.id}-${activity.key}`} words={theme.ord} />
+                  <Exercise key={`${theme.id}-${listLanguage ?? ''}-${activity.key}`} words={theme.ord} />
                 </PronunciationProvider>
               ) : (
                 <div className="flex items-center justify-center gap-3 py-16 text-gray-500">
@@ -169,7 +260,7 @@ export default function LaerOrdClient({ userEmail = null, isAdmin = false }: Lae
           </Card>
 
           <p className="mt-4 text-sm text-white/80 drop-shadow">
-            {theme.ord.length} ord i temaet «{theme.navn}».
+            {theme.ord.length} ord i {teacherList ? 'ordlisten' : 'temaet'} «{theme.navn}».
           </p>
 
           <JoinWordListForm />

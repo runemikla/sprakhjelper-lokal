@@ -10,6 +10,42 @@ export interface WordListItem {
   word: string
   // Optional hint for the image model, e.g. «et rødt eple på et bord».
   imageDescription: string
+  // Text made by the language model for «Lær ord». `sig` records which
+  // word, description and languages it was made for, so only changed words
+  // are made again.
+  content?: ItemContent
+  // Which version of each recording/picture is stored (same idea as `sig`).
+  // The files themselves are in IndexedDB (see media-store.ts).
+  media?: Partial<Record<MediaKind, string>>
+}
+
+export interface ItemContent {
+  sig: string
+  boying: string
+  en: string
+  translations: Record<string, string>
+  // Example sentence with the word in [brackets].
+  s: string
+}
+
+// img: picture, w: the word read aloud, s: the example sentence read aloud.
+export type MediaKind = 'img' | 'w' | 's'
+
+export function contentSig(item: Pick<WordListItem, 'word' | 'imageDescription'>, languages: string[]) {
+  return JSON.stringify([item.word, item.imageDescription, [...languages].sort()])
+}
+
+export function mediaSig(item: WordListItem, kind: MediaKind): string | null {
+  if (kind === 'img') return JSON.stringify([item.word, item.imageDescription])
+  if (kind === 'w') return item.word
+  return item.content?.s ?? null
+}
+
+// True when the word has everything «Lær ord» uses.
+export function isItemReady(item: WordListItem, languages: string[], withImages: boolean) {
+  if (item.content?.sig !== contentSig(item, languages)) return false
+  const kinds: MediaKind[] = withImages ? ['w', 's', 'img'] : ['w', 's']
+  return kinds.every((k) => item.media?.[k] === mediaSig(item, k))
 }
 
 export interface WordList {

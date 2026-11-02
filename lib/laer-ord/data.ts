@@ -10,6 +10,19 @@ export interface Word {
   en: string
   s: string
   tema?: string
+  // Words from a teacher's list («Ordlister») carry their own files as
+  // object URLs. img: null means the word has no picture yet.
+  img?: string | null
+  lyd?: { w?: string; s?: string }
+}
+
+export function wordImageSrc(word: Word): string | null {
+  return word.img === undefined ? `/laer-ord/img/${word.id}.webp` : word.img
+}
+
+export function wordAudioSrc(word: Word, kind: 'w' | 's'): string | null {
+  if (word.lyd) return word.lyd[kind] ?? null
+  return `/laer-ord/lyd/${word.id}${kind === 's' ? '-s' : ''}.mp3`
 }
 
 export interface Theme {

@@ -5,6 +5,7 @@
 // tables exist (see docs/ORDLISTER_DATABASE.md).
 
 import { generateAccessCode, type WordList } from './types'
+import { mediaStore } from './media-store'
 
 const KEY = 'ordlister:lists'
 
@@ -53,9 +54,22 @@ export const wordListStore = {
       words: list.words,
     }
     writeAll(existing ? all.map((l) => (l.id === saved.id ? saved : l)) : [...all, saved])
+
+    // Drop pictures and recordings of words the teacher deleted.
+    const kept = new Set(saved.words.map((w) => w.id))
+    for (const word of existing?.words ?? []) {
+      if (!kept.has(word.id)) void mediaStore.removeItem(word.id)
+    }
     return saved
   },
+  // Stores generated content without touching the «changed» date.
+  put(list: WordList) {
+    const all = readAll()
+    writeAll(all.some((l) => l.id === list.id) ? all.map((l) => (l.id === list.id ? list : l)) : [...all, list])
+  },
   remove(id: string) {
+    const list = readAll().find((l) => l.id === id)
+    for (const word of list?.words ?? []) void mediaStore.removeItem(word.id)
     writeAll(readAll().filter((l) => l.id !== id))
   },
 }

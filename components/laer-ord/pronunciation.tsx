@@ -11,9 +11,9 @@ import {
   type ReactNode,
 } from 'react'
 import Image from 'next/image'
-import { Volume2 } from 'lucide-react'
+import { ImageIcon, Volume2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import type { Word } from '@/lib/laer-ord/data'
+import { wordAudioSrc, wordImageSrc, type Word } from '@/lib/laer-ord/data'
 
 // "w" plays the word itself, "s" plays the example sentence.
 export type SoundKind = 'w' | 's'
@@ -70,7 +70,13 @@ export function PronunciationProvider({ children }: { children: ReactNode }) {
       const key = `${word.id}:${kind}`
       audioRef.current?.pause()
 
-      const audio = new Audio(`/laer-ord/lyd/${word.id}${kind === 's' ? '-s' : ''}.mp3`)
+      const src = wordAudioSrc(word, kind)
+      if (!src) {
+        setPlaying(null)
+        speakWithBrowser(kind === 's' ? plainSentence(word.s) : word.ord, slow)
+        return
+      }
+      const audio = new Audio(src)
       audio.preservesPitch = true
       audio.playbackRate = slow ? 0.7 : 1
       audio.onended = () => setPlaying((current) => (current === key ? null : current))
@@ -164,13 +170,30 @@ interface WordImageProps {
 export function WordImage({ word, alt = '', className, sizes = '300px' }: WordImageProps) {
   return (
     <div className={cn('relative aspect-square overflow-hidden rounded-lg bg-white', className)}>
-      <Image
-        src={`/laer-ord/img/${word.id}.webp`}
-        alt={alt}
-        fill
-        sizes={sizes}
-        className="object-contain"
-      />
+      <WordImageFill word={word} alt={alt} sizes={sizes} />
     </div>
+  )
+}
+
+// The picture filling a relatively positioned parent. Pictures from a
+// teacher's list are object URLs, which Next.js cannot optimise.
+export function WordImageFill({ word, alt = '', sizes }: { word: Word; alt?: string; sizes: string }) {
+  const src = wordImageSrc(word)
+  if (!src) {
+    return (
+      <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-blue-50 to-cyan-50 text-blue-900/40">
+        <ImageIcon className="h-1/3 w-1/3" aria-hidden="true" />
+      </div>
+    )
+  }
+  return (
+    <Image
+      src={src}
+      alt={alt}
+      fill
+      sizes={sizes}
+      unoptimized={word.img !== undefined}
+      className="object-contain"
+    />
   )
 }

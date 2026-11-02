@@ -1,12 +1,11 @@
 'use client'
 
 import { useCallback, useState } from 'react'
-import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import type { Word } from '@/lib/laer-ord/data'
 import { ExerciseHeader, Feedback, shuffle } from './shared'
-import { usePronunciation } from './pronunciation'
+import { usePronunciation, WordImageFill } from './pronunciation'
 
 const ROUND_SIZE = 5
 
@@ -125,13 +124,7 @@ export function MatchSentences({ words }: { words: Word[] }) {
                 )}
               >
                 <span className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-white">
-                  <Image
-                    src={`/laer-ord/img/${word.id}.webp`}
-                    alt=""
-                    fill
-                    sizes="48px"
-                    className="object-contain"
-                  />
+                  <WordImageFill word={word} sizes="48px" />
                 </span>
                 <GappedSentence word={word} filled={isDone} />
               </button>

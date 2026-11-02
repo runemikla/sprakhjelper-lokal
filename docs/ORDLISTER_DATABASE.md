@@ -55,9 +55,19 @@ Lagring går via en `save_word_list(...)`-funksjon (eller en API-rute) som oppda
 listen og erstatter ordene i én transaksjon. Ord som er uendret, beholder bilde, lyd og
 oversettelse. Nye ord og ord med endret beskrivelse får nye bilder.
 
-## Bilder, lyd og oversettelse
+## Bilder, lyd og oversettelse (laget allerede nå)
 
-Når en lærer lagrer, lager en API-rute det som mangler for hvert ord:
-oversettelse til de valgte morsmålene (Azure OpenAI), bilde ut fra ordet og
-beskrivelsen (bildemodell i Azure AI Foundry), og lyd (Google TTS). Filene legges i en
-Storage-bøtte `word-lists`. Elevvisningen bruker så de samme øvelsene som Lær ord.
+Når læreren lagrer, lager nettleseren det som mangler for hvert ord via tre API-ruter
+(bare for innloggede lærere):
+
+- `POST /api/ordlister/innhold`: bøyning, engelsk, oversettelse til morsmålene og
+  eksempelsetning (Azure OpenAI, samme modell som resten av Språkhjelp).
+- `POST /api/ordlister/lyd`: ordet og setningen lest opp (Google TTS).
+- `POST /api/ordlister/bilde`: bilde ut fra ordet og beskrivelsen (Googles bildemodell
+  via Gemini API, `GEMINI_API_KEY` og valgfritt `GEMINI_IMAGE_MODEL`).
+
+Foreløpig lagres tekst i localStorage og filer i IndexedDB. Med database flyttes
+tekstfeltene til `word_list_items`/`word_list_translations`, og filene til en
+Storage-bøtte `word-lists` (`<list_id>/<item_id>-img.webp`, `-w.mp3`, `-s.mp3`) med
+offentlig lesing. Da blir listen et tema i Lær ord for alle elever med koden, ikke bare
+i lærerens nettleser.
