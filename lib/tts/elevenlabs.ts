@@ -1,22 +1,20 @@
+import { TextToSpeechError } from './errors'
+
 const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY
 const ELEVENLABS_VOICE_ID = 'k5IgYJw2jfo6mO5HhagG'
 const ELEVENLABS_MODEL_ID = 'eleven_flash_v2_5'
-
-export class ElevenLabsError extends Error {
-  readonly status: number
-
-  constructor(message: string, status: number) {
-    super(message)
-    this.name = 'ElevenLabsError'
-    this.status = status
-  }
-}
+// ElevenLabs accepts speed between 0.7 and 1.2.
+const MIN_SPEED = 0.7
+const MAX_SPEED = 1.2
 
 /**
  * Convert text to MP3 speech with ElevenLabs.
  * The API key stays on the server and is never sent to the browser.
  */
-export async function textToSpeech(text: string): Promise<Buffer> {
+export async function elevenLabsTextToSpeech(
+  text: string,
+  speakingRate: number
+): Promise<Buffer> {
   if (!ELEVENLABS_API_KEY) {
     throw new Error(
       'ElevenLabs configuration missing. Please set ELEVENLABS_API_KEY in .env'
@@ -35,6 +33,9 @@ export async function textToSpeech(text: string): Promise<Buffer> {
       body: JSON.stringify({
         text,
         model_id: ELEVENLABS_MODEL_ID,
+        voice_settings: {
+          speed: Math.min(MAX_SPEED, Math.max(MIN_SPEED, speakingRate)),
+        },
       }),
     }
   )
@@ -55,13 +56,13 @@ export async function textToSpeech(text: string): Promise<Buffer> {
     }
 
     if (response.status === 402) {
-      throw new ElevenLabsError(
+      throw new TextToSpeechError(
         'Denne stemmen krever en betalt ElevenLabs-plan. Oppgrader abonnementet eller velg en annen stemme.',
         402
       )
     }
 
-    throw new ElevenLabsError(
+    throw new TextToSpeechError(
       'Kunne ikke lage lyd av teksten. Prøv igjen.',
       response.status
     )

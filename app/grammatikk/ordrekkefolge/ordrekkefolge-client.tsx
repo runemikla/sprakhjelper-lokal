@@ -67,10 +67,13 @@ function shuffleWords(words: string[]): string[] {
 
 interface OrdrekkefolgeClientProps {
   userEmail?: string | null
+  // Forwarded to the navbar so admins see the "Instrukser" menu entry.
+  isAdmin?: boolean
 }
 
 export default function OrdrekkefolgeClient({
   userEmail = null,
+  isAdmin = false,
 }: OrdrekkefolgeClientProps) {
   // Selected difficulty (1–7). `started` flips once the first sentence loads.
   const [level, setLevel] = useState<Level>(1)
@@ -329,7 +332,7 @@ export default function OrdrekkefolgeClient({
         </div>
       </div>
 
-      <Navbar userEmail={userEmail} />
+      <Navbar userEmail={userEmail} isAdmin={isAdmin} />
 
       {/* Content */}
       <div className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-12">

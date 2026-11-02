@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation'
 import { getUser } from '@/lib/supabase/server'
+import { isAdmin } from '@/lib/auth/roles'
 import { isValidAccessCode, normalizeAccessCode } from '@/lib/lytteoving'
 import { LytteovingPlayClient } from './lytteoving-play-client'
 
@@ -18,11 +19,13 @@ export default async function LytteovingCodePage({
   }
 
   const user = await getUser()
+  const admin = await isAdmin(user)
 
   return (
     <LytteovingPlayClient
       code={normalized}
       userEmail={user?.email ?? null}
+      isAdmin={admin}
     />
   )
 }

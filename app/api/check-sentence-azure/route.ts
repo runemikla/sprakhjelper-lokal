@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { checkRateLimit, validateResponseSize } from '@/lib/api-helpers';
+import { getInstruction } from '@/lib/ai/instruction-store';
+import { azureChatCompletion, isAzureConfigured } from '@/lib/ai/azure';
 
 // Input validation schema
 const checkSentenceSchema = z.object({
@@ -9,12 +11,6 @@ const checkSentenceSchema = z.object({
   morsmaal: z.string().min(1, 'Mother language is required').max(50, 'Language name too long'),
 });
 
-// Azure OpenAI configuration
-const AZURE_ENDPOINT = process.env.AZURE_OPENAI_ENDPOINT!;
-const AZURE_API_KEY = process.env.AZURE_OPENAI_API_KEY!;
-const AZURE_DEPLOYMENT_NAME = process.env.AZURE_OPENAI_DEPLOYMENT_NAME || 'gpt-4o';
-const AZURE_API_VERSION = process.env.AZURE_OPENAI_API_VERSION || '2024-08-01-preview';
-
 export async function POST(req: Request) {
   try {
     // Rate limiting: 10 requests per minute per IP
@@ -22,7 +18,7 @@ export async function POST(req: Request) {
     if (rateLimitError) return rateLimitError;
     
     // Validate Azure configuration
-    if (!AZURE_ENDPOINT || !AZURE_API_KEY) {
+    if (!isAzureConfigured()) {
       throw new Error('Azure OpenAI configuration missing. Please set AZURE_OPENAI_ENDPOINT and AZURE_OPENAI_API_KEY in .env');
     }
 
@@ -31,58 +27,13 @@ export async function POST(req: Request) {
     const { sentence, correctSentence, morsmaal } = checkSentenceSchema.parse(body);
 
     console.log('Checking sentence for language:', morsmaal);
-    console.log('Using Azure OpenAI endpoint:', AZURE_ENDPOINT);
 
-    // Build system prompt (based on main route style)
-    const systemPrompt = `Du er en hjelpsom språkveileder for elever som lærer norsk. Skriv på bokmål og ${morsmaal}. Bruk enkelt, tydelig og muntlig språk – som til en venn – men med riktig grammatikk. Skriv korte setninger og forklar én ting om gangen. Bruk bare enkle grammatikkord som «verb» eller «ordstilling». Dersom du bruker et grammatikkbegrep i en forklaring, forklar det kort hver gang, eller så lenge det ikke er brukt tidligere i denne samtalen.
-Unngå vanskelige ord og faguttrykk. Når du forklarer feil, bruk små eksempler for å illustrere hva eleven skal gjøre for å forbedre setningen sin.
-
-##Fremgangsmåte
-1. Sett punktum på slutten av setningen hvis det ikke er det.
-2. Sammenlign brukerens setning med den korrekte setningen og gi konstruktiv tilbakemelding.
-
-Brukerens setning: "${sentence}"
-Korrekt setning: "${correctSentence}"
-Analyser setningen og gi punktvis forklaring (bruk tall) PÅ NORSK hva i elevens setning som eventuelt er galt og hvorfor – på en enkel og tydelig måte. Lag ett punkt for hver feil. Maksimalt 40 ord per punkt. Start hvert punkt med uthevet tekst som beskriver feilen. Dersom feil i setningen kan knyttes til vanlige utfordringer eller overføringsfeil skal du alltid forklare dette eksplisitt. Dersom det er gjort en overføringsfeil - Forklar på en enkel måte hvordan strukturer eller vaner fra ${morsmaal} kan ha ført til denne feilen på norsk, gjerne med et lite eksempel. Du skal ALDRI skrive den riktige setningen i forklaringen, men kun hva eleven må gjøre for å forbedre setningen sin. 
-
-##Viktige retningslinjer for tilbakemelding:
-- Hvis setningene er like (ignorer små forskjeller i tegnsetting): sett "er_riktig" til true
-- Hvis setningene er forskjellige: sett "er_riktig" til false
-- Beskriv hva eleven skal gjøre for å forbedre setningen sin, ikke hva eleven ikke skal gjøre
-- Du kan skrive delene av setningen som er feil i forklaringen, men ALDRI hele den riktige setningen
-- Ikke bruk vanskelige ord som «spesifikk», «funksjon», «konstruksjon», «korrekthet», «presist», «formulering», «komplekst» og lignende
-- Bruk bare helt nødvendige grammatikkbegreper som «subjekt», «verb», «ordstilling» og lignende. Hvis du må bruke et grammatisk begrep, forklar det med enkle ord
-- Ikke skriv ting som: «Denne konstruksjonen er ukorrekt». Skriv heller: «Dette sier vi ikke sånn på norsk. Her må vi gjøre ... i stedet.»
-- Vær oppmuntrende og vennlig.
-- Ved feil bøyning av verb, forklar hvordan verbet bøyes, hva som er riktig og hvorfor.
-
-##Eksempler på respons (KUN FOR SYSTEMET – IKKE VIS TIL ELEVEN)
-Følgende eksempler viser nøyaktig format på svaret. I faktiske svar skal modellen levere KUN JSON (ingen kodeblokker, ingen ekstra tekst).
-
-Eksempel 1 - Setning med feil:
-{
-  "er_riktig": false,
-  "forklaring": "1. **jeg reiser -> reiser jeg:** Verbet «reiser» skal stå på plass nummer to i setningen. Dette følger V2-regelen, som sier at verbet skal stå i den andre posisjonen i setningen.\\n2. **Thailand -> til Thailand:** Husk å ta med preposisjonen «til» for å vise hvor du reiser: «til Thailand».",
-  "forklaring_morsmaal": "...oversatt til ${morsmaal}",
-  "bruker_setning": "${sentence}"
-}
-
-Eksempel 2 - Riktig setning:
-{
-  "er_riktig": true,
-  "forklaring": "Flott! Denne setningen er helt riktig!",
-  "forklaring_morsmaal": "...oversatt til ${morsmaal}",
-  "bruker_setning": "${sentence}"
-}
-  
-Eksempel 3 - Setning med feil bøyning av verb:
-{
-  "er_riktig": false,
-  "forklaring": "1. **spiser -> har spist: ** Verbet  å spise, blir bøyd slik i presens og preteritum: å spise – spiser – har spist. I din tekst passer det med «har spist» siden du skriver om noe som har skjedd, i fortid",
-  "forklaring_morsmaal": "...oversatt til ${morsmaal}",
-  "bruker_setning": "${sentence}"
-}
-}`;
+    // Build system prompt from the active instruction version (or the default)
+    const systemPrompt = await getInstruction('skrivehjelp_setningssjekk', {
+      morsmaal,
+      elevens_setning: sentence,
+      fasitsetning: correctSentence,
+    });
 
     // Define JSON Schema for structured output
     const responseSchema = {
@@ -109,33 +60,23 @@ Eksempel 3 - Setning med feil bøyning av verb:
       additionalProperties: false
     };
 
-    // Build Azure OpenAI URL
-    const azureUrl = `${AZURE_ENDPOINT}/openai/deployments/${AZURE_DEPLOYMENT_NAME}/chat/completions?api-version=${AZURE_API_VERSION}`;
-
     // Make API call to Azure OpenAI with structured output
     console.log('Calling Azure OpenAI with structured output...');
-    const response = await fetch(azureUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'api-key': AZURE_API_KEY,
-      },
-      body: JSON.stringify({
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: `Sammenlign setningene og gi tilbakemelding.` }
-        ],
-        temperature: 0,
-        max_completion_tokens: 1000,
-        response_format: {
-          type: "json_schema",
-          json_schema: {
-            name: "sentence_check",
-            strict: true,
-            schema: responseSchema
-          }
+    const response = await azureChatCompletion({
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: `Sammenlign setningene og gi tilbakemelding.` }
+      ],
+      temperature: 0,
+      max_completion_tokens: 1000,
+      response_format: {
+        type: "json_schema",
+        json_schema: {
+          name: "sentence_check",
+          strict: true,
+          schema: responseSchema
         }
-      }),
+      }
     });
 
     if (!response.ok) {

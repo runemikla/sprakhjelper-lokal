@@ -59,6 +59,9 @@ const nextConfig: NextConfig = {
       {
         pathname: '/images/**',
       },
+      {
+        pathname: '/laer-ord/img/**',
+      },
     ],
   },
   async headers() {

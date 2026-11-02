@@ -3,6 +3,8 @@ import { z } from 'zod'
 import { checkRateLimit, validateResponseSize } from '@/lib/api-helpers'
 import { isValidAccessCode, normalizeAccessCode, QUESTION_TYPE, normalizeQuestionType } from '@/lib/lytteoving'
 import { sanitizeContent } from '@/lib/sanitize'
+import { getInstruction } from '@/lib/ai/instruction-store'
+import { azureChatCompletion, isAzureConfigured } from '@/lib/ai/azure'
 import { createClient } from '@/lib/supabase/server'
 
 export const maxDuration = 60
@@ -13,11 +15,6 @@ const checkAnswersSchema = z.object({
   taskPosition: z.number().int().min(1).max(3).default(1),
   answers: z.array(z.string().max(500)).min(1).max(10),
 })
-
-const AZURE_ENDPOINT = process.env.AZURE_OPENAI_ENDPOINT!
-const AZURE_API_KEY = process.env.AZURE_OPENAI_API_KEY!
-const AZURE_DEPLOYMENT_NAME = process.env.AZURE_OPENAI_DEPLOYMENT_NAME || 'gpt-4o'
-const AZURE_API_VERSION = process.env.AZURE_OPENAI_API_VERSION || '2024-08-01-preview'
 
 interface RouteContext {
   params: Promise<{ code: string }>
@@ -129,7 +126,7 @@ export async function POST(req: Request, { params }: RouteContext) {
       .filter(({ item }) => item.questionType === QUESTION_TYPE.open)
 
     if (openQuestions.length > 0) {
-      if (!AZURE_ENDPOINT || !AZURE_API_KEY) {
+      if (!isAzureConfigured()) {
         return NextResponse.json(
           { error: 'Azure OpenAI configuration missing.' },
           { status: 500 }
@@ -143,24 +140,7 @@ export async function POST(req: Request, { params }: RouteContext) {
         })
         .join('\n')
 
-      const systemPrompt = `Du vurderer svar fra elever som lærer norsk som andrespråk. Eleven har hørt en tekst og svart på spørsmål om innholdet.
-
-##Oppgave
-Vurder hvert elevsvar opp mot originalteksten. Det finnes ikke et lagret fasitsvar.
-
-##Krav
-- Et svar er riktig hvis det viser at eleven har forstått det spørsmålet spør om, ut fra teksten.
-- Godta meningslike svar, korte svar og små skrivefeil.
-- Et tomt svar er alltid feil.
-- Ikke krev identisk ordlyd med teksten.
-- Skriv tilbakemelding på enkelt bokmål. Maks 25 ord.
-- Vær vennlig og oppmuntrende.
-- Hvis svaret er feil: hint mot hva i teksten eleven skal lytte etter. Ikke skriv av hele den relevante setningen fra originalteksten.
-
-##Utdata
-Returner JSON med "results": en liste med nøyaktig ett objekt per spørsmål, i samme rekkefølge, hvert med:
-- "isCorrect": true eller false
-- "feedback": kort tilbakemelding til eleven`
+      const systemPrompt = await getInstruction('lytteoving_vurdering')
 
       const responseSchema = {
         type: 'object',
@@ -190,33 +170,24 @@ Returner JSON med "results": en liste med nøyaktig ett objekt per spørsmål, i
         additionalProperties: false,
       }
 
-      const azureUrl = `${AZURE_ENDPOINT}/openai/deployments/${AZURE_DEPLOYMENT_NAME}/chat/completions?api-version=${AZURE_API_VERSION}`
-
-      const response = await fetch(azureUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'api-key': AZURE_API_KEY,
-        },
-        body: JSON.stringify({
-          messages: [
-            { role: 'system', content: systemPrompt },
-            {
-              role: 'user',
-              content: `Originaltekst:\n${task.original_text}\n\n${numberedQuestions}`,
-            },
-          ],
-          temperature: 0.2,
-          max_completion_tokens: 1500,
-          response_format: {
-            type: 'json_schema',
-            json_schema: {
-              name: 'listening_answer_check',
-              strict: true,
-              schema: responseSchema,
-            },
+      const response = await azureChatCompletion({
+        messages: [
+          { role: 'system', content: systemPrompt },
+          {
+            role: 'user',
+            content: `Originaltekst:\n${task.original_text}\n\n${numberedQuestions}`,
           },
-        }),
+        ],
+        temperature: 0.2,
+        max_completion_tokens: 1500,
+        response_format: {
+          type: 'json_schema',
+          json_schema: {
+            name: 'listening_answer_check',
+            strict: true,
+            schema: responseSchema,
+          },
+        },
       })
 
       if (!response.ok) {

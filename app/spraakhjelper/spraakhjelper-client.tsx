@@ -100,9 +100,11 @@ interface SpraakhjelpperClientProps {
     id: string
     email?: string
   }
+  // Forwarded to the navbar so admins see the "Instrukser" menu entry.
+  isAdmin?: boolean
 }
 
-export default function SpraakhjelpperClient({ user }: SpraakhjelpperClientProps) {
+export default function SpraakhjelpperClient({ user, isAdmin = false }: SpraakhjelpperClientProps) {
   const [inputValue, setInputValue] = useState('')
   const [selectedLanguage, setSelectedLanguage] = useState<string>('')
 
@@ -716,7 +718,7 @@ export default function SpraakhjelpperClient({ user }: SpraakhjelpperClientProps
       </div>
 
       {/* Navbar */}
-      <Navbar userEmail={user.email ?? null} />
+      <Navbar userEmail={user.email ?? null} isAdmin={isAdmin} />
 
       {/* Content */}
       <div className="relative z-10 container mx-auto pt-24 pb-8 px-4 max-w-4xl">

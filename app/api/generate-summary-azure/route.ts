@@ -1,18 +1,14 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { checkRateLimit, validateResponseSize } from '@/lib/api-helpers';
+import { getInstruction } from '@/lib/ai/instruction-store';
+import { azureChatCompletion, isAzureConfigured } from '@/lib/ai/azure';
 
 // Input validation schema
 const summarySchema = z.object({
   originalText: z.string().min(1, 'Text is required').max(5000, 'Text too long (max 5000 characters)'),
   morsmaal: z.string().min(1, 'Mother language is required').max(50, 'Language name too long'),
 });
-
-// Azure OpenAI configuration
-const AZURE_ENDPOINT = process.env.AZURE_OPENAI_ENDPOINT!;
-const AZURE_API_KEY = process.env.AZURE_OPENAI_API_KEY!;
-const AZURE_DEPLOYMENT_NAME = process.env.AZURE_OPENAI_DEPLOYMENT_NAME || 'gpt-4o';
-const AZURE_API_VERSION = process.env.AZURE_OPENAI_API_VERSION || '2024-08-01-preview';
 
 export async function POST(req: Request) {
   try {
@@ -21,7 +17,7 @@ export async function POST(req: Request) {
     if (rateLimitError) return rateLimitError;
     
     // Validate Azure configuration
-    if (!AZURE_ENDPOINT || !AZURE_API_KEY) {
+    if (!isAzureConfigured()) {
       throw new Error('Azure OpenAI configuration missing. Please set AZURE_OPENAI_ENDPOINT and AZURE_OPENAI_API_KEY in .env');
     }
 
@@ -31,42 +27,9 @@ export async function POST(req: Request) {
 
     console.log('Generating summary for language:', morsmaal);
 
-    // Build system prompt for comprehensive analysis
-    const systemPrompt = `Du er en erfaren språklærer som gir konstruktiv og motiverende tilbakemelding til elever som lærer norsk. 
-
-Analyser den følgende teksten skrevet av en elev med ${morsmaal} som morsmål. Gi en omfattende vurdering som hjelper eleven å forbedre seg.
-
-## Oppgave
-Analyser teksten og gi tilbakemelding på følgende områder:
-
-1. **Hva var bra med teksten** - Vær spesifikk og oppmuntrende. Pek på positive aspekter som:
-   - God ordstilling eller setningsstruktur
-   - Riktig bruk av grammatikk
-   - Variert ordforråd
-   - God tekst sammenheng
-   - Andre sterke sider
-
-2. **Hva kan bli bedre** - Gi konstruktiv kritikk på:
-   - Grammatiske feil som går igjen
-   - Områder som trenger mer øvelse (f.eks. verb-bøying, substantiv-bøying, ordstilling, tegnsetting)
-   - Konkrete forslag til forbedring
-   - Hva eleven bør øve på videre
-   - Ikke nevn skrivefeil her.
-
-3. **Ordliste** - Liste over ord eleven har skrevet feil:
-   - Feil skrevet ord fra elevens tekst
-   - Korrekt stavemåte
-   - Kun ord som faktisk er feil stavet (ikke grammatikkfeil). For eksempel hvis eleven har skrevet "like" i stedet for "liker", så skal ikke "like" være med i ordlisten.
-
-## Retningslinjer
-- Vær oppmuntrende og konstruktiv
-- Skriv på bokmål og ${morsmaal}
-- Bruk enkelt språk som eleven forstår
-- Vær spesifikk og gi konkrete eksempler
-- Fokuser på de viktigste forbedringsområdene
-- Hvis det er få eller ingen feil, ros eleven og gi tips for videre utvikling
-
-Returner resultatet som JSON.`;
+    // Build system prompt for comprehensive analysis from the active instruction
+    // version (or the default)
+    const systemPrompt = await getInstruction('skrivehjelp_sammendrag', { morsmaal });
 
     // Define JSON Schema for structured output
     const responseSchema = {
@@ -114,32 +77,22 @@ Returner resultatet som JSON.`;
 
     // Make API call to Azure OpenAI
     console.log('Calling Azure OpenAI for summary generation...');
-    const response = await fetch(
-      `${AZURE_ENDPOINT}/openai/deployments/${AZURE_DEPLOYMENT_NAME}/chat/completions?api-version=${AZURE_API_VERSION}`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'api-key': AZURE_API_KEY,
-        },
-        body: JSON.stringify({
-          messages: [
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: `Tekst fra eleven:\n\n${originalText}` }
-          ],
-          temperature: 0.7,
-          max_completion_tokens: 2000,
-          response_format: {
-            type: "json_schema",
-            json_schema: {
-              name: "text_analysis",
-              strict: true,
-              schema: responseSchema
-            }
-          }
-        }),
+    const response = await azureChatCompletion({
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: `Tekst fra eleven:\n\n${originalText}` }
+      ],
+      temperature: 0.7,
+      max_completion_tokens: 2000,
+      response_format: {
+        type: "json_schema",
+        json_schema: {
+          name: "text_analysis",
+          strict: true,
+          schema: responseSchema
+        }
       }
-    );
+    });
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));

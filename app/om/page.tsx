@@ -167,14 +167,12 @@ export default function OmPage() {
                   <li>Microsoft Azure OpenAI — språkanalyse og tilbakemelding (EU)</li>
                   <li>Supabase — innlogging og lagring av lærerens lytteøvinger (EU)</li>
                   <li>Hetzner — drift av nettsiden (EU)</li>
-                  <li>ElevenLabs — tekst til tale for lytteøvinger (USA)</li>
+                  <li>Google Cloud — tekst til tale for lytteøvinger (kan være utenfor EU)</li>
                 </ul>
                 <p className="mt-4">
-                  ElevenLabs behandler data utenfor EU når lærerens tekst gjøres
+                  Google kan behandle data utenfor EU når lærerens tekst gjøres
                   om til tale. Det gjelder bare tekster som skal brukes i
                   lytteøving, og det er bare lærere som kan opprette lytteøvinger.
-                  ElevenLabs er valgt fordi de har naturlige stemmer som egner
-                  seg til denne typen øving. Det arbeides med alternativer innenfor EU.
                 </p>
                 <p className="mt-2">
                   All trafikk til appen går over HTTPS. Vi bruker bare nødvendige

@@ -26,6 +26,8 @@ import {
 interface LytteovingPlayClientProps {
   code: string
   userEmail?: string | null
+  // Forwarded to the navbar so admins see the "Instrukser" menu entry.
+  isAdmin?: boolean
 }
 
 interface LoadedTask {
@@ -51,6 +53,7 @@ function emptyAnswers(questions: ListeningQuestion[]): string[] {
 export function LytteovingPlayClient({
   code,
   userEmail = null,
+  isAdmin = false,
 }: LytteovingPlayClientProps) {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(true)
@@ -268,7 +271,7 @@ export function LytteovingPlayClient({
   }
 
   return (
-    <ListeningPageShell userEmail={userEmail}>
+    <ListeningPageShell userEmail={userEmail} isAdmin={isAdmin}>
       {showSummary && !isOwner ? (
         <ListeningSummary
           code={code}

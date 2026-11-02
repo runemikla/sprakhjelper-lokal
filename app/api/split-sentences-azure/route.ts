@@ -1,18 +1,14 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { checkRateLimit, validateResponseSize } from '@/lib/api-helpers';
+import { getInstruction } from '@/lib/ai/instruction-store';
+import { azureChatCompletion, isAzureConfigured } from '@/lib/ai/azure';
 
 // Input validation schema
 const splitSentencesSchema = z.object({
   text: z.string().min(1, 'Text is required').max(5000, 'Text too long (max 5000 characters)'),
   morsmaal: z.string().min(1, 'Mother language is required').max(50, 'Language name too long'),
 });
-
-// Azure OpenAI configuration
-const AZURE_ENDPOINT = process.env.AZURE_OPENAI_ENDPOINT!;
-const AZURE_API_KEY = process.env.AZURE_OPENAI_API_KEY!;
-const AZURE_DEPLOYMENT_NAME = process.env.AZURE_OPENAI_DEPLOYMENT_NAME || 'gpt-4o';
-const AZURE_API_VERSION = process.env.AZURE_OPENAI_API_VERSION || '2024-08-01-preview';
 
 export async function POST(req: Request) {
   try {
@@ -21,7 +17,7 @@ export async function POST(req: Request) {
     if (rateLimitError) return rateLimitError;
     
     // Validate Azure configuration
-    if (!AZURE_ENDPOINT || !AZURE_API_KEY) {
+    if (!isAzureConfigured()) {
       throw new Error('Azure OpenAI configuration missing. Please set AZURE_OPENAI_ENDPOINT and AZURE_OPENAI_API_KEY in .env');
     }
 
@@ -30,51 +26,19 @@ export async function POST(req: Request) {
     const { text, morsmaal } = splitSentencesSchema.parse(body);
 
     console.log('Splitting sentences for language:', morsmaal);
-    console.log('Using Azure OpenAI endpoint:', AZURE_ENDPOINT);
 
-    // Build system prompt for sentence splitting
-    const systemPrompt = `Du er en hjelpsom skriveassistent som hjelper brukeren med å dele tekst i setninger og korrigere tegnsetting.
-
-# Instruksjoner
-1. Del teksten inn i separate setninger. 
-2. Legg til punktum, spørsmålstegn eller utropstegn på slutten av hver setning hvis det mangler. 
-3. Start hver setning med stor bokstav. 
-4. IKKE endre noen ord, bøyninger eller grammatikk.
-
-Svar med kun én JSON-struktur på toppnivå – et array hvor hvert objekt representerer én setning:
-- "original": Den opprinnelige setningen som brukeren skrev (med korrigert tegnsetting og stor bokstav)
-- "corrected": Identisk med "original" (samme verdi)
-
-###OBS!
-Returner kun et JSON-objekt (gyldig JSON, uten kodeblokker eller ekstra tekst).
-
-Eksempel:
-Input: "Vi danset og holdt på hele natta, jeg tror aldri jeg har hatt det så gøy. Klokka ble alt for mye og jeg glemte helt å dra hjem i tide haha."
-Output:
-[
-  {"original": "Vi danset og holdt på hele natta.", "corrected": "Vi danset og holdt på hele natta."},
-  {"original": "Jeg tror aldri jeg har hatt det så gøy.", "corrected": "Jeg tror aldri jeg har hatt det så gøy."},
-  {"original": "Klokka ble alt for mye og jeg glemte helt å dra hjem i tide haha.", "corrected": "Klokka ble alt for mye og jeg glemte helt å dra hjem i tide haha."}
-]`;
-
-    // Build Azure OpenAI URL
-    const azureUrl = `${AZURE_ENDPOINT}/openai/deployments/${AZURE_DEPLOYMENT_NAME}/chat/completions?api-version=${AZURE_API_VERSION}`;
+    // Build system prompt for sentence splitting from the active instruction
+    // version (or the default)
+    const systemPrompt = await getInstruction('skrivehjelp_setningsdeling');
 
     // Make API call to Azure OpenAI
     console.log('Calling Azure OpenAI...');
-    const response = await fetch(azureUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'api-key': AZURE_API_KEY,
-      },
-      body: JSON.stringify({
-        messages: [
-          { role: 'user', content: `${systemPrompt}\n\nTekst: ${text}` }
-        ],
-        temperature: 0,
-        max_completion_tokens: 4000,
-      }),
+    const response = await azureChatCompletion({
+      messages: [
+        { role: 'user', content: `${systemPrompt}\n\nTekst: ${text}` }
+      ],
+      temperature: 0,
+      max_completion_tokens: 4000,
     });
 
     if (!response.ok) {

@@ -10,9 +10,11 @@ import { KiToolsMenu, KiToolsMobileLinks } from '@/components/landing/ki-tools-m
 
 interface NavbarProps {
   userEmail?: string | null
+  // When true, the admin-only "Instrukser" entry is shown in the KI-verktøy menu.
+  isAdmin?: boolean
 }
 
-export function Navbar({ userEmail = null }: NavbarProps) {
+export function Navbar({ userEmail = null, isAdmin = false }: NavbarProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   return (
@@ -33,7 +35,7 @@ export function Navbar({ userEmail = null }: NavbarProps) {
 
           {/* Desktop Navigation Links */}
           <div className="hidden md:flex items-center gap-8">
-            <KiToolsMenu />
+            <KiToolsMenu isAdmin={isAdmin} />
             <Link
               href="/laererveiledning"
               className="text-gray-700 hover:text-blue-600 transition-colors font-medium"
@@ -81,7 +83,7 @@ export function Navbar({ userEmail = null }: NavbarProps) {
         {mobileMenuOpen && (
           <div className="md:hidden py-4 border-t border-gray-200">
             <div className="flex flex-col space-y-4">
-              <KiToolsMobileLinks onNavigate={() => setMobileMenuOpen(false)} />
+              <KiToolsMobileLinks isAdmin={isAdmin} onNavigate={() => setMobileMenuOpen(false)} />
               <Link
                 href="/laererveiledning"
                 className="text-gray-700 hover:text-blue-600 transition-colors font-medium px-2"

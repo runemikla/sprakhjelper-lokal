@@ -29,7 +29,12 @@ Opprett en `.env.local`-fil i rotmappen med følgende variabler:
 AZURE_OPENAI_API_KEY=your_azure_api_key
 AZURE_OPENAI_ENDPOINT=your_azure_endpoint
 AZURE_OPENAI_DEPLOYMENT_NAME=your_deployment_name
+AZURE_OPENAI_API_VERSION=2024-08-01-preview
+# Valgfritt: standard | reasoning (gjettes fra deployment-navnet hvis tom)
+AZURE_OPENAI_MODEL_TYPE=
 ```
+
+Språkmodellen styres bare av disse variablene (se `lib/ai/azure.ts`). Slik bytter du modell: [docs/BYTTE_SPRAKMODELL.md](docs/BYTTE_SPRAKMODELL.md). Test en modell med `pnpm sjekk-modell`.
 
 4. Start utviklingsserveren:
 ```bash

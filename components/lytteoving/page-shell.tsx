@@ -4,11 +4,14 @@ import { Navbar } from '@/components/landing/navbar'
 
 interface ListeningPageShellProps {
   userEmail?: string | null
+  // Forwarded to the navbar so admins see the "Instrukser" menu entry.
+  isAdmin?: boolean
   children: ReactNode
 }
 
 export function ListeningPageShell({
   userEmail = null,
+  isAdmin = false,
   children,
 }: ListeningPageShellProps) {
   return (
@@ -28,7 +31,7 @@ export function ListeningPageShell({
         </div>
       </div>
 
-      <Navbar userEmail={userEmail} />
+      <Navbar userEmail={userEmail} isAdmin={isAdmin} />
 
       <div className="relative z-10 container mx-auto pt-24 pb-8 px-4 max-w-4xl">
         <div className="space-y-8">{children}</div>

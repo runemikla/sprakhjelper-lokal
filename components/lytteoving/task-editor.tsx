@@ -15,6 +15,7 @@ import { AudioPlayer } from '@/components/lytteoving/audio-player'
 import { QuestionList } from '@/components/lytteoving/question-list'
 import {
   QUESTION_TYPE,
+  SPEAKING_RATES,
   isStatementTask,
   type ListeningQuestion,
   type QuestionType,
@@ -28,6 +29,7 @@ export interface DraftListeningTask {
   text: string
   questionCount: number
   questionType: QuestionType
+  speakingRate: number
   originalText: string
   questions: ListeningQuestion[]
   audioBase64: string | null
@@ -45,6 +47,7 @@ interface TaskEditorProps {
   onTextChange: (value: string) => void
   onQuestionCountChange: (value: number) => void
   onQuestionTypeChange: (value: QuestionType) => void
+  onSpeakingRateChange: (value: number) => void
   onQuestionChange: (questionIndex: number, patch: Partial<ListeningQuestion>) => void
   onGenerate: () => void
   onRemove: () => void
@@ -59,6 +62,7 @@ export function TaskEditor({
   onTextChange,
   onQuestionCountChange,
   onQuestionTypeChange,
+  onSpeakingRateChange,
   onQuestionChange,
   onGenerate,
   onRemove,
@@ -181,6 +185,41 @@ export function TaskEditor({
           </span>
         </div>
       </div>
+
+      {!isLocked && (
+        <div>
+          <Label
+            htmlFor={`speaking-rate-${task.id}`}
+            className="mb-1 block text-sm font-semibold"
+          >
+            Lesehastighet
+          </Label>
+          <Select
+            value={String(task.speakingRate)}
+            onValueChange={(value) => onSpeakingRateChange(Number(value))}
+            disabled={task.isGenerating}
+          >
+            <SelectTrigger
+              id={`speaking-rate-${task.id}`}
+              className="w-full max-w-none"
+            >
+              <SelectValue placeholder="Velg hastighet" />
+            </SelectTrigger>
+            <SelectContent>
+              {SPEAKING_RATES.map((rate) => (
+                <SelectItem key={rate.value} value={String(rate.value)}>
+                  {rate.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {task.questions.length > 0 && (
+            <p className="mt-1 text-xs text-gray-500">
+              Generer oppgaven på nytt for å endre hastigheten på lydfilen.
+            </p>
+          )}
+        </div>
+      )}
 
       {!isLocked && (
         <Button
