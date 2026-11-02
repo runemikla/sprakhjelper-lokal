@@ -61,7 +61,7 @@ Når læreren lagrer, lager nettleseren det som mangler for hvert ord via tre AP
 (bare for innloggede lærere):
 
 - `POST /api/ordlister/innhold`: bøyning, engelsk, oversettelse til morsmålene og
-  eksempelsetning (Azure OpenAI, samme modell som resten av Språkhjelp).
+  eksempelsetning (Azure OpenAI, `gpt-6.1-terra`; kan overstyres med `ORDLISTER_DEPLOYMENT`).
 - `POST /api/ordlister/lyd`: ordet og setningen lest opp (Google TTS).
 - `POST /api/ordlister/bilde`: bilde ut fra ordet og beskrivelsen (Googles bildemodell
   via Gemini API, `GEMINI_API_KEY` og valgfritt `GEMINI_IMAGE_MODEL`).

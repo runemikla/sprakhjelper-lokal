@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { checkRateLimit, validateResponseSize } from '@/lib/api-helpers'
-import { azureChatCompletion, isAzureConfigured } from '@/lib/ai/azure'
+import { isAzureConfigured } from '@/lib/ai/azure'
+import { getEnvModelConfig, guessModelType, sendChatCompletion, type AzureModelConfig } from '@/lib/ai/azure-core'
 import { requireTeacher } from '@/lib/ordlister/require-teacher'
 
 // Writes the text «Lær ord» needs for each word in a teacher's list:
@@ -20,6 +21,20 @@ const schema = z.object({
     .min(1)
     .max(30),
 })
+
+// Word lists use their own model, separate from the one chosen on the
+// «Språkmodell» admin page. Endpoint and key come from AZURE_OPENAI_*.
+// Override with ORDLISTER_DEPLOYMENT / ORDLISTER_API_VERSION.
+function ordlisterModel(): AzureModelConfig {
+  const deployment = process.env.ORDLISTER_DEPLOYMENT?.trim() || 'gpt-6.1-terra'
+  return {
+    ...getEnvModelConfig(),
+    deployment,
+    apiVersion: process.env.ORDLISTER_API_VERSION?.trim() || 'v1',
+    modelType: guessModelType(deployment),
+    reasoningEffort: 'low',
+  }
+}
 
 const SYSTEM_PROMPT = `Du lager innhold til en ordtrener for elever som lærer norsk (bokmål) som andrespråk, nivå A1–A2.
 For hvert ord du får, skal du gi:
@@ -73,7 +88,7 @@ export async function POST(req: Request) {
       .map((w, i) => `${i + 1}. ${w.word}${w.description ? ` (lærerens beskrivelse: ${w.description})` : ''}`)
       .join('\n')
 
-    const response = await azureChatCompletion({
+    const response = await sendChatCompletion(ordlisterModel(), {
       messages: [
         { role: 'system', content: SYSTEM_PROMPT },
         {
