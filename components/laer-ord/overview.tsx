@@ -5,8 +5,9 @@ import Link from 'next/link'
 import { BookOpen, Loader2, Pencil, Plus, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { THEMES } from '@/lib/laer-ord/data'
+import { THEMES, type Theme } from '@/lib/laer-ord/data'
 import { wordListStore } from '@/lib/ordlister/db-store'
+import { importTheme } from '@/lib/ordlister/import-themes'
 import { mediaUrl } from '@/lib/ordlister/media'
 import type { WordList } from '@/lib/ordlister/types'
 
@@ -26,10 +27,11 @@ interface WordListOverviewProps {
   userId: string
 }
 
-// The first page of «Lær ord»: the user's word lists, then the built-in themes.
+// The first page of «Lær ord»: the user's word lists.
 export function WordListOverview({ isTeacher, isAdmin, userId }: WordListOverviewProps) {
   const [lists, setLists] = useState<WordList[] | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [importing, setImporting] = useState<string | null>(null)
 
   async function reload() {
     try {
@@ -51,6 +53,23 @@ export function WordListOverview({ isTeacher, isAdmin, userId }: WordListOvervie
       await reload()
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Kunne ikke slette ordlisten.')
+    }
+  }
+
+  // The built-in themes from the Ordbank prototype become ordinary lists
+  // when an admin imports them. Until then, admins get a button for it.
+  const pendingThemes =
+    isAdmin && lists ? THEMES.filter((t) => !lists.some((l) => l.title === t.navn)) : []
+
+  async function handleImport(theme: Theme) {
+    setError(null)
+    try {
+      await importTheme(theme, (done, total) => setImporting(`${theme.navn}: ${done} av ${total} ord`))
+      await reload()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Kunne ikke hente inn temaet.')
+    } finally {
+      setImporting(null)
     }
   }
 
@@ -93,6 +112,32 @@ export function WordListOverview({ isTeacher, isAdmin, userId }: WordListOvervie
         <CardContent className="space-y-4 pt-6">
           {error && (
             <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">{error}</p>
+          )}
+          {pendingThemes.length > 0 && (
+            <div className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900">
+              <p className="mb-2">
+                De faste temaene fra Ordbank er ikke ordlister ennå. Hent dem inn som dine ordlister, så kan du dele
+                dem med grupper. Bilder og lyd blir med.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {pendingThemes.map((theme) => (
+                  <Button
+                    key={theme.id}
+                    size="sm"
+                    variant="outline"
+                    disabled={importing !== null}
+                    onClick={() => void handleImport(theme)}
+                  >
+                    {importing?.startsWith(theme.navn) ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Plus className="h-4 w-4" />
+                    )}
+                    {importing?.startsWith(theme.navn) ? importing : `Hent inn «${theme.navn}»`}
+                  </Button>
+                ))}
+              </div>
+            </div>
           )}
           {lists === null ? (
             <div className="flex items-center justify-center gap-3 py-10 text-gray-500">
@@ -137,30 +182,6 @@ export function WordListOverview({ isTeacher, isAdmin, userId }: WordListOvervie
         </CardContent>
       </Card>
 
-      <Card className={card}>
-        <div className="border-b border-gray-200 px-6 pt-6 pb-4">
-          <h2 className="mb-1 text-2xl font-bold text-gray-900">Faste temaer</h2>
-          <p className="text-sm text-gray-600">Ordlister som alltid er tilgjengelige.</p>
-        </div>
-        <CardContent className="pt-6">
-          <ul className="grid gap-3 sm:grid-cols-2">
-            {THEMES.map((theme) => (
-              <li key={theme.id}>
-                <Link
-                  href={`/laer-ord/${theme.id}`}
-                  className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 hover:border-blue-300 hover:bg-blue-50"
-                >
-                  <BookOpen className="h-5 w-5 shrink-0 text-blue-700" />
-                  <span className="min-w-0">
-                    <span className="block font-semibold text-gray-900">{theme.navn}</span>
-                    <span className="block text-sm text-gray-600">{theme.ord.length} ord</span>
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </CardContent>
-      </Card>
     </>
   )
 }
