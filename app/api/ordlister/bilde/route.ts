@@ -23,7 +23,7 @@ export async function GET() {
 export async function POST(req: Request) {
   const denied = await requireTeacher()
   if (denied) return denied
-  const limited = checkRateLimit(req, 30, 60000)
+  const limited = checkRateLimit(req, 120, 60000)
   if (limited) return limited
 
   try {

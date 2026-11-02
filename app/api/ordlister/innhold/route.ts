@@ -56,7 +56,7 @@ Hvis læreren har gitt en beskrivelse, følg den. Den beskriver hvordan læreren
 export async function POST(req: Request) {
   const denied = await requireTeacher()
   if (denied) return denied
-  const limited = checkRateLimit(req, 20, 60000)
+  const limited = checkRateLimit(req, 30, 60000)
   if (limited) return limited
 
   try {
