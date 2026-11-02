@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import { Textarea } from '@/components/ui/textarea'
-import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -918,16 +917,21 @@ export default function SpraakhjelpperClient({ user, isAdmin = false }: Spraakhj
                         }`}>
                         {currentSentence.setning_status === 'feil' ? (
                           <div className="space-y-3">
-                            <Input
+                            <Textarea
+                              autosize
+                              autosizeProps={{ minRows: 1, maxRows: 8 }}
                               value={retryInput}
                               onChange={(e) => setRetryInput(e.target.value)}
                               onKeyDown={(e) => {
-                                if (e.key === 'Enter' && retryInput.trim() && !isCheckingAnswer) {
+                                // Enter sender svaret, Shift+Enter gir ny linje
+                                if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
                                   e.preventDefault()
-                                  handleCheckAnswer()
+                                  if (retryInput.trim() && !isCheckingAnswer) {
+                                    handleCheckAnswer()
+                                  }
                                 }
                               }}
-                              className="bg-white border-red-300 focus:border-red-500 text-base"
+                              className="resize-none bg-white border-red-300 focus:border-red-500 text-base"
                               placeholder="Skriv setningen din på nytt her..."
                             />
                             <div className="flex items-center justify-between">
