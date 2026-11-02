@@ -50,20 +50,13 @@ export function GroupsClient({ isTeacher, isAdmin }: GroupsClientProps) {
 
   return (
     <>
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-white drop-shadow">Grupper</h1>
-          <p className="mt-1 text-white/90 drop-shadow">
-            {isTeacher
-              ? 'Lag en gruppe for klassen din og gi elevene tilgangskoden. Ordlister i Lær ord deles med gruppene.'
-              : 'Bli med i gruppen din med koden fra læreren. Da ser du ordlistene som er delt med gruppen i Lær ord.'}
-          </p>
-        </div>
-        <Button asChild className="shrink-0 bg-white text-gray-900 shadow hover:bg-gray-100">
-          <Link href="/grupper/ny">
-            <Plus className="h-4 w-4" /> Ny gruppe
-          </Link>
-        </Button>
+      <div>
+        <h1 className="text-3xl font-bold text-white drop-shadow">Grupper</h1>
+        <p className="mt-1 text-white/90 drop-shadow">
+          {isTeacher
+            ? 'Lag en gruppe for klassen din og gi elevene tilgangskoden. Ordlister i Lær ord deles med gruppene.'
+            : 'Bli med i gruppen din med koden fra læreren. Da ser du ordlistene som er delt med gruppen i Lær ord.'}
+        </p>
       </div>
 
       {error && (
@@ -81,6 +74,8 @@ export function GroupsClient({ isTeacher, isAdmin }: GroupsClientProps) {
           {isTeacher && (
             <GroupSection
               title="Mine grupper"
+              description="Elevene blir med i gruppen med tilgangskoden. Ordlister du deler med gruppen, dukker opp i Lær ord for dem."
+              newButton
               empty="Du har ikke laget noen grupper ennå. Trykk «Ny gruppe» for å lage en."
               groups={own}
               manage
@@ -90,6 +85,8 @@ export function GroupsClient({ isTeacher, isAdmin }: GroupsClientProps) {
           {(member.length > 0 || !isTeacher) && (
             <GroupSection
               title="Grupper jeg er med i"
+              description={isTeacher ? undefined : 'Ordlister som er delt med gruppene dine, finner du i Lær ord.'}
+              newButton={!isTeacher}
               empty="Du er ikke med i noen grupper ennå. Trykk «Ny gruppe» og skriv inn koden fra læreren."
               groups={member}
               onChanged={reload}
@@ -112,6 +109,9 @@ export function GroupsClient({ isTeacher, isAdmin }: GroupsClientProps) {
 
 interface GroupSectionProps {
   title: string
+  description?: string
+  // Shows the «Ny gruppe» button in the header.
+  newButton?: boolean
   empty: string
   groups: Group[]
   // Owners and admins: show the code and members, allow delete.
@@ -119,11 +119,21 @@ interface GroupSectionProps {
   onChanged: () => Promise<void>
 }
 
-function GroupSection({ title, empty, groups, manage = false, onChanged }: GroupSectionProps) {
+function GroupSection({ title, description, newButton, empty, groups, manage = false, onChanged }: GroupSectionProps) {
   return (
     <Card className={card}>
-      <div className="border-b border-gray-200 px-6 pt-6 pb-4">
-        <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
+      <div className="flex items-start justify-between gap-4 border-b border-gray-200 px-6 pt-6 pb-4">
+        <div>
+          <h2 className="mb-1 text-2xl font-bold text-gray-900">{title}</h2>
+          {description && <p className="text-sm text-gray-600">{description}</p>}
+        </div>
+        {newButton && (
+          <Button asChild className="shrink-0">
+            <Link href="/grupper/ny">
+              <Plus className="h-4 w-4" /> Ny gruppe
+            </Link>
+          </Button>
+        )}
       </div>
       <CardContent className="pt-6">
         {groups.length === 0 ? (
