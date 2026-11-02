@@ -41,7 +41,8 @@ const securityHeaders = [
       "font-src 'self' data:",
       // Allow Supabase (with specific URL + wildcard) and Azure OpenAI
       "connect-src 'self' https://ltfpqhavtpoiclqcuamg.supabase.co https://*.supabase.co https://*.openai.azure.com https://*.services.ai.azure.com",
-      "media-src 'self' data: blob:",
+      // Word list recordings in «Lær ord» are played from Supabase Storage.
+      "media-src 'self' data: blob: https://ltfpqhavtpoiclqcuamg.supabase.co https://*.supabase.co",
       "object-src 'none'",
       "base-uri 'self'",
       "form-action 'self'",
