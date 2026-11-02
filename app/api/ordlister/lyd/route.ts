@@ -23,9 +23,12 @@ export async function POST(req: Request) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: 'Ugyldig forespørsel' }, { status: 400 })
     }
-    console.error('ordlister/lyd:', error instanceof Error ? error.message : error)
+    const detail = error instanceof Error ? error.message : String(error)
+    console.error('ordlister/lyd:', detail)
+    // Only teachers reach this route, so the real reason is shown to help fix
+    // setup problems (missing credentials, disabled API, wrong voice).
     const message =
-      error instanceof TextToSpeechError ? error.message : 'Kunne ikke lage lyd.'
+      error instanceof TextToSpeechError ? error.message : `Kunne ikke lage lyd: ${detail}`
     return NextResponse.json({ error: message }, { status: 502 })
   }
 }
