@@ -7,6 +7,9 @@ import { rateLimit, getClientIp } from './rate-limit';
  * @param limit - Maximum requests allowed (default: 10)
  * @param window - Time window in ms (default: 60000 = 1 minute)
  * @returns NextResponse with 429 status if rate limit exceeded, null otherwise
+ *
+ * Each route gets its own counter per client (keyed by the request path), so
+ * one tool's calls do not use up another tool's limit.
  */
 export function checkRateLimit(
   req: Request,
@@ -14,12 +17,13 @@ export function checkRateLimit(
   window: number = 60000
 ): NextResponse | null {
   const clientIp = getClientIp(req);
-  const rateLimitResult = rateLimit(clientIp, { limit, window });
+  const route = new URL(req.url).pathname;
+  const rateLimitResult = rateLimit(`${route}:${clientIp}`, { limit, window });
   
   if (!rateLimitResult.success) {
     return NextResponse.json(
       { 
-        error: 'Rate limit exceeded', 
+        error: 'For mange forespørsler. Vent litt og prøv igjen.',
         message: 'Too many requests. Please try again later.',
         retryAfter: Math.ceil((rateLimitResult.reset - Date.now()) / 1000)
       },

@@ -10,7 +10,7 @@ const schema = z.object({ text: z.string().trim().min(1).max(200) })
 export async function POST(req: Request) {
   const denied = await requireTeacher()
   if (denied) return denied
-  const limited = checkRateLimit(req, 120, 60000)
+  const limited = checkRateLimit(req, 240, 60000)
   if (limited) return limited
 
   try {
