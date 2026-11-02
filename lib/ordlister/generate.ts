@@ -2,10 +2,11 @@
 
 // Makes everything «Lær ord» needs for a teacher's word list: text from the
 // language model, recordings from Google TTS and pictures from Google's
-// image model. Only words that are new or changed are made again.
+// image model. Only words that are new or changed are made again. Text is
+// stored in the database and files in the word-lists bucket as they finish.
 
-import { wordListStore } from './local-store'
-import { mediaStore, shrinkImage } from './media-store'
+import { wordListStore } from './db-store'
+import { shrinkImage, uploadMedia } from './media'
 import {
   contentSig,
   mediaSig,
@@ -47,11 +48,12 @@ export async function generateList(start: WordList, options: GenerateOptions): P
 
   const commit = (words: WordListItem[]) => {
     list = { ...list, words }
-    wordListStore.put(list)
     options.onList(list)
   }
-  const patchItem = (id: string, patch: Partial<WordListItem>) =>
+  const patchItem = async (id: string, patch: Partial<WordListItem>) => {
+    await wordListStore.patchItem(id, patch)
     commit(list.words.map((w) => (w.id === id ? { ...w, ...patch } : w)))
+  }
 
   for (const item of list.words) options.onStatus(item.id, 'venter')
 
@@ -74,24 +76,20 @@ export async function generateList(start: WordList, options: GenerateOptions): P
       const { words } = (await response.json()) as {
         words: { boying: string; en: string; oversettelser: Record<string, string>; s: string; motiv: string }[]
       }
-      const byId = new Map(batch.map((w, n) => [w.id, words[n]]))
-      commit(
-        list.words.map((w) => {
-          const made = byId.get(w.id)
-          if (!made) return w
-          return {
-            ...w,
-            content: {
-              sig: contentSig(w, list.languages),
-              boying: made.boying,
-              en: made.en,
-              translations: made.oversettelser,
-              s: made.s,
-              motif: made.motiv,
-            },
-          }
+      for (const [n, w] of batch.entries()) {
+        const made = words[n]
+        if (!made) continue
+        await patchItem(w.id, {
+          content: {
+            sig: contentSig(w, list.languages),
+            boying: made.boying,
+            en: made.en,
+            translations: made.oversettelser,
+            s: made.s,
+            motif: made.motiv,
+          },
         })
-      )
+      }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Ukjent feil'
       batch.forEach((w) => {
@@ -135,8 +133,8 @@ export async function generateList(start: WordList, options: GenerateOptions): P
 
       let blob = await response.blob()
       if (kind === 'img') blob = await shrinkImage(blob)
-      await mediaStore.put(id, kind, blob)
-      patchItem(id, { media: { ...item.media, [kind]: sig } })
+      await uploadMedia(list.id, id, kind, blob)
+      await patchItem(id, { media: { ...item.media, [kind]: sig } })
     }
   }
 

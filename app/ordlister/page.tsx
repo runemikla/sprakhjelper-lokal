@@ -1,9 +1,6 @@
-import { getUser } from '@/lib/supabase/server'
-import { isAdmin } from '@/lib/auth/roles'
-import { TeacherOverview } from '@/components/ordlister/teacher-overview'
+import { redirect } from 'next/navigation'
 
-export default async function OrdlisterPage() {
-  const user = await getUser()
-  const admin = await isAdmin(user)
-  return <TeacherOverview userEmail={user?.email ?? null} isAdmin={admin} />
+// «Ordlister» is now part of «Lær ord».
+export default function OrdlisterPage() {
+  redirect('/laer-ord')
 }
