@@ -21,6 +21,8 @@ import { ItemThumb } from '@/components/ordlister/item-thumb'
 
 const MAX_DESCRIPTION = 300
 const MAX_IMAGE_CONTEXT = 500
+// Most words a list can have. Older lists with more keep them, but get no new ones.
+const MAX_WORDS = 20
 
 interface WordListEditorProps {
   // Undefined for a new list.
@@ -172,9 +174,11 @@ export function WordListEditor({ listId, userEmail = null, isAdmin = false }: Wo
     setGroupIds((current) => (current.includes(id) ? current.filter((g) => g !== id) : [...current, id]))
   }
 
+  const full = words.length >= MAX_WORDS
+
   function addWord() {
     const word = newWord.trim()
-    if (!word) return
+    if (!word || full) return
     setWords((current) => [...current, newItem(word)])
     setNewWord('')
     newWordRef.current?.focus()
@@ -186,7 +190,14 @@ export function WordListEditor({ listId, userEmail = null, isAdmin = false }: Wo
       .split(/[\n,;]+/)
       .map((w) => w.trim())
       .filter((w) => w && !existing.has(w.toLowerCase()))
-    setWords((current) => [...current, ...[...new Set(items)].map((w) => newItem(w))])
+    const unique = [...new Set(items)]
+    const room = Math.max(0, MAX_WORDS - words.length)
+    setWords((current) => [...current, ...unique.slice(0, room).map((w) => newItem(w))])
+    setErrors(
+      unique.length > room
+        ? [`En ordliste kan ha maks ${MAX_WORDS} ord. ${unique.length - room} ord ble ikke lagt til.`]
+        : []
+    )
     setBulkText('')
     setShowBulk(false)
   }
@@ -216,6 +227,10 @@ export function WordListEditor({ listId, userEmail = null, isAdmin = false }: Wo
     if (!title.trim()) problems.push('Gi ordlisten et navn.')
     if (languages.length === 0) problems.push('Velg minst ett morsmål.')
     if (cleaned.length === 0) problems.push('Legg til minst ett ord.')
+    const before = saved?.words.length ?? 0
+    if (cleaned.length > Math.max(MAX_WORDS, before)) {
+      problems.push(`En ordliste kan ha maks ${MAX_WORDS} ord.`)
+    }
     setErrors(problems)
     if (problems.length > 0) return
 
@@ -226,7 +241,8 @@ export function WordListEditor({ listId, userEmail = null, isAdmin = false }: Wo
         id: saved?.id,
         title: title.trim(),
         languages,
-        imageContext: imageContext.trim(),
+        // The context is set when the list is made and cannot be changed later.
+        imageContext: saved ? undefined : imageContext.trim(),
         words: cleaned,
         groupIds,
       })
@@ -351,27 +367,41 @@ export function WordListEditor({ listId, userEmail = null, isAdmin = false }: Wo
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="image-context" className="text-base font-semibold text-gray-900">
-              Kontekst for bildene (valgfritt)
-            </Label>
-            <p className="text-sm text-gray-600">
-              Gjelder alle bildene i listen. Beskriv for eksempel hvem som er med, hvor det skjer
-              eller hva som skal være likt. Endrer du konteksten på en ferdig liste, lages bildene
-              på nytt.
-            </p>
-            <Textarea
-              id="image-context"
-              value={imageContext}
-              maxLength={MAX_IMAGE_CONTEXT}
-              onChange={(e) => setImageContext(e.target.value)}
-              placeholder="For eksempel: «Voksne elever på en norsk arbeidsplass» eller «Alt skjer på en skole i Norge»"
-              className="min-h-[72px] bg-white text-base md:text-sm"
-            />
-            <p className="text-right text-xs tabular-nums text-gray-400">
-              {imageContext.length}/{MAX_IMAGE_CONTEXT}
-            </p>
-          </div>
+          {saved ? (
+            saved.imageContext && (
+              <div className="space-y-2">
+                <p className="text-base font-semibold text-gray-900">Kontekst for bildene</p>
+                <p className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-800">
+                  {saved.imageContext}
+                </p>
+                <p className="text-sm text-gray-600">
+                  Konteksten kan ikke endres etter at listen er laget. Vil du endre et bilde, bruk
+                  bildeknappen ved ordet.
+                </p>
+              </div>
+            )
+          ) : (
+            <div className="space-y-2">
+              <Label htmlFor="image-context" className="text-base font-semibold text-gray-900">
+                Kontekst for bildene (valgfritt)
+              </Label>
+              <p className="text-sm text-gray-600">
+                Gjelder alle bildene i listen. Beskriv for eksempel hvem som er med, hvor det skjer
+                eller hva som skal være likt. Konteksten kan ikke endres etter at listen er laget.
+              </p>
+              <Textarea
+                id="image-context"
+                value={imageContext}
+                maxLength={MAX_IMAGE_CONTEXT}
+                onChange={(e) => setImageContext(e.target.value)}
+                placeholder="For eksempel: «Voksne elever på en norsk arbeidsplass» eller «Alt skjer på en skole i Norge»"
+                className="min-h-[72px] bg-white text-base md:text-sm"
+              />
+              <p className="text-right text-xs tabular-nums text-gray-400">
+                {imageContext.length}/{MAX_IMAGE_CONTEXT}
+              </p>
+            </div>
+          )}
 
           <div className="space-y-2">
             <p className="text-base font-semibold text-gray-900">Del med grupper</p>
@@ -423,7 +453,7 @@ export function WordListEditor({ listId, userEmail = null, isAdmin = false }: Wo
             <div className="flex flex-wrap items-baseline justify-between gap-2">
               <p className="text-base font-semibold text-gray-900">Ord</p>
               <span className="text-sm tabular-nums text-gray-500">
-                {words.length} ord
+                {words.length} av {MAX_WORDS} ord
               </span>
             </div>
 
@@ -511,11 +541,12 @@ export function WordListEditor({ listId, userEmail = null, isAdmin = false }: Wo
                     addWord()
                   }
                 }}
-                placeholder="Skriv et ord og trykk Enter"
+                placeholder={full ? `Listen har ${MAX_WORDS} ord, som er maks` : 'Skriv et ord og trykk Enter'}
+                disabled={full}
                 aria-label="Nytt ord"
                 className="h-10 bg-white text-base"
               />
-              <Button type="button" onClick={addWord} disabled={!newWord.trim()} className="h-10">
+              <Button type="button" onClick={addWord} disabled={!newWord.trim() || full} className="h-10">
                 <Plus className="h-4 w-4" /> Legg til
               </Button>
             </div>
@@ -541,7 +572,7 @@ export function WordListEditor({ listId, userEmail = null, isAdmin = false }: Wo
                   </Button>
                 </div>
               </div>
-            ) : (
+            ) : full ? null : (
               <button
                 type="button"
                 onClick={() => setShowBulk(true)}
