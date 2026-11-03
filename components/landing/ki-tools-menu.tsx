@@ -9,9 +9,13 @@ export const KI_TOOLS = [
   { href: '/spraakhjelper', label: 'Skrivehjelp', clearsSession: true },
   { href: '/grammatikk', label: 'Grammatikk øving', clearsSession: false },
   { href: '/lytteoving', label: 'Lytteøving', clearsSession: false },
-  { href: '/laer-ord', label: 'Lær ord', clearsSession: false },
-  { href: '/ordlister', label: 'Ordlister', clearsSession: false },
+  // «Lær ord» needs a signed-in user (word lists are shared through groups).
+  { href: '/laer-ord', label: 'Lær ord', clearsSession: false, requiresLogin: true },
 ] as const
+
+function visibleTools(loggedIn: boolean) {
+  return KI_TOOLS.filter((tool) => !('requiresLogin' in tool && tool.requiresLogin) || loggedIn)
+}
 
 function openTool(href: string, clearsSession: boolean, router: ReturnType<typeof useRouter>) {
   if (clearsSession && globalThis.window !== undefined) {
@@ -24,9 +28,11 @@ interface KiToolsMenuProps {
   onNavigate?: () => void
   // When true, an admin-only "Instrukser" entry is shown in the menu.
   isAdmin?: boolean
+  // When true, tools that need a signed-in user are shown.
+  loggedIn?: boolean
 }
 
-export function KiToolsMenu({ onNavigate, isAdmin = false }: KiToolsMenuProps) {
+export function KiToolsMenu({ onNavigate, isAdmin = false, loggedIn = false }: KiToolsMenuProps) {
   const [isOpen, setIsOpen] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
@@ -87,7 +93,7 @@ export function KiToolsMenu({ onNavigate, isAdmin = false }: KiToolsMenuProps) {
           aria-label="KI-verktøy"
           className="absolute left-0 top-full z-50 mt-2 min-w-[12rem] rounded-xl border border-gray-200 bg-white py-1 shadow-lg"
         >
-          {KI_TOOLS.map((tool) => (
+          {visibleTools(loggedIn).map((tool) => (
             <a
               key={tool.href}
               href={tool.href}
@@ -136,9 +142,14 @@ interface KiToolsMobileLinksProps {
   onNavigate: () => void
   // When true, an admin-only "Instrukser" entry is shown in the menu.
   isAdmin?: boolean
+  loggedIn?: boolean
 }
 
-export function KiToolsMobileLinks({ onNavigate, isAdmin = false }: KiToolsMobileLinksProps) {
+export function KiToolsMobileLinks({
+  onNavigate,
+  isAdmin = false,
+  loggedIn = false,
+}: KiToolsMobileLinksProps) {
   const router = useRouter()
 
   return (
@@ -146,7 +157,7 @@ export function KiToolsMobileLinks({ onNavigate, isAdmin = false }: KiToolsMobil
       <p className="px-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
         KI-verktøy
       </p>
-      {KI_TOOLS.map((tool) =>
+      {visibleTools(loggedIn).map((tool) =>
         tool.clearsSession ? (
           <a
             key={tool.href}

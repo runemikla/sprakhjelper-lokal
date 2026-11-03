@@ -197,7 +197,6 @@ export function ListeningSummary({
       addText('Fortsett å øve!', 10, false, [107, 114, 128])
 
       doc.save(`lytteoving_sammendrag_${new Date().toISOString().split('T')[0]}.pdf`)
-      toast.success('PDF lastet ned!')
     } catch (error) {
       console.error('Error generating listening summary PDF:', error)
       toast.error('Kunne ikke generere PDF. Prøv igjen.')

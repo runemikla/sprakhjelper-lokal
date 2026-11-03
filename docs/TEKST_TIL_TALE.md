@@ -34,3 +34,17 @@ Norske stemmer finner du i [Googles stemmeliste](https://cloud.google.com/text-t
 
 - **Læreren** velger lesehastighet (Normal, Litt saktere, Sakte) før oppgaven genereres. Det sendes som `speakingRate` til Google (1.0, 0.85 og 0.7), så selve lydfilen blir saktere.
 - **Eleven** kan i tillegg sette ned avspillingsfarten i lydspilleren. Det virker også på lytteøvinger som ble laget med ElevenLabs.
+
+## Ordlister i Lær ord: Gemini-stemmer
+
+Lyden i ordlistene (`/api/ordlister/lyd`) lages med Gemini sin tekst-til-tale når
+`GEMINI_API_KEY` er satt (samme nøkkel som bildene), slik som de faste Lær ord-temaene.
+Uten nøkkelen brukes Google Cloud TTS som over.
+
+- Læreren velger stemme i ordliste-editoren (feltet «Stemme») og kan høre hver av de 30
+  stemmene med en prøvesetning før hen velger. Listen husker stemmen.
+- Bytter læreren stemme, lages lyden på nytt med «Lag det som mangler» eller ved lagring.
+- Modell: `GEMINI_TTS_MODEL`, standard `gemini-3.1-flash-tts-preview` (faller tilbake til
+  `gemini-2.5-flash-preview-tts` hvis modellen ikke finnes). Lyden lagres som WAV.
+- Pris: ca. 20 $ per million lydtokens (25 tokens per sekund), altså rundt 0,002 $ per ord
+  med setning.

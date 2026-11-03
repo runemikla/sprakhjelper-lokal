@@ -1,73 +1,58 @@
-# Ordlister: plan for databasekobling
+# Grupper og ordlister i databasen
 
-Ordlistene (/ordlister) lagres foreløpig i nettleseren (`lib/ordlister/local-store.ts`).
-Slik er planen for å flytte dem til Supabase. Ingenting her er kjørt i databasen ennå.
+Ordlistene i «Lær ord» lagres i Supabase og deles med elever gjennom grupper.
+Migrasjonen ligger i `supabase/migrations/20261102100000_create_groups_and_word_lists.sql`
+og er rent additiv (ingen eksisterende tabeller endres).
+
+## Slik henger det sammen
+
+- **Grupper** (`/grupper`): En lærer (eller admin) lager en gruppe og får en
+  tilgangskode på seks tegn. Elever logger inn, skriver inn koden på samme side og
+  blir medlem. Eieren og admin ser koden og medlemmene og kan fjerne medlemmer eller
+  slette gruppen. Admin ser alle grupper.
+- **Lær ord** (`/laer-ord`): Krever innlogging. Lærere ser sine egne ordlister og
+  «Lag ny». Elever ser ordlistene som er delt med gruppene de er med i. Begge ser
+  de faste temaene. Admin har samme rettigheter som lærer, og ser i tillegg alle
+  ordlister.
+- Når læreren lagrer en ordliste, velger hen hvilke grupper listen deles med.
+  Gammel deling med firetegnskode og `/ordlister` finnes ikke lenger;
+  `/ordlister/...` sender videre til `/laer-ord`.
 
 ## Tabeller
 
-```sql
-create table public.word_lists (
-  id uuid primary key default gen_random_uuid(),
-  created_by uuid not null references auth.users(id) on delete cascade,
-  title text not null check (char_length(title) between 1 and 120),
-  access_code text not null unique
-    check (access_code ~ '^[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{4}$'),
-  languages text[] not null default '{}',      -- elevenes morsmål
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
-);
+| Tabell | Innhold |
+| --- | --- |
+| `groups` | Navn, `access_code` (6 tegn, lages av trigger), `created_by` |
+| `group_members` | Hvem som er med i hvilken gruppe (fylles av `join_group`) |
+| `word_lists` | Tittel, morsmål (`languages`), `created_by` |
+| `word_list_items` | Ordene: `word`, `image_description`, `content` (jsonb: bøyning, engelsk, oversettelser, setning, motiv), `media` (jsonb: hvilken versjon av bilde/lyd som er lagret) |
+| `word_list_groups` | Hvilke grupper en ordliste er delt med |
 
-create table public.word_list_items (
-  id uuid primary key default gen_random_uuid(),
-  list_id uuid not null references public.word_lists(id) on delete cascade,
-  position int not null,
-  word text not null check (char_length(word) between 1 and 80),
-  image_description text check (char_length(image_description) <= 300),
-  image_path text,                -- Supabase Storage, fylles når bildet er laget
-  audio_path text,                -- Google TTS, fylles når lyden er laget
-  example_sentence text,
-  unique (list_id, position)
-);
+Filer (bilde `-img.webp`, ordet `-w.mp3`, setningen `-s.mp3`) ligger i Storage-bøtta
+`word-lists` under `<liste-id>/<ord-id>-<type>.<ext>`. Bøtta er offentlig lesbar, så
+Lær ord kan spille av direkte; bare eieren og admin kan skrive til den.
 
-create table public.word_list_translations (
-  item_id uuid not null references public.word_list_items(id) on delete cascade,
-  language text not null,
-  translation text not null,
-  primary key (item_id, language)
-);
-```
+## Funksjoner
 
-`access_code` lages av en trigger, på samme måte som `listening_exercises`
-(`generate_listening_access_code`), og `updated_at` bruker `set_updated_at()`.
+- `join_group(code)`: innlogget bruker blir medlem; returnerer gruppen eller ingenting.
+- `list_my_groups()`: gruppene brukeren eier eller er med i (admin: alle). Koden og
+  eierens e-post vises bare for eier og admin.
+- `get_group_members(group_id)`: medlemmenes e-post, for eier og admin.
+- `save_word_list(id, title, languages, items, group_ids)`: lagrer liste, ord og
+  deling i én transaksjon (security invoker, så RLS gjelder).
+- Hjelpere for RLS: `is_group_owner`, `is_group_member`, `can_manage_word_list`,
+  `can_read_word_list`, `can_manage_word_list_file`.
 
 ## Tilgang (RLS)
 
-- Lærere (`public.is_teacher()`) kan lese, opprette, endre og slette sine egne lister
-  og ord (`created_by = auth.uid()`), som for lytteøvingene.
-- Elever trenger ikke konto. De får ikke lese tabellene direkte. I stedet finnes en
-  `security definer`-funksjon `get_word_list_by_code(code text)` som gir tilbake én liste
-  med ord og oversettelser bare når koden er riktig. Den gis til `anon` og `authenticated`.
-  Da kan ingen liste opp alle ordlister ved å gjette.
+- Lærere kan lage grupper og ordlister. Eier og admin kan endre og slette.
+- Elever ser gruppene de er med i, og ordlister (med ord) som er delt med disse
+  gruppene. De kan melde seg ut av en gruppe.
+- En ordliste kan bare deles med grupper læreren selv eier (admin: alle).
 
-## Redigering
+## Generering av innhold
 
-Lagring går via en `save_word_list(...)`-funksjon (eller en API-rute) som oppdaterer
-listen og erstatter ordene i én transaksjon. Ord som er uendret, beholder bilde, lyd og
-oversettelse. Nye ord og ord med endret beskrivelse får nye bilder.
-
-## Bilder, lyd og oversettelse (laget allerede nå)
-
-Når læreren lagrer, lager nettleseren det som mangler for hvert ord via tre API-ruter
-(bare for innloggede lærere):
-
-- `POST /api/ordlister/innhold`: bøyning, engelsk, oversettelse til morsmålene og
-  eksempelsetning (Azure OpenAI, `gpt-6.1-terra`; kan overstyres med `ORDLISTER_DEPLOYMENT`).
-- `POST /api/ordlister/lyd`: ordet og setningen lest opp (Google TTS).
-- `POST /api/ordlister/bilde`: bilde ut fra ordet og beskrivelsen (Googles bildemodell
-  via Gemini API, `GEMINI_API_KEY` og valgfritt `GEMINI_IMAGE_MODEL`).
-
-Foreløpig lagres tekst i localStorage og filer i IndexedDB. Med database flyttes
-tekstfeltene til `word_list_items`/`word_list_translations`, og filene til en
-Storage-bøtte `word-lists` (`<list_id>/<item_id>-img.webp`, `-w.mp3`, `-s.mp3`) med
-offentlig lesing. Da blir listen et tema i Lær ord for alle elever med koden, ikke bare
-i lærerens nettleser.
+Som før: `/api/ordlister/innhold` (språkmodell), `/api/ordlister/lyd` (Google TTS) og
+`/api/ordlister/bilde` (Gemini) kalles fra nettleseren i `lib/ordlister/generate.ts`.
+Tekst lagres rett i `word_list_items.content`, filer lastes opp til bøtta, og
+`media` oppdateres når hver fil er på plass. Bare nye eller endrede ord lages på nytt.

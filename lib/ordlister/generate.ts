@@ -2,10 +2,11 @@
 
 // Makes everything «Lær ord» needs for a teacher's word list: text from the
 // language model, recordings from Google TTS and pictures from Google's
-// image model. Only words that are new or changed are made again.
+// image model. Only words that are new or changed are made again. Text is
+// stored in the database and files in the word-lists bucket as they finish.
 
-import { wordListStore } from './local-store'
-import { mediaStore, shrinkImage } from './media-store'
+import { wordListStore } from './db-store'
+import { shrinkImage, uploadMedia } from './media'
 import {
   contentSig,
   mediaSig,
@@ -18,6 +19,8 @@ export type ItemStatus = 'venter' | 'tekst' | 'lyd' | 'bilde' | 'ferdig' | 'feil
 
 export interface GenerateOptions {
   withImages: boolean
+  // Gemini voice for the recordings.
+  voice: string
   onStatus: (itemId: string, status: ItemStatus, error?: string) => void
   onList: (list: WordList) => void
 }
@@ -47,11 +50,12 @@ export async function generateList(start: WordList, options: GenerateOptions): P
 
   const commit = (words: WordListItem[]) => {
     list = { ...list, words }
-    wordListStore.put(list)
     options.onList(list)
   }
-  const patchItem = (id: string, patch: Partial<WordListItem>) =>
+  const patchItem = async (id: string, patch: Partial<WordListItem>) => {
+    await wordListStore.patchItem(id, patch)
     commit(list.words.map((w) => (w.id === id ? { ...w, ...patch } : w)))
+  }
 
   for (const item of list.words) options.onStatus(item.id, 'venter')
 
@@ -65,31 +69,29 @@ export async function generateList(start: WordList, options: GenerateOptions): P
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          theme: list.title,
           languages: list.languages,
           words: batch.map((w) => ({ word: w.word, description: w.imageDescription || undefined })),
         }),
       })
       if (!response.ok) throw new Error(await errorText(response))
       const { words } = (await response.json()) as {
-        words: { boying: string; en: string; oversettelser: Record<string, string>; s: string }[]
+        words: { boying: string; en: string; oversettelser: Record<string, string>; s: string; motiv: string }[]
       }
-      const byId = new Map(batch.map((w, n) => [w.id, words[n]]))
-      commit(
-        list.words.map((w) => {
-          const made = byId.get(w.id)
-          if (!made) return w
-          return {
-            ...w,
-            content: {
-              sig: contentSig(w, list.languages),
-              boying: made.boying,
-              en: made.en,
-              translations: made.oversettelser,
-              s: made.s,
-            },
-          }
+      for (const [n, w] of batch.entries()) {
+        const made = words[n]
+        if (!made) continue
+        await patchItem(w.id, {
+          content: {
+            sig: contentSig(w, list.languages),
+            boying: made.boying,
+            en: made.en,
+            translations: made.oversettelser,
+            s: made.s,
+            motif: made.motiv,
+          },
         })
-      )
+      }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Ukjent feil'
       batch.forEach((w) => {
@@ -107,7 +109,7 @@ export async function generateList(start: WordList, options: GenerateOptions): P
     for (const kind of kinds) {
       const item = list.words.find((w) => w.id === id)
       if (!item?.content) return
-      const sig = mediaSig(item, kind)
+      const sig = mediaSig(item, kind, options.voice, list.imageContext)
       if (!sig || item.media?.[kind] === sig) continue
 
       options.onStatus(id, kind === 'img' ? 'bilde' : 'lyd')
@@ -118,8 +120,9 @@ export async function generateList(start: WordList, options: GenerateOptions): P
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 word: item.word,
-                meaning: item.content.en,
-                description: item.imageDescription || undefined,
+                theme: list.title,
+                context: list.imageContext.trim() || undefined,
+                motif: (item.content.motif || item.imageDescription || item.content.en).slice(0, 400),
               }),
             })
           : await fetch('/api/ordlister/lyd', {
@@ -127,14 +130,15 @@ export async function generateList(start: WordList, options: GenerateOptions): P
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 text: kind === 'w' ? item.word : plainSentence(item.content.s),
+                voice: options.voice,
               }),
             })
       if (!response.ok) throw new Error(await errorText(response))
 
       let blob = await response.blob()
       if (kind === 'img') blob = await shrinkImage(blob)
-      await mediaStore.put(id, kind, blob)
-      patchItem(id, { media: { ...item.media, [kind]: sig } })
+      await uploadMedia(list.id, id, kind, blob)
+      await patchItem(id, { media: { ...item.media, [kind]: sig } })
     }
   }
 

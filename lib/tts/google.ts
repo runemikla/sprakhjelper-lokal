@@ -11,7 +11,10 @@ const DEFAULT_VOICE = 'nb-NO-Chirp3-HD-Leda'
  */
 export async function googleTextToSpeech(
   text: string,
-  speakingRate: number
+  speakingRate: number,
+  // Chirp 3 HD voice name such as «Erinome». Without it, GOOGLE_TTS_VOICE
+  // or the default voice is used.
+  voice?: string
 ): Promise<Buffer> {
   const accessToken = await getServiceAccountToken()
   const apiKey = process.env.GOOGLE_TTS_API_KEY
@@ -25,7 +28,9 @@ export async function googleTextToSpeech(
     /\/+$/,
     ''
   )
-  const voiceName = process.env.GOOGLE_TTS_VOICE || DEFAULT_VOICE
+  const voiceName = voice
+    ? `nb-NO-Chirp3-HD-${voice}`
+    : process.env.GOOGLE_TTS_VOICE || DEFAULT_VOICE
   // Voice names look like "nb-NO-Chirp3-HD-Leda"; the first two parts are the language.
   const languageCode = voiceName.split('-').slice(0, 2).join('-')
 

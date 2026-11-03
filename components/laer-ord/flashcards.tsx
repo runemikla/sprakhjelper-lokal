@@ -7,8 +7,6 @@ import type { Word } from '@/lib/laer-ord/data'
 import { ExerciseHeader, shuffle, store } from './shared'
 import { SayWord, Sentence, usePronunciation, WordImage } from './pronunciation'
 
-type FrontSide = 'bilde' | 'ord'
-
 const faceClass =
   'flex min-h-[26rem] flex-col items-center justify-center gap-3 rounded-2xl border border-gray-200 bg-white p-5 text-center shadow-lg'
 
@@ -16,12 +14,10 @@ const faceClass =
 export function Flashcards({ words }: { words: Word[] }) {
   const { play } = usePronunciation()
   const [known, setKnown] = useState<string[]>(() => store.get('kan', []))
-  const [front, setFront] = useState<FrontSide>(() => store.get('forside', 'bilde'))
   const [deck, setDeck] = useState<Word[]>(() => shuffle(words.filter((w) => !known.includes(w.id))))
   const [flipped, setFlipped] = useState(false)
 
   useEffect(() => store.set('kan', known), [known])
-  useEffect(() => store.set('forside', front), [front])
 
   const knownCount = words.filter((w) => known.includes(w.id)).length
   const word = deck[0]
@@ -68,21 +64,6 @@ export function Flashcards({ words }: { words: Word[] }) {
         score={`${knownCount} av ${words.length} kan du`}
       />
       <div className="mx-auto flex max-w-sm flex-col items-center gap-4">
-        <label className="flex items-center gap-2 text-sm text-gray-600">
-          Forside:
-          <select
-            value={front}
-            onChange={(event) => {
-              setFront(event.target.value as FrontSide)
-              setFlipped(false)
-            }}
-            className="rounded-md border border-gray-300 bg-white px-2 py-1 text-gray-900"
-          >
-            <option value="bilde">Bilde</option>
-            <option value="ord">Ord</option>
-          </select>
-        </label>
-
         <div
           role="button"
           tabIndex={0}
@@ -100,16 +81,11 @@ export function Flashcards({ words }: { words: Word[] }) {
             flipped={flipped}
             front={
               <div className={faceClass}>
-                {front === 'bilde' ? (
-                  <WordImage word={word} alt="Hva heter dette på norsk?" className="w-4/5" />
-                ) : (
-                  <div className="text-4xl font-bold text-gray-900">{word.ord}</div>
-                )}
+                <WordImage word={word} alt="Hva heter dette på norsk?" className="w-full" sizes="400px" />
               </div>
             }
             back={
               <div className={faceClass}>
-                {front === 'ord' && <WordImage word={word} alt={word.en} className="w-1/2" />}
                 <div className="text-4xl text-gray-900">
                   <SayWord word={word} className="font-bold" />
                 </div>

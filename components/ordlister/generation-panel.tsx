@@ -59,7 +59,7 @@ export function GenerationPanel({
             </Button>
           )}
           <Button asChild variant={allReady ? 'default' : 'outline'} disabled={running}>
-            <Link href={`/laer-ord?liste=${list.accessCode}`}>Åpne i Lær ord</Link>
+            <Link href={`/laer-ord/${list.id}`}>Øv på ordene</Link>
           </Button>
         </div>
       </div>

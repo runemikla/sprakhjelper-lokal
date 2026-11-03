@@ -136,11 +136,10 @@ export function ModelSettingsPanel({
 
   const activeModel = models.find((model) => model.is_active) ?? null
 
-  function run(action: () => Promise<ActionResult>, successMessage: string, onSuccess?: () => void) {
+  function run(action: () => Promise<ActionResult>, onSuccess?: () => void) {
     startTransition(async () => {
       const result = await action()
       if (result.ok) {
-        toast.success(successMessage)
         onSuccess?.()
         router.refresh()
       } else {
@@ -174,19 +173,18 @@ export function ModelSettingsPanel({
   function activate(model: AiModel | null) {
     const label = model ? model.name : `standardmodellen (${envModel.deployment})`
     if (!window.confirm(`Bytte alle KI-verktøyene til ${label}?`)) return
-    run(() => activateAiModel({ modelId: model?.id ?? null }), `Verktøyene bruker nå ${label}.`)
+    run(() => activateAiModel({ modelId: model?.id ?? null }))
   }
 
   function remove(model: AiModel) {
     if (!window.confirm(`Slette ${model.name} fra listen? Deploymenten i Azure blir ikke slettet.`)) return
-    run(() => deleteAiModel({ modelId: model.id }), 'Modellen er fjernet fra listen.')
+    run(() => deleteAiModel({ modelId: model.id }))
   }
 
   function save(activate: boolean) {
     if (!form) return
     run(
       () => createAiModel({ ...form, name: form.name.trim() || form.deployment, activate }),
-      activate ? 'Modellen er lagret og tatt i bruk.' : 'Modellen er lagret.',
       () => {
         setForm(null)
         clearFormTest()

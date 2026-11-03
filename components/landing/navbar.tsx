@@ -35,18 +35,20 @@ export function Navbar({ userEmail = null, isAdmin = false }: NavbarProps) {
 
           {/* Desktop Navigation Links */}
           <div className="hidden md:flex items-center gap-8">
-            <KiToolsMenu isAdmin={isAdmin} />
-            <Link
-              href="/laererveiledning"
-              className="text-gray-700 hover:text-blue-600 transition-colors font-medium"
-            >
-              Lærerveiledning
-            </Link>
+            <KiToolsMenu isAdmin={isAdmin} loggedIn={Boolean(userEmail)} />
+            {userEmail && (
+              <Link
+                href="/grupper"
+                className="text-gray-700 hover:text-blue-600 transition-colors font-medium"
+              >
+                Grupper
+              </Link>
+            )}
             <Link
               href="/om"
               className="text-gray-700 hover:text-blue-600 transition-colors font-medium"
             >
-              Om språkhjelp
+              Om Språkhjelp
             </Link>
             {userEmail ? (
               <div className="flex items-center gap-3">
@@ -83,20 +85,26 @@ export function Navbar({ userEmail = null, isAdmin = false }: NavbarProps) {
         {mobileMenuOpen && (
           <div className="md:hidden py-4 border-t border-gray-200">
             <div className="flex flex-col space-y-4">
-              <KiToolsMobileLinks isAdmin={isAdmin} onNavigate={() => setMobileMenuOpen(false)} />
-              <Link
-                href="/laererveiledning"
-                className="text-gray-700 hover:text-blue-600 transition-colors font-medium px-2"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Lærerveiledning
-              </Link>
+              <KiToolsMobileLinks
+                isAdmin={isAdmin}
+                loggedIn={Boolean(userEmail)}
+                onNavigate={() => setMobileMenuOpen(false)}
+              />
+              {userEmail && (
+                <Link
+                  href="/grupper"
+                  className="text-gray-700 hover:text-blue-600 transition-colors font-medium px-2"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Grupper
+                </Link>
+              )}
               <Link
                 href="/om"
                 className="text-gray-700 hover:text-blue-600 transition-colors font-medium px-2"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                Om språkhjelp
+                Om Språkhjelp
               </Link>
               {userEmail ? (
                 <div className="px-2">
