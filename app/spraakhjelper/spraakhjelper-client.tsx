@@ -197,11 +197,9 @@ export default function SpraakhjelpperClient({ user, isAdmin = false }: Spraakhj
       setSplitResult(data)
       setEditableSentences(data.sentences.map((s: SplitSentence) => s.corrected))
       setShowSplitOverview(true)
-      toast.success('Teksten er delt inn i setninger!')
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'En feil oppstod'
       setError(errorMessage)
-      toast.error(`Feil: ${errorMessage}`)
       setShowForm(true)
     } finally {
       setIsSubmitting(false)
@@ -248,11 +246,9 @@ export default function SpraakhjelpperClient({ user, isAdmin = false }: Spraakhj
       if (data.results && data.results.length > 0) {
         setRetryInput(data.results[0].bruker_setning)
       }
-      toast.success('Analyse fullført!')
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'En feil oppstod'
       setError(errorMessage)
-      toast.error(`Feil: ${errorMessage}`)
       setShowSplitOverview(true)
     } finally {
       setIsSubmitting(false)
@@ -307,7 +303,6 @@ export default function SpraakhjelpperClient({ user, isAdmin = false }: Spraakhj
   const copyToClipboard = async (text: string) => {
     try {
       await navigator.clipboard.writeText(text)
-      toast.success('Tekst kopiert!')
     } catch (err) {
       toast.error('Kunne ikke kopiere teksten')
     }
@@ -375,12 +370,6 @@ export default function SpraakhjelpperClient({ user, isAdmin = false }: Spraakhj
       console.log('Setting retryInput to:', updatedSentence)
       setRetryInput(updatedSentence)
       console.log('retryInput should now be:', updatedSentence)
-
-      if (data.er_riktig) {
-        toast.success('Riktig! Godt jobbet! 🎉')
-      } else {
-        toast.info('Se forklaringen for tips!')
-      }
 
       setRetryInput('')
     } catch (err) {
@@ -633,7 +622,6 @@ export default function SpraakhjelpperClient({ user, isAdmin = false }: Spraakhj
       // Save PDF
       doc.save(filename)
 
-      toast.success('📄 PDF lastet ned!')
     } catch (error) {
       console.error('Error generating PDF:', error)
       toast.error('Kunne ikke generere PDF. Prøv igjen.')
@@ -673,7 +661,6 @@ export default function SpraakhjelpperClient({ user, isAdmin = false }: Spraakhj
 
       if (data.success && data.analysis) {
         setTextAnalysis(data.analysis)
-        toast.success('Analyse generert!')
       } else {
         throw new Error('Invalid response from API')
       }
