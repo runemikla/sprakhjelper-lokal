@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Menu, X } from 'lucide-react'
 import { LogoutButton } from '@/components/logout-button'
 import { KiToolsMenu, KiToolsMobileLinks } from '@/components/landing/ki-tools-menu'
+import { OmMenu, OmMobileLinks } from '@/components/landing/om-menu'
 
 interface NavbarProps {
   userEmail?: string | null
@@ -44,18 +45,7 @@ export function Navbar({ userEmail = null, isAdmin = false }: NavbarProps) {
                 Grupper
               </Link>
             )}
-            <Link
-              href="/laererveiledning"
-              className="text-gray-700 hover:text-blue-600 transition-colors font-medium"
-            >
-              Lærerveiledning
-            </Link>
-            <Link
-              href="/om"
-              className="text-gray-700 hover:text-blue-600 transition-colors font-medium"
-            >
-              Om språkhjelp
-            </Link>
+            <OmMenu />
             {userEmail ? (
               <div className="flex items-center gap-3">
                 <span className="hidden lg:inline text-sm text-gray-500 max-w-[180px] truncate">
@@ -105,20 +95,7 @@ export function Navbar({ userEmail = null, isAdmin = false }: NavbarProps) {
                   Grupper
                 </Link>
               )}
-              <Link
-                href="/laererveiledning"
-                className="text-gray-700 hover:text-blue-600 transition-colors font-medium px-2"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Lærerveiledning
-              </Link>
-              <Link
-                href="/om"
-                className="text-gray-700 hover:text-blue-600 transition-colors font-medium px-2"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Om språkhjelp
-              </Link>
+              <OmMobileLinks onNavigate={() => setMobileMenuOpen(false)} />
               {userEmail ? (
                 <div className="px-2">
                   <p className="text-sm text-gray-500 mb-2 truncate">{userEmail}</p>

@@ -25,13 +25,23 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/om" className="hover:text-blue-400 transition-colors">
-                  Om oss
+                <Link href="/laererveiledning" className="hover:text-blue-400 transition-colors">
+                  Lærerveiledning
                 </Link>
               </li>
               <li>
-                <Link href="/lærerveiledning" className="hover:text-blue-400 transition-colors">
-                  Lærerveiledning
+                <Link href="/om" className="hover:text-blue-400 transition-colors">
+                  Om verktøyene
+                </Link>
+              </li>
+              <li>
+                <Link href="/personvern" className="hover:text-blue-400 transition-colors">
+                  Personvern og GDPR
+                </Link>
+              </li>
+              <li>
+                <Link href="/endringslogg" className="hover:text-blue-400 transition-colors">
+                  Endringslogg
                 </Link>
               </li>
             </ul>
