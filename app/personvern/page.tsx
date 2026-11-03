@@ -1,7 +1,6 @@
 import type { Metadata } from 'next'
 import { OmPage } from '@/components/om/om-page'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { AlertTriangle } from 'lucide-react'
 
 export const metadata: Metadata = {
   title: 'Personvern og GDPR - Språkhjelp',
@@ -34,28 +33,10 @@ export default function PersonvernPage() {
         </p>
       }
     >
-      <div
-        role="note"
-        className="mb-8 flex gap-3 rounded-xl border border-amber-300 bg-amber-50 p-4 text-amber-900"
-      >
-        <AlertTriangle className="h-5 w-5 shrink-0 mt-0.5" aria-hidden="true" />
-        <p className="text-sm leading-relaxed">
-          <strong>Utkast.</strong> Denne teksten beskriver hvordan appen fungerer teknisk. Den er
-          ikke juridisk kvalitetssikret og må gjennomgås av behandlingsansvarlig (og gjerne
-          personvernombudet) før den regnes som gjeldende personvernerklæring.
-        </p>
-      </div>
-
       <div className="space-y-6">
         <Section title="Behandlingsansvarlig">
           <p>
             <strong>Vestland fylkeskommune</strong> er behandlingsansvarlig for Språkhjelp.
-          </p>
-          <p>
-            Organisasjonsnummer 974 574 861 · Postboks 7900, 5020 Bergen ·{' '}
-            <a href="mailto:post@vlfk.no" className="text-blue-700 underline underline-offset-4">
-              post@vlfk.no
-            </a>
           </p>
           <p>
             Spørsmål om selve tjenesten kan sendes til{' '}
@@ -180,8 +161,8 @@ export default function PersonvernPage() {
           <p>
             Du har rett til innsyn i, retting av og sletting av opplysninger om deg, og rett til å
             protestere mot behandlingen. Ta kontakt på{' '}
-            <a href="mailto:post@vlfk.no" className="text-blue-700 underline underline-offset-4">
-              post@vlfk.no
+            <a href="mailto:rune.mikal.birkeland@vlfk.no" className="text-blue-700 underline underline-offset-4">
+              rune.mikal.birkeland@vlfk.no
             </a>{' '}
             hvis du vil bruke rettighetene dine eller slette kontoen din.
           </p>
