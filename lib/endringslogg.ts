@@ -27,7 +27,7 @@ export const ENDRINGSLOGG: Endringsoppforing[] = [
     dato: '2026-11-03',
     tittel: 'Om Språkhjelp og bedre ordlister',
     endringer: [
-      { type: 'nytt', tekst: 'Ny meny «Om Språkhjelp» med lærerveiledning, om verktøyene, personvern og GDPR, og denne endringsloggen.' },
+      { type: 'nytt', tekst: 'Ny side «Om Språkhjelp» med lærerveiledning, om verktøyene, personvern og GDPR, og denne endringsloggen.' },
       { type: 'nytt', tekst: 'Ordlister: arabisk (syrisk dialekt) er lagt til som språk.' },
       { type: 'nytt', tekst: 'Ordlister: feltet «Kontekst for bildene» gjør at alle bildene i en liste passer til samme tema. Konteksten velges når listen lages.' },
       { type: 'forbedret', tekst: 'Ordlister og lytteøving: velg mellom fire stemmer (Enceladus, Iapetus, Erinome og Callirrhoe), og hør stemmen før du velger.' },

@@ -1,6 +1,6 @@
 # Endringslogg
 
-Endringsloggen vises på `/endringslogg` under menyen «Om Språkhjelp». Innholdet ligger i
+Endringsloggen vises på `/endringslogg` under «Om Språkhjelp». Innholdet ligger i
 [`lib/endringslogg.ts`](../lib/endringslogg.ts).
 
 ## Slik legger du til en endring
@@ -34,4 +34,4 @@ Legg en ny oppføring **øverst** i `ENDRINGSLOGG` (nyeste først):
 | Personvern og GDPR | `app/personvern/page.tsx` (oppdater `SIST_OPPDATERT` når teksten endres) |
 | Endringslogg | `app/endringslogg/page.tsx` + `lib/endringslogg.ts` |
 
-Menyen og fanene leser rekkefølgen fra `components/om/sections.ts`.
+Fanene leser rekkefølgen fra `components/om/sections.ts`.
