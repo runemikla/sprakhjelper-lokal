@@ -27,9 +27,9 @@ export default function PersonvernPage() {
       title="Personvern og GDPR"
       intro={
         <p>
-          Her forklarer vi hvilke opplysninger Språkhjelp lagrer, hvilke tjenester som behandler
-          dem, og hvilke rettigheter du har. Tjenesten er laget for opplæring og samler inn så lite
-          som mulig.
+          Her forklarer vi hvilke opplysninger Språkhjelp lagrer, og hvilke tjenester som behandler
+          dem. Tjenesten er laget for opplæring og samler inn så lite som mulig. Alle data behandles
+          i EU.
         </p>
       }
     >
@@ -119,6 +119,10 @@ export default function PersonvernPage() {
         </Section>
 
         <Section title="Hvem behandler data på våre vegne?">
+          <p>
+            <strong>Alle data behandles i EU.</strong> Vi bruker disse tjenestene for å levere
+            Språkhjelp:
+          </p>
           <ul className="list-disc pl-5 space-y-2">
             <li>
               <strong>Microsoft Azure OpenAI</strong>: språkmodellen bak tilbakemeldinger, spørsmål
@@ -127,14 +131,14 @@ export default function PersonvernPage() {
             <li>
               <strong>Google Cloud tekst til tale og Google Gemini</strong>: lyd i lytteøvinger og
               ordlister, og bilder i Lær ord. Dette gjelder bare tekst og ord som læreren har lagt
-              inn. Google kan behandle data utenfor EU.
+              inn.
             </li>
             <li>
               <strong>Supabase</strong>: innlogging og lagring av grupper, ordlister og
               lytteøvinger.
             </li>
             <li>
-              <strong>Hetzner</strong>: drift av nettsiden, i EU.
+              <strong>Hetzner</strong>: drift av nettsiden.
             </li>
           </ul>
         </Section>
@@ -155,29 +159,6 @@ export default function PersonvernPage() {
               sporing eller markedsføring.
             </li>
           </ul>
-        </Section>
-
-        <Section title="Dine rettigheter">
-          <p>
-            Du har rett til innsyn i, retting av og sletting av opplysninger om deg, og rett til å
-            protestere mot behandlingen. Ta kontakt på{' '}
-            <a href="mailto:rune.mikal.birkeland@vlfk.no" className="text-blue-700 underline underline-offset-4">
-              rune.mikal.birkeland@vlfk.no
-            </a>{' '}
-            hvis du vil bruke rettighetene dine eller slette kontoen din.
-          </p>
-          <p>
-            Mener du at vi ikke behandler opplysningene dine riktig, kan du klage til{' '}
-            <a
-              href="https://www.datatilsynet.no"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-700 underline underline-offset-4"
-            >
-              Datatilsynet
-            </a>
-            .
-          </p>
         </Section>
 
         <p className="text-sm text-gray-500">Sist oppdatert: {SIST_OPPDATERT}</p>
