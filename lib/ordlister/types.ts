@@ -35,9 +35,18 @@ export function contentSig(item: Pick<WordListItem, 'word' | 'imageDescription'>
 }
 
 // Recordings carry the voice in their version, so choosing another voice
-// makes them again.
-export function mediaSig(item: WordListItem, kind: MediaKind, voice: string): string | null {
-  if (kind === 'img') return JSON.stringify([item.word, item.imageDescription])
+// makes them again. Pictures carry the list's picture context, so changing
+// it makes them again (lists without context keep their old versions).
+export function mediaSig(
+  item: WordListItem,
+  kind: MediaKind,
+  voice: string,
+  imageContext = ''
+): string | null {
+  if (kind === 'img') {
+    const context = imageContext.trim()
+    return JSON.stringify(context ? [item.word, item.imageDescription, context] : [item.word, item.imageDescription])
+  }
   const text = kind === 'w' ? item.word : item.content?.s
   return text ? JSON.stringify([text, voice]) : null
 }
@@ -56,10 +65,16 @@ export function listVoice(list: Pick<WordList, 'words'>): string | null {
 }
 
 // True when the word has everything «Lær ord» uses.
-export function isItemReady(item: WordListItem, languages: string[], withImages: boolean, voice: string) {
+export function isItemReady(
+  item: WordListItem,
+  languages: string[],
+  withImages: boolean,
+  voice: string,
+  imageContext = ''
+) {
   if (item.content?.sig !== contentSig(item, languages)) return false
   const kinds: MediaKind[] = withImages ? ['w', 's', 'img'] : ['w', 's']
-  return kinds.every((k) => item.media?.[k] === mediaSig(item, k, voice))
+  return kinds.every((k) => item.media?.[k] === mediaSig(item, k, voice, imageContext))
 }
 
 export interface WordList {
@@ -67,6 +82,9 @@ export interface WordList {
   title: string
   // The students' first languages (morsmål). Several can be chosen.
   languages: string[]
+  // Context that applies to every picture in the list, e.g. «Alle bildene
+  // skal vise voksne i et klasserom». Added to the image prompt.
+  imageContext: string
   words: WordListItem[]
   // Groups the list is shared with. Students in these groups see it.
   groupIds: string[]
@@ -92,6 +110,7 @@ export interface Group {
 // language. Teachers can also add a language that is not listed.
 export const COMMON_LANGUAGES = [
   'Arabisk',
+  'Arabisk (syrisk dialekt)',
   'Somali',
   'Tigrinja',
   'Ukrainsk',

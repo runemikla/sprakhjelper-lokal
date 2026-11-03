@@ -10,6 +10,8 @@ const schema = z.object({
   word: z.string().trim().min(1).max(80),
   // The list's title, e.g. «Lunsj i kantinen».
   theme: z.string().trim().max(120).optional(),
+  // The teacher's context for every picture in the list (any language).
+  context: z.string().trim().max(500).optional(),
   // Concrete English description of what to draw (written by the language
   // model from the word, the theme and the teacher's description).
   motif: z.string().trim().min(1).max(400),
@@ -27,13 +29,14 @@ export async function POST(req: Request) {
   if (limited) return limited
 
   try {
-    const { word, theme, motif } = schema.parse(await req.json())
+    const { word, theme, context, motif } = schema.parse(await req.json())
     // Same style prompt as the built-in «Lær ord» pictures (see
     // «Slik lages ordbildene»), so teachers' pictures match the set.
     const prompt = [
       'A simple, friendly flat vector illustration for a language-learning flashcard.',
       theme ? `Theme: ${theme}.` : '',
       `Show: ${motif} (Norwegian word: '${word}').`,
+      context ? `Context for every picture in this set (follow it): ${context}.` : '',
       'One clear subject centered, soft pastel colors, plain white background, no text, no letters, no numbers, no logos. Consistent style for teenagers.',
     ]
       .filter(Boolean)

@@ -1,9 +1,10 @@
 'use client'
 
 import { useRef, useState } from 'react'
-import { Check, Loader2, Volume2 } from 'lucide-react'
-import { GEMINI_VOICES } from '@/lib/tts/gemini-voices'
-import { cn } from '@/lib/utils'
+import { Loader2, Volume2 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { CHOSEN_VOICES, GEMINI_VOICES, voiceLabel } from '@/lib/tts/gemini-voices'
 
 const SAMPLE = 'Hei! Jeg heter Sara. I dag spiser jeg lunsj i kantinen.'
 
@@ -14,27 +15,31 @@ interface VoicePickerProps {
   sample?: string
 }
 
-// Lets the teacher hear each Gemini voice and pick one for the list.
+// Drop-down with the four chosen Gemini voices, and a button to hear the
+// selected one. A list made earlier with another voice keeps it as an
+// extra option, so its recordings are not made again by accident.
 export function VoicePicker({ value, onChange, sample }: VoicePickerProps) {
-  const [loading, setLoading] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const cache = useRef(new Map<string, string>())
   const audio = useRef<HTMLAudioElement | null>(null)
   const text = sample?.trim() || SAMPLE
 
-  async function play(voice: string) {
-    onChange(voice)
+  const current = GEMINI_VOICES.find((v) => v.name === value)
+  const options = CHOSEN_VOICES.some((v) => v.name === value) || !current ? CHOSEN_VOICES : [...CHOSEN_VOICES, current]
+
+  async function play() {
     setError(null)
     audio.current?.pause()
-    const key = `${voice}:${text}`
+    const key = `${value}:${text}`
     let url = cache.current.get(key)
     if (!url) {
-      setLoading(voice)
+      setLoading(true)
       try {
         const response = await fetch('/api/ordlister/lyd', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ text, voice }),
+          body: JSON.stringify({ text, voice: value }),
         })
         if (!response.ok) {
           const body = (await response.json().catch(() => null)) as { error?: string } | null
@@ -46,7 +51,7 @@ export function VoicePicker({ value, onChange, sample }: VoicePickerProps) {
         setError(e instanceof Error ? e.message : 'Kunne ikke spille av stemmen.')
         return
       } finally {
-        setLoading(null)
+        setLoading(false)
       }
     }
     audio.current = new Audio(url)
@@ -55,42 +60,25 @@ export function VoicePicker({ value, onChange, sample }: VoicePickerProps) {
 
   return (
     <div className="space-y-2">
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-        {GEMINI_VOICES.map((v) => {
-          const selected = v.name === value
-          return (
-            <button
-              key={v.name}
-              type="button"
-              onClick={() => void play(v.name)}
-              aria-pressed={selected}
-              className={cn(
-                'flex items-center gap-2 rounded-xl border px-3 py-2 text-left text-sm transition-colors',
-                selected
-                  ? 'border-blue-600 bg-blue-50 ring-1 ring-blue-600'
-                  : 'border-gray-200 bg-white hover:border-blue-300'
-              )}
-            >
-              {loading === v.name ? (
-                <Loader2 className="h-4 w-4 shrink-0 animate-spin text-blue-600" />
-              ) : selected ? (
-                <Check className="h-4 w-4 shrink-0 text-blue-600" />
-              ) : (
-                <Volume2 className="h-4 w-4 shrink-0 text-gray-400" />
-              )}
-              <span className="min-w-0">
-                <span className="block font-semibold text-gray-900">{v.name}</span>
-                <span className="block truncate text-xs text-gray-500">
-                  {v.gender}, {v.style}
-                </span>
-              </span>
-            </button>
-          )
-        })}
+      <div className="flex max-w-md gap-2">
+        <Select value={value} onValueChange={onChange}>
+          <SelectTrigger aria-label="Stemme" className="h-10 w-full bg-white">
+            <SelectValue placeholder="Velg stemme" />
+          </SelectTrigger>
+          <SelectContent>
+            {options.map((v) => (
+              <SelectItem key={v.name} value={v.name}>
+                {voiceLabel(v)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Button type="button" variant="outline" className="h-10 shrink-0" onClick={() => void play()} disabled={loading}>
+          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Volume2 className="h-4 w-4" />}
+          Hør
+        </Button>
       </div>
-      <p className="text-xs text-gray-500">
-        Trykk på en stemme for å høre den og velge den. Prøvesetning: «{text}»
-      </p>
+      <p className="text-xs text-gray-500">Prøvesetning: «{text}»</p>
       {error && <p className="text-sm text-red-700">{error}</p>}
     </div>
   )

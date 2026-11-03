@@ -14,12 +14,13 @@ import { LanguagePicker } from '@/components/ordlister/language-picker'
 import { groupStore, wordListStore } from '@/lib/ordlister/db-store'
 import { isItemReady, listVoice, type Group, type WordList, type WordListItem } from '@/lib/ordlister/types'
 import { VoicePicker } from '@/components/ordlister/voice-picker'
-import { DEFAULT_GEMINI_VOICE, isGeminiVoice } from '@/lib/tts/gemini-voices'
+import { DEFAULT_CHOSEN_VOICE, isChosenVoice, isGeminiVoice } from '@/lib/tts/gemini-voices'
 import { generateList, imagesAvailable, type ItemStatus } from '@/lib/ordlister/generate'
 import { GenerationPanel } from '@/components/ordlister/generation-panel'
 import { ItemThumb } from '@/components/ordlister/item-thumb'
 
 const MAX_DESCRIPTION = 300
+const MAX_IMAGE_CONTEXT = 500
 
 interface WordListEditorProps {
   // Undefined for a new list.
@@ -32,7 +33,7 @@ interface WordListEditorProps {
 function rememberedVoice(): string | null {
   try {
     const remembered = localStorage.getItem('ordlister:stemme')
-    return remembered && isGeminiVoice(remembered) ? remembered : null
+    return remembered && isChosenVoice(remembered) ? remembered : null
   } catch {
     return null
   }
@@ -51,6 +52,7 @@ export function WordListEditor({ listId, userEmail = null, isAdmin = false }: Wo
 
   const [title, setTitle] = useState('')
   const [languages, setLanguages] = useState<string[]>([])
+  const [imageContext, setImageContext] = useState('')
   const [words, setWords] = useState<WordListItem[]>([])
   // Groups the list is shared with, and the teacher's groups to pick from.
   const [groupIds, setGroupIds] = useState<string[]>([])
@@ -67,7 +69,7 @@ export function WordListEditor({ listId, userEmail = null, isAdmin = false }: Wo
   const [imagesOn, setImagesOn] = useState(true)
   // Gemini voice for the recordings. A list keeps the voice it was made with;
   // a new list starts with the teacher's last choice.
-  const [voice, setVoice] = useState(DEFAULT_GEMINI_VOICE)
+  const [voice, setVoice] = useState<string>(DEFAULT_CHOSEN_VOICE)
 
   function chooseVoice(next: string) {
     setVoice(next)
@@ -143,6 +145,7 @@ export function WordListEditor({ listId, userEmail = null, isAdmin = false }: Wo
           setSaved(list)
           setTitle(list.title)
           setLanguages(list.languages)
+          setImageContext(list.imageContext)
           setWords(list.words)
           setGroupIds(list.groupIds)
           // The voice the recordings were made with; a new list (nothing
@@ -223,6 +226,7 @@ export function WordListEditor({ listId, userEmail = null, isAdmin = false }: Wo
         id: saved?.id,
         title: title.trim(),
         languages,
+        imageContext: imageContext.trim(),
         words: cleaned,
         groupIds,
       })
@@ -304,7 +308,7 @@ export function WordListEditor({ listId, userEmail = null, isAdmin = false }: Wo
               running={running}
               statuses={statuses}
               imagesOn={imagesOn}
-              readyCount={saved.words.filter((w) => isItemReady(w, saved.languages, imagesOn, voice)).length}
+              readyCount={saved.words.filter((w) => isItemReady(w, saved.languages, imagesOn, voice, saved.imageContext)).length}
               onStart={() => void runGeneration(saved)}
             />
           </CardContent>
@@ -345,6 +349,28 @@ export function WordListEditor({ listId, userEmail = null, isAdmin = false }: Wo
               onChange={chooseVoice}
               sample={words.find((w) => w.content?.s)?.content?.s.replace(/[[\]]/g, '')}
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="image-context" className="text-base font-semibold text-gray-900">
+              Kontekst for bildene (valgfritt)
+            </Label>
+            <p className="text-sm text-gray-600">
+              Gjelder alle bildene i listen. Beskriv for eksempel hvem som er med, hvor det skjer
+              eller hva som skal være likt. Endrer du konteksten på en ferdig liste, lages bildene
+              på nytt.
+            </p>
+            <Textarea
+              id="image-context"
+              value={imageContext}
+              maxLength={MAX_IMAGE_CONTEXT}
+              onChange={(e) => setImageContext(e.target.value)}
+              placeholder="For eksempel: «Voksne elever på en norsk arbeidsplass» eller «Alt skjer på en skole i Norge»"
+              className="min-h-[72px] bg-white text-base md:text-sm"
+            />
+            <p className="text-right text-xs tabular-nums text-gray-400">
+              {imageContext.length}/{MAX_IMAGE_CONTEXT}
+            </p>
           </div>
 
           <div className="space-y-2">
