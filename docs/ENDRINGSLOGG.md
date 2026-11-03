@@ -31,6 +31,7 @@ Legg en ny oppføring **øverst** i `ENDRINGSLOGG` (nyeste først):
 | --- | --- |
 | Lærerveiledning | `app/laererveiledning/page.tsx` |
 | Om verktøyene | `app/om/page.tsx` |
+| Læreplaner | `app/laereplaner/page.tsx` + `lib/laereplaner.ts` (målene) |
 | Personvern og GDPR | `app/personvern/page.tsx` (oppdater `SIST_OPPDATERT` når teksten endres) |
 | Endringslogg | `app/endringslogg/page.tsx` + `lib/endringslogg.ts` |
 
