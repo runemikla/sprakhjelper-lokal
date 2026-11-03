@@ -20,6 +20,7 @@ import {
   type ListeningQuestion,
   type QuestionType,
 } from '@/lib/lytteoving'
+import { CHOSEN_VOICES, voiceLabel } from '@/lib/tts/gemini-voices'
 
 const MAX_CHARS = 1000
 const QUESTION_COUNTS = [1, 2, 3, 4, 5]
@@ -30,6 +31,7 @@ export interface DraftListeningTask {
   questionCount: number
   questionType: QuestionType
   speakingRate: number
+  voice: string
   originalText: string
   questions: ListeningQuestion[]
   audioBase64: string | null
@@ -48,6 +50,7 @@ interface TaskEditorProps {
   onQuestionCountChange: (value: number) => void
   onQuestionTypeChange: (value: QuestionType) => void
   onSpeakingRateChange: (value: number) => void
+  onVoiceChange: (value: string) => void
   onQuestionChange: (questionIndex: number, patch: Partial<ListeningQuestion>) => void
   onGenerate: () => void
   onRemove: () => void
@@ -63,6 +66,7 @@ export function TaskEditor({
   onQuestionCountChange,
   onQuestionTypeChange,
   onSpeakingRateChange,
+  onVoiceChange,
   onQuestionChange,
   onGenerate,
   onRemove,
@@ -213,9 +217,29 @@ export function TaskEditor({
               ))}
             </SelectContent>
           </Select>
+        </div>
+      )}
+
+      {!isLocked && (
+        <div>
+          <Label htmlFor={`voice-${task.id}`} className="mb-1 block text-sm font-semibold">
+            Stemme
+          </Label>
+          <Select value={task.voice} onValueChange={onVoiceChange} disabled={task.isGenerating}>
+            <SelectTrigger id={`voice-${task.id}`} className="w-full max-w-none">
+              <SelectValue placeholder="Velg stemme" />
+            </SelectTrigger>
+            <SelectContent>
+              {CHOSEN_VOICES.map((v) => (
+                <SelectItem key={v.name} value={v.name}>
+                  {voiceLabel(v)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           {task.questions.length > 0 && (
             <p className="mt-1 text-xs text-gray-500">
-              Generer oppgaven på nytt for å endre hastigheten på lydfilen.
+              Generer oppgaven på nytt for å endre hastighet eller stemme på lydfilen.
             </p>
           )}
         </div>

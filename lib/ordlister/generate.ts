@@ -109,7 +109,7 @@ export async function generateList(start: WordList, options: GenerateOptions): P
     for (const kind of kinds) {
       const item = list.words.find((w) => w.id === id)
       if (!item?.content) return
-      const sig = mediaSig(item, kind, options.voice)
+      const sig = mediaSig(item, kind, options.voice, list.imageContext)
       if (!sig || item.media?.[kind] === sig) continue
 
       options.onStatus(id, kind === 'img' ? 'bilde' : 'lyd')
@@ -121,6 +121,7 @@ export async function generateList(start: WordList, options: GenerateOptions): P
               body: JSON.stringify({
                 word: item.word,
                 theme: list.title,
+                context: list.imageContext.trim() || undefined,
                 motif: (item.content.motif || item.imageDescription || item.content.en).slice(0, 400),
               }),
             })

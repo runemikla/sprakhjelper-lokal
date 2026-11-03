@@ -19,6 +19,7 @@ import {
   type ListeningQuestion,
   type QuestionType,
 } from '@/lib/lytteoving'
+import { DEFAULT_CHOSEN_VOICE } from '@/lib/tts/gemini-voices'
 
 const GENERATE_TIMEOUT_MS = 60000
 
@@ -44,6 +45,7 @@ function createEmptyTask(id = crypto.randomUUID()): DraftListeningTask {
     questionCount: 3,
     questionType: QUESTION_TYPE.open,
     speakingRate: DEFAULT_SPEAKING_RATE,
+    voice: DEFAULT_CHOSEN_VOICE,
     originalText: '',
     questions: [],
     audioBase64: null,
@@ -128,6 +130,7 @@ export function CreateListeningClient({
             questionCount: task.questionCount,
             questionType: task.questionType,
             speakingRate: task.speakingRate,
+            voice: task.voice,
           }),
         },
         GENERATE_TIMEOUT_MS
@@ -282,6 +285,7 @@ export function CreateListeningClient({
               onSpeakingRateChange={(value) =>
                 updateTask(task.id, { speakingRate: value })
               }
+              onVoiceChange={(value) => updateTask(task.id, { voice: value })}
               onQuestionChange={(questionIndex, patch) => {
                 setTasks((current) =>
                   current.map((item) =>

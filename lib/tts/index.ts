@@ -10,10 +10,12 @@ export { TextToSpeechError } from './errors'
  */
 export async function textToSpeech(
   text: string,
-  speakingRate: number = DEFAULT_SPEAKING_RATE
+  speakingRate: number = DEFAULT_SPEAKING_RATE,
+  // One of the chosen voices (see lib/tts/gemini-voices.ts). Only used by Google.
+  voice?: string
 ): Promise<Buffer> {
   if (process.env.TTS_PROVIDER?.toLowerCase() === 'elevenlabs') {
     return elevenLabsTextToSpeech(text, speakingRate)
   }
-  return googleTextToSpeech(text, speakingRate)
+  return googleTextToSpeech(text, speakingRate, voice)
 }

@@ -20,6 +20,7 @@ interface ListRow {
   id: string
   title: string
   languages: string[]
+  image_context: string | null
   created_by: string
   created_at: string
   updated_at: string
@@ -28,13 +29,14 @@ interface ListRow {
 }
 
 const LIST_SELECT =
-  'id, title, languages, created_by, created_at, updated_at, word_list_items(id, position, word, image_description, content, media), word_list_groups(group_id)'
+  'id, title, languages, image_context, created_by, created_at, updated_at, word_list_items(id, position, word, image_description, content, media), word_list_groups(group_id)'
 
 function toList(row: ListRow): WordList {
   return {
     id: row.id,
     title: row.title,
     languages: row.languages ?? [],
+    imageContext: row.image_context ?? '',
     createdBy: row.created_by,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -85,6 +87,8 @@ export const wordListStore = {
     id?: string
     title: string
     languages: string[]
+    // Left out: the stored context is kept as it is.
+    imageContext?: string
     words: WordListItem[]
     groupIds: string[]
   }): Promise<WordList> {
@@ -103,6 +107,13 @@ export const wordListStore = {
       p_group_ids: list.groupIds,
     })
     if (error) fail(error, 'Kunne ikke lagre ordlisten.')
+    if (list.imageContext !== undefined) {
+      const { error: contextError } = await supabase
+        .from('word_lists')
+        .update({ image_context: list.imageContext })
+        .eq('id', data as string)
+      if (contextError) fail(contextError, 'Kunne ikke lagre konteksten til bildene.')
+    }
     const saved = await this.get(data as string)
     if (!saved) throw new Error('Ordlisten ble lagret, men kunne ikke hentes igjen.')
     return saved

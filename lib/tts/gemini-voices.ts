@@ -43,6 +43,24 @@ export const GEMINI_VOICES: GeminiVoice[] = [
 
 export const DEFAULT_GEMINI_VOICE = 'Kore'
 
+// The voices teachers choose between, in word lists and listening exercises.
+// Google Cloud TTS has Chirp 3 HD voices with the same names
+// (nb-NO-Chirp3-HD-<name>), so the same four are offered in both places.
+export const CHOSEN_VOICE_NAMES = ['Enceladus', 'Iapetus', 'Erinome', 'Callirrhoe'] as const
+export type ChosenVoice = (typeof CHOSEN_VOICE_NAMES)[number]
+export const CHOSEN_VOICES: GeminiVoice[] = CHOSEN_VOICE_NAMES.map(
+  (name) => GEMINI_VOICES.find((v) => v.name === name) as GeminiVoice
+)
+export const DEFAULT_CHOSEN_VOICE: ChosenVoice = 'Erinome'
+
+export function isChosenVoice(name: string | null | undefined): name is ChosenVoice {
+  return (CHOSEN_VOICE_NAMES as readonly string[]).includes(name ?? '')
+}
+
+export function voiceLabel(v: GeminiVoice): string {
+  return `${v.name} (${v.gender}, ${v.style})`
+}
+
 export function isGeminiVoice(name: string): boolean {
   return GEMINI_VOICES.some((v) => v.name === name)
 }
