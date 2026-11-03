@@ -32,6 +32,7 @@ export const ENDRINGSLOGG: Endringsoppforing[] = [
       { type: 'nytt', tekst: 'Ordlister: feltet «Kontekst for bildene» gjør at alle bildene i en liste passer til samme tema. Konteksten velges når listen lages.' },
       { type: 'forbedret', tekst: 'Ordlister og lytteøving: velg mellom fire stemmer (Enceladus, Iapetus, Erinome og Callirrhoe), og hør stemmen før du velger.' },
       { type: 'forbedret', tekst: 'Ordlister: en liste kan ha inntil 20 ord.' },
+      { type: 'forbedret', tekst: 'Færre forstyrrelser: beskjedene som spratt opp nederst på skjermen (for eksempel «Analyse fullført!» og «PDF lastet ned!») er fjernet. Feilmeldinger vises fortsatt.' },
     ],
   },
   {

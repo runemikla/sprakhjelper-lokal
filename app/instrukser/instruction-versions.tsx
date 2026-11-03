@@ -80,11 +80,10 @@ export function InstructionVersions({
   )
   const selected = options.find((option) => option.id === selectedId) ?? options[0]
 
-  function run(action: () => Promise<ActionResult>, successMessage: string, onSuccess?: () => void) {
+  function run(action: () => Promise<ActionResult>, onSuccess?: () => void) {
     startTransition(async () => {
       const result = await action()
       if (result.ok) {
-        toast.success(successMessage)
         onSuccess?.()
         router.refresh()
       } else {
@@ -99,8 +98,7 @@ export function InstructionVersions({
         activateInstructionVersion({
           instructionKey,
           versionId: id === DEFAULT_ID ? null : id,
-        }),
-      'Versjonen er nå i bruk i verktøyet.'
+        })
     )
   }
 
@@ -108,7 +106,6 @@ export function InstructionVersions({
     if (!window.confirm('Slette denne versjonen? Dette kan ikke angres.')) return
     run(
       () => deleteInstructionVersion({ instructionKey, versionId: id }),
-      'Versjonen er slettet.',
       () => setSelectedId(activeId)
     )
   }
@@ -117,7 +114,6 @@ export function InstructionVersions({
     if (!editor) return
     run(
       () => createInstructionVersion({ instructionKey, ...editor }),
-      editor.activate ? 'Versjonen er lagret og tatt i bruk.' : 'Versjonen er lagret.',
       () => setEditor(null)
     )
   }
