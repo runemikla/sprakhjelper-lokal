@@ -1,201 +1,170 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import Image from 'next/image'
-import { AppNavbar } from '@/components/landing/app-navbar'
-import { Footer } from '@/components/landing/footer'
+import { OmPage } from '@/components/om/om-page'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import {
-  ArrowDownUp,
-  Headphones,
-  PenLine,
-  ShieldCheck,
-} from 'lucide-react'
+import { ArrowDownUp, BookOpen, Headphones, PenLine, Settings, Users } from 'lucide-react'
+
+export const metadata: Metadata = {
+  title: 'Om verktøyene - Språkhjelp',
+}
 
 const tools = [
   {
     href: '/spraakhjelper',
     title: 'Skrivehjelp',
     icon: PenLine,
+    who: 'For elever. Krever ikke innlogging.',
     description:
-      'Lim inn eller skriv en tekst. KI-en gir forklaringer og forslag på bokmål og på elevens morsmål, uten å bare rette teksten for eleven.',
+      'Eleven skriver eller limer inn en tekst på inntil 1000 tegn og velger morsmål. KI-en deler teksten opp i setninger og gir forklaringer og forslag på bokmål og på morsmålet, uten å bare rette teksten for eleven. Eleven prøver selv å skrive setningen riktig.',
     credit:
-      'Den bygger på en systeminstruks opprinnelig utformet av Ine Jørvum og Jan Erik Paulsen, og har siden blitt videreutviklet i tett samarbeid med andrespråkspedagoger i fylkeskommunen.',
+      'Skrivehjelp bygger på en systeminstruks opprinnelig utformet av Ine Jørvum og Jan Erik Paulsen, og har siden blitt videreutviklet i tett samarbeid med andrespråkspedagoger i fylkeskommunen.',
     points: [
       'Tilbakemelding setning for setning',
       'Forklaring på norsk og morsmål',
-      'Rapport du kan dele med læreren',
+      'Sammendrag med analyse som kan deles med læreren',
     ],
   },
   {
     href: '/grammatikk',
     title: 'Grammatikkøving',
     icon: ArrowDownUp,
+    who: 'For elever. Krever ikke innlogging.',
     description:
-      'Øv på norsk grammatikk med korte, interaktive oppgaver. Ordrekkefølge er tilgjengelig nå. Flere temaer kommer.',
+      'Korte, interaktive oppgaver i norsk grammatikk. Ordrekkefølge er tilgjengelig nå: eleven drar ordene i riktig rekkefølge, og KI-en lager nye setninger på flere nivåer. Flere temaer kommer.',
     points: [
       'Dra og slipp ord til riktig rekkefølge',
       'Flere nivåer å øve på',
-      'Oversikt over det du har øvd på',
+      'Oversikt over det eleven har øvd på (lagres bare i nettleseren)',
     ],
   },
   {
     href: '/lytteoving',
     title: 'Lytteøving',
     icon: Headphones,
+    who: 'Læreren lager øvingen (innlogget). Elevene åpner den med en kode.',
     description:
-      'Læreren lager en lytteøving med inntil tre oppgaver. Elevene hører lyden, svarer på spørsmål og får tilbakemelding ut fra innholdet i teksten.',
+      'Læreren skriver eller limer inn en tekst, velger stemme og hastighet, og får lyd og spørsmål laget automatisk. En øving kan ha inntil tre oppgaver. Elevene hører lyden, svarer på åpne spørsmål eller påstander (sant/usant) og får tilbakemelding ut fra innholdet i teksten.',
     points: [
-      'Inntil tre oppgaver med egen lyd og spørsmål',
-      'Lærer lager øving og får en kort kode',
-      'Elever åpner øvingen uten å logge inn',
+      'Inntil tre oppgaver med egen lyd og egne spørsmål',
+      'Åpne spørsmål eller påstander',
+      'Elever åpner øvingen med en kort kode, uten å logge inn',
+    ],
+  },
+  {
+    href: '/laer-ord',
+    title: 'Lær ord',
+    icon: BookOpen,
+    who: 'Krever innlogging. Lærere lager ordlister, elever øver.',
+    description:
+      'Elevene øver på ordlister som læreren har delt med gruppen deres. Læreren skriver inn inntil 20 ord og velger språk, stemme og kontekst for bildene. Bøyning, oversettelse, eksempelsetning, lyd og bilde lages automatisk.',
+    points: [
+      'Øvelser: ordliste, velg riktig ord, lytt og velg, hør og skriv, match ord og setning, flashcards',
+      'Lyd og bilde til hvert ord',
+      'Ordlister deles med grupper',
+    ],
+  },
+  {
+    href: '/grupper',
+    title: 'Grupper',
+    icon: Users,
+    who: 'Krever innlogging.',
+    description:
+      'Læreren lager en gruppe for klassen og får en tilgangskode på seks tegn. Elevene skriver inn koden for å bli med. Ordlister i Lær ord deles med en eller flere grupper.',
+    points: [
+      'Læreren ser hvem som er med, og kan fjerne medlemmer',
+      'Elevene ser ordlistene som er delt med gruppene deres',
     ],
   },
 ]
 
-export default function OmPage() {
+export default function OmVerktoyenePage() {
   return (
-    <main className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
-      <AppNavbar />
+    <OmPage
+      current="/om"
+      title="Om verktøyene"
+      intro={
+        <p>
+          Språkhjelp er en prototype utviklet av Rune Mikal Birkeland, som del av et større prosjekt
+          i Vestland fylkeskommune. Målet er å utvikle KI-verktøy som kan støtte språklæringen til
+          elever med norsk som andrespråk.
+        </p>
+      }
+    >
+      <div className="grid grid-cols-1 gap-6 mb-12">
+        {tools.map((tool) => {
+          const Icon = tool.icon
+          return (
+            <Card key={tool.href}>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Icon className="h-6 w-6 text-[#9ADBE8]" />
+                  {tool.title}
+                </CardTitle>
+                <p className="text-sm text-gray-500">{tool.who}</p>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-gray-700 leading-relaxed">{tool.description}</p>
+                {'credit' in tool && tool.credit ? (
+                  <p className="text-gray-700 leading-relaxed">{tool.credit}</p>
+                ) : null}
+                <ul className="list-disc pl-5 space-y-1 text-gray-600">
+                  {tool.points.map((point) => (
+                    <li key={point}>{point}</li>
+                  ))}
+                </ul>
+                <Link
+                  href={tool.href}
+                  className="inline-flex font-medium text-blue-700 underline underline-offset-4 hover:text-blue-800"
+                >
+                  Åpne {tool.title.toLowerCase()}
+                </Link>
+              </CardContent>
+            </Card>
+          )
+        })}
 
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-24 mt-16">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-16">
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">
-              Om Språkhjelp
-            </h1>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Språkhjelp er en prototype utviklet av Rune Mikal Birkeland, som del av et større prosjekt i Vestland fylkeskommune. Målet er å utvikle KI-verktøy som kan støtte språklæringen til elever med norsk som andrespråk.
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Settings className="h-6 w-6 text-[#9ADBE8]" />
+              For administratorer
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2 text-gray-700 leading-relaxed">
+            <p>
+              Administratorer har to ekstra sider i menyen KI-verktøy. På <strong>Instrukser</strong>{' '}
+              kan de lese og endre instruksene KI-en får i hvert verktøy, med versjoner som kan
+              rulles tilbake. På <strong>Språkmodell</strong> velger de hvilken språkmodell
+              verktøyene bruker.
             </p>
-          </div>
-
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">
-            Verktøyene
-          </h2>
-          <div className="grid grid-cols-1 gap-6 mb-12">
-            {tools.map((tool) => {
-              const Icon = tool.icon
-              return (
-                <Card key={tool.href}>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Icon className="h-6 w-6 text-[#9ADBE8]" />
-                      {tool.title}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <p className="text-gray-700 leading-relaxed">
-                      {tool.description}
-                    </p>
-                    {'credit' in tool && tool.credit ? (
-                      <p className="text-gray-700 leading-relaxed">{tool.credit}</p>
-                    ) : null}
-                    <ul className="list-disc pl-5 space-y-1 text-gray-600">
-                      {tool.points.map((point) => (
-                        <li key={point}>{point}</li>
-                      ))}
-                    </ul>
-                    <Link
-                      href={tool.href}
-                      className="inline-flex font-medium text-blue-700 underline underline-offset-4 hover:text-blue-800"
-                    >
-                      Åpne {tool.title.toLowerCase()}
-                    </Link>
-                  </CardContent>
-                </Card>
-              )
-            })}
-          </div>
-
-          <Card className="mb-12">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <ShieldCheck className="h-6 w-6 text-[#9ADBE8]" />
-                GDPR og personvern
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6 text-gray-700 leading-relaxed">
-              <p>
-                Vestland fylkeskommune er behandlingsansvarlig. Tjenesten er laget
-                for opplæring og samler inn så lite som mulig data. Data behandles
-                i EU, med unntak av tekst til tale i lytteøving (se under). Dette er generiske tekster som ikke inneholder personlig informasjon.
-              </p>
-
-              <div>
-                <h3 className="font-semibold text-gray-900 mb-2">
-                  Du trenger ikke logge inn for å øve
-                </h3>
-                <p>
-                  Tilgang til appen styres med en skolekode, ikke med navn eller
-                  fødselsnummer. Innlogging med e-post er valgfritt og brukes av
-                  lærere som skal lagre lytteøvinger.
-                </p>
-              </div>
-
-              <div>
-                <h3 className="font-semibold text-gray-900 mb-2">
-                  Hva skjer med det du skriver og svarer?
-                </h3>
-                <ul className="list-disc pl-5 space-y-2">
-                  <li>
-                    <strong>Skrivehjelp:</strong> Teksten sendes til en
-                    KI-tjeneste for å lage tilbakemelding. Resultatet lagres
-                    bare i nettleseren din i økten, og forsvinner når du lukker
-                    den.
-                  </li>
-                  <li>
-                    <strong>Grammatikkøving:</strong> Øvingen skjer i
-                    nettleseren. Vi lagrer ikke en elevprofil eller
-                    øvingsresultater hos oss.
-                  </li>
-                  <li>
-                    <strong>Lytteøving:</strong> Læreren lagrer tekst, lyd og
-                    spørsmål for inntil tre oppgaver. Elever åpner øvingen med
-                    en kort kode, uten konto. Svarene sjekkes av KI mot
-                    originalteksten og lagres ikke som en elevbesvarelse hos oss.
-                  </li>
-                </ul>
-              </div>
-
-              <div>
-                <h3 className="font-semibold text-gray-900 mb-2">
-                  Hvem behandler data på våre vegne?
-                </h3>
-                <p>
-                  For å levere tjenesten bruker vi databehandlere. De fleste
-                  behandler data i EU.
-                </p>
-                <ul className="list-disc pl-5 mt-2 space-y-1">
-                  <li>Microsoft Azure OpenAI — språkanalyse og tilbakemelding (EU)</li>
-                  <li>Supabase — innlogging og lagring av lærerens lytteøvinger (EU)</li>
-                  <li>Hetzner — drift av nettsiden (EU)</li>
-                  <li>Google Cloud — tekst til tale for lytteøvinger (kan være utenfor EU)</li>
-                </ul>
-                <p className="mt-4">
-                  Google kan behandle data utenfor EU når lærerens tekst gjøres
-                  om til tale. Det gjelder bare tekster som skal brukes i
-                  lytteøving, og det er bare lærere som kan opprette lytteøvinger.
-                </p>
-                <p className="mt-2">
-                  All trafikk til appen går over HTTPS. Vi bruker bare nødvendige
-                  informasjonskapsler til tilgang og innlogging, ikke til sporing
-                  eller markedsføring.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <div className="flex justify-center">
-            <Image
-              src="/images/vestland_team.jpg"
-              alt="Teamet bak Språkhjelp"
-              width={600}
-              height={400}
-              className="object-contain rounded-lg shadow-md"
-            />
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       </div>
 
-      <Footer />
-    </main>
+      <h2 className="text-2xl font-bold text-gray-900 mb-4">Teknologien bak</h2>
+      <ul className="list-disc pl-5 space-y-2 text-gray-700 leading-relaxed mb-12">
+        <li>Tilbakemeldinger, spørsmål og ordinnhold lages med språkmodeller i Microsoft Azure OpenAI.</li>
+        <li>Lyd lages med Google Cloud tekst til tale og Google Gemini. Bildene i Lær ord lages med Google Gemini.</li>
+        <li>Innlogging, grupper, ordlister og lytteøvinger lagres i Supabase.</li>
+        <li>
+          Nettsiden driftes hos Hetzner i EU. Les mer under{' '}
+          <Link href="/personvern" className="text-blue-700 underline underline-offset-4">
+            Personvern og GDPR
+          </Link>
+          .
+        </li>
+      </ul>
+
+      <div className="flex justify-center">
+        <Image
+          src="/images/vestland_team.jpg"
+          alt="Teamet bak Språkhjelp"
+          width={600}
+          height={400}
+          className="object-contain rounded-lg shadow-md"
+        />
+      </div>
+    </OmPage>
   )
 }

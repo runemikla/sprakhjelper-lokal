@@ -1,269 +1,206 @@
-import { AppNavbar } from '@/components/landing/app-navbar'
-import { Footer } from '@/components/landing/footer'
+import type { Metadata } from 'next'
+import { OmPage } from '@/components/om/om-page'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { AlertTriangle } from 'lucide-react'
 
-export default function PersonvernPage() {
+export const metadata: Metadata = {
+  title: 'Personvern og GDPR - Språkhjelp',
+}
+
+// Dato for siste faglige gjennomgang av teksten. Oppdater når teksten endres.
+const SIST_OPPDATERT = '3. november 2026'
+
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="min-h-screen flex flex-col">
-      <AppNavbar />
-      
-      <main className="flex-1 container mx-auto px-4 py-16 max-w-4xl">
-        <h1 className="text-4xl font-bold mb-8">Personvernerklæring</h1>
-        
-        <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>1. Innledning</CardTitle>
-            </CardHeader>
-            <CardContent className="prose max-w-none">
-              <p>
-                Språkhjelp er utviklet av Vestland fylkeskommune for å hjelpe elever med å lære norsk. 
-                Vi tar personvernet ditt på alvor og denne erklæringen forklarer hvordan vi samler inn, 
-                bruker og beskytter dine personopplysninger.
-              </p>
-              <p className="text-sm text-gray-600 mt-2">
-                <strong>Sist oppdatert:</strong> {new Date().toLocaleDateString('nb-NO', { year: 'numeric', month: 'long', day: 'numeric' })}
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>2. Behandlingsansvarlig</CardTitle>
-            </CardHeader>
-            <CardContent className="prose max-w-none">
-              <p><strong>Vestland fylkeskommune</strong></p>
-              <p>Organisasjonsnummer: 974 574 861</p>
-              <p>Postadresse: Postboks 7900, 5020 Bergen</p>
-              <p>E-post: <a href="mailto:post@vlfk.no" className="text-blue-600 hover:underline">post@vlfk.no</a></p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>3. Hvilke opplysninger samler vi inn?</CardTitle>
-            </CardHeader>
-            <CardContent className="prose max-w-none space-y-4">
-              <div>
-                <h4 className="font-semibold">3.1 Brukeropplysninger</h4>
-                <ul className="list-disc pl-6 space-y-1">
-                  <li>E-postadresse (for innlogging)</li>
-                  <li>Navn (hvis oppgitt)</li>
-                  <li>Innloggingsinformasjon (kryptert)</li>
-                </ul>
-              </div>
-              
-              <div>
-                <h4 className="font-semibold">3.2 Tekstdata</h4>
-                <ul className="list-disc pl-6 space-y-1">
-                  <li>Tekster du skriver i Skrivehjelp</li>
-                  <li>Morsmål du oppgir</li>
-                  <li>Tilbakemeldinger fra AI-systemet</li>
-                </ul>
-              </div>
-
-              <div>
-                <h4 className="font-semibold">3.3 Teknisk informasjon</h4>
-                <ul className="list-disc pl-6 space-y-1">
-                  <li>IP-adresse (anonymisert)</li>
-                  <li>Nettlesertype og versjon</li>
-                  <li>Tidspunkt for bruk</li>
-                </ul>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>4. Hvordan bruker vi opplysningene?</CardTitle>
-            </CardHeader>
-            <CardContent className="prose max-w-none">
-              <ul className="list-disc pl-6 space-y-2">
-                <li>
-                  <strong>Levere tjenesten:</strong> For å analysere tekstene dine og gi tilbakemeldinger
-                </li>
-                <li>
-                  <strong>Autentisering:</strong> For å sikre at bare du har tilgang til dine data
-                </li>
-                <li>
-                  <strong>Forbedre tjenesten:</strong> For å utvikle og forbedre Språkhjelp
-                </li>
-                <li>
-                  <strong>Sikkerhet:</strong> For å beskytte mot misbruk og angrep
-                </li>
-              </ul>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>5. Deling av opplysninger</CardTitle>
-            </CardHeader>
-            <CardContent className="prose max-w-none space-y-4">
-              <div>
-                <h4 className="font-semibold">5.1 Tredjepartstjenester</h4>
-                <p>Vi bruker følgende tredjepartstjenester:</p>
-                <ul className="list-disc pl-6 space-y-2">
-                  <li>
-                    <strong>Supabase:</strong> For autentisering og datalagring (EU-servere)
-                  </li>
-                  <li>
-                    <strong>Azure OpenAI / OpenAI:</strong> For AI-analyse av tekster
-                  </li>
-                  <li>
-                    <strong>Vercel:</strong> For hosting av applikasjonen
-                  </li>
-                </ul>
-              </div>
-
-              <div>
-                <h4 className="font-semibold">5.2 Databehandleravtaler</h4>
-                <p>
-                  Vi har databehandleravtaler med alle tredjepartsleverandører som sikrer 
-                  at dine data behandles i henhold til GDPR.
-                </p>
-              </div>
-
-              <div>
-                <h4 className="font-semibold">5.3 Vi selger ALDRI dine data</h4>
-                <p>
-                  Dine personopplysninger selges aldri til tredjeparter for markedsføringsformål.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>6. Dine rettigheter</CardTitle>
-            </CardHeader>
-            <CardContent className="prose max-w-none">
-              <p>Du har følgende rettigheter etter GDPR:</p>
-              <ul className="list-disc pl-6 space-y-2">
-                <li>
-                  <strong>Rett til innsyn:</strong> Du kan be om en kopi av dine personopplysninger
-                </li>
-                <li>
-                  <strong>Rett til retting:</strong> Du kan be om at feil informasjon rettes
-                </li>
-                <li>
-                  <strong>Rett til sletting:</strong> Du kan be om at dine data slettes
-                </li>
-                <li>
-                  <strong>Rett til begrensning:</strong> Du kan be om at behandlingen begrenses
-                </li>
-                <li>
-                  <strong>Rett til dataportabilitet:</strong> Du kan få dine data i et maskinlesbart format
-                </li>
-                <li>
-                  <strong>Rett til å protestere:</strong> Du kan protestere mot behandling av dine data
-                </li>
-              </ul>
-              <p className="mt-4">
-                For å utøve dine rettigheter, kontakt oss på: <a href="mailto:post@vlfk.no" className="text-blue-600 hover:underline">post@vlfk.no</a>
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>7. Lagring og sletting</CardTitle>
-            </CardHeader>
-            <CardContent className="prose max-w-none">
-              <ul className="list-disc pl-6 space-y-2">
-                <li>
-                  <strong>Brukerdata:</strong> Lagres så lenge kontoen er aktiv
-                </li>
-                <li>
-                  <strong>Tekstdata:</strong> Slettes automatisk etter 90 dager
-                </li>
-                <li>
-                  <strong>Logger:</strong> Anonymiserte logger beholdes i 30 dager
-                </li>
-              </ul>
-              <p className="mt-4">
-                Du kan når som helst slette kontoen din og alle tilhørende data ved å kontakte oss.
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>8. Sikkerhet</CardTitle>
-            </CardHeader>
-            <CardContent className="prose max-w-none">
-              <p>Vi bruker følgende sikkerhetstiltak:</p>
-              <ul className="list-disc pl-6 space-y-2">
-                <li>HTTPS-kryptering for all dataoverføring</li>
-                <li>Krypterte passord (bcrypt)</li>
-                <li>Rate limiting for å forhindre misbruk</li>
-                <li>Regelmessige sikkerhetsoppdateringer</li>
-                <li>Tilgangskontroll og autentisering</li>
-                <li>Logging og overvåking av sikkerhetshendelser</li>
-              </ul>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>9. Cookies</CardTitle>
-            </CardHeader>
-            <CardContent className="prose max-w-none">
-              <p>Vi bruker følgende cookies:</p>
-              <ul className="list-disc pl-6 space-y-2">
-                <li>
-                  <strong>Nødvendige cookies:</strong> For innlogging og autentisering (Supabase)
-                </li>
-                <li>
-                  <strong>Funksjonelle cookies:</strong> For å huske dine preferanser
-                </li>
-              </ul>
-              <p className="mt-4">
-                Vi bruker IKKE cookies for markedsføring eller sporing.
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>10. Endringer i personvernerklæringen</CardTitle>
-            </CardHeader>
-            <CardContent className="prose max-w-none">
-              <p>
-                Vi kan oppdatere denne personvernerklæringen fra tid til annen. 
-                Vesentlige endringer vil bli kommunisert via e-post eller ved innlogging.
-              </p>
-              <p className="mt-4">
-                Siste oppdatering: {new Date().toLocaleDateString('nb-NO', { year: 'numeric', month: 'long', day: 'numeric' })}
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>11. Kontakt</CardTitle>
-            </CardHeader>
-            <CardContent className="prose max-w-none">
-              <p>Har du spørsmål om personvern? Kontakt oss:</p>
-              <div className="mt-4 space-y-2">
-                <p><strong>E-post:</strong> <a href="mailto:post@vlfk.no" className="text-blue-600 hover:underline">post@vlfk.no</a></p>
-                <p><strong>Telefon:</strong> 55 23 90 00</p>
-                <p><strong>Postadresse:</strong> Vestland fylkeskommune, Postboks 7900, 5020 Bergen</p>
-              </div>
-              <p className="mt-4">
-                <strong>Datatilsynet:</strong> Du har rett til å klage til Datatilsynet hvis du mener 
-                vi ikke behandler dine personopplysninger i henhold til loven.
-              </p>
-              <p>
-                Datatilsynet: <a href="https://www.datatilsynet.no" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">www.datatilsynet.no</a>
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-      </main>
-
-      <Footer />
-    </div>
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-xl">{title}</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4 text-gray-700 leading-relaxed">{children}</CardContent>
+    </Card>
   )
 }
 
+export default function PersonvernPage() {
+  return (
+    <OmPage
+      current="/personvern"
+      title="Personvern og GDPR"
+      intro={
+        <p>
+          Her forklarer vi hvilke opplysninger Språkhjelp lagrer, hvilke tjenester som behandler
+          dem, og hvilke rettigheter du har. Tjenesten er laget for opplæring og samler inn så lite
+          som mulig.
+        </p>
+      }
+    >
+      <div
+        role="note"
+        className="mb-8 flex gap-3 rounded-xl border border-amber-300 bg-amber-50 p-4 text-amber-900"
+      >
+        <AlertTriangle className="h-5 w-5 shrink-0 mt-0.5" aria-hidden="true" />
+        <p className="text-sm leading-relaxed">
+          <strong>Utkast.</strong> Denne teksten beskriver hvordan appen fungerer teknisk. Den er
+          ikke juridisk kvalitetssikret og må gjennomgås av behandlingsansvarlig (og gjerne
+          personvernombudet) før den regnes som gjeldende personvernerklæring.
+        </p>
+      </div>
+
+      <div className="space-y-6">
+        <Section title="Behandlingsansvarlig">
+          <p>
+            <strong>Vestland fylkeskommune</strong> er behandlingsansvarlig for Språkhjelp.
+          </p>
+          <p>
+            Organisasjonsnummer 974 574 861 · Postboks 7900, 5020 Bergen ·{' '}
+            <a href="mailto:post@vlfk.no" className="text-blue-700 underline underline-offset-4">
+              post@vlfk.no
+            </a>
+          </p>
+          <p>
+            Spørsmål om selve tjenesten kan sendes til{' '}
+            <a
+              href="mailto:rune.mikal.birkeland@vlfk.no"
+              className="text-blue-700 underline underline-offset-4"
+            >
+              rune.mikal.birkeland@vlfk.no
+            </a>
+            .
+          </p>
+        </Section>
+
+        <Section title="Bruk uten innlogging">
+          <p>
+            Tilgang til appen styres med en skolekode. Koden lagres i en informasjonskapsel i
+            nettleseren, og den knyttes ikke til navn eller fødselsnummer.
+          </p>
+          <p>
+            Skrivehjelp, Grammatikkøving og elevdelen av Lytteøving kan brukes uten å logge inn.
+            Da lagrer vi ingen opplysninger om eleven hos oss.
+          </p>
+        </Section>
+
+        <Section title="Hva lagres når du logger inn?">
+          <p>
+            Lærere trenger konto for å lage lytteøvinger, ordlister og grupper. Elever trenger konto
+            for å bli med i en gruppe og bruke Lær ord. Følgende lagres i databasen (Supabase):
+          </p>
+          <ul className="list-disc pl-5 space-y-2">
+            <li>
+              <strong>Konto:</strong> e-postadresse, passord (lagret kryptert), rolle (elev, lærer
+              eller administrator) og tidspunkt for opprettelse og innlogging.
+            </li>
+            <li>
+              <strong>Grupper:</strong> gruppenavn, tilgangskode, hvem som laget gruppen, og hvilke
+              brukere som er medlemmer og når de ble med. Læreren som eier gruppen, ser e-postadressen
+              til medlemmene.
+            </li>
+            <li>
+              <strong>Ordlister:</strong> tittel, ord, språk, bildekontekst og innholdet som lages
+              automatisk (bøyning, oversettelse, eksempelsetning, lyd og bilde), og hvilke grupper
+              listen er delt med.
+            </li>
+            <li>
+              <strong>Lytteøvinger:</strong> lærerens tekst, lyd, spørsmål og en kort kode.
+            </li>
+          </ul>
+          <p>
+            Elevens svar i Lytteøving og Lær ord lagres ikke hos oss. Framgang i Grammatikkøving og
+            Lær ord lagres bare i elevens egen nettleser.
+          </p>
+        </Section>
+
+        <Section title="Hva skjer med teksten du skriver?">
+          <ul className="list-disc pl-5 space-y-2">
+            <li>
+              <strong>Skrivehjelp:</strong> Teksten og valgt morsmål sendes til en språkmodell for å
+              lage tilbakemelding. Resultatet lagres bare i nettleseren mens økten varer, og
+              forsvinner når fanen lukkes.
+            </li>
+            <li>
+              <strong>Grammatikkøving:</strong> Setningene lages av en språkmodell. Elevens svar
+              sjekkes i nettleseren eller av språkmodellen og lagres ikke.
+            </li>
+            <li>
+              <strong>Lytteøving:</strong> Lærerens tekst sendes til en språkmodell for å lage
+              spørsmål, og til tekst til tale for å lage lyd. Elevens svar sendes til språkmodellen
+              for å få tilbakemelding, men lagres ikke.
+            </li>
+            <li>
+              <strong>Lær ord:</strong> Ordene i lærerens ordliste sendes til en språkmodell for å
+              lage innhold, til tekst til tale for lyd og til en bildemodell for bilder.
+            </li>
+          </ul>
+          <p>
+            Ikke skriv navn, fødselsnummer eller andre personopplysninger i tekstene. Verktøyene
+            trenger ikke slike opplysninger.
+          </p>
+        </Section>
+
+        <Section title="Hvem behandler data på våre vegne?">
+          <ul className="list-disc pl-5 space-y-2">
+            <li>
+              <strong>Microsoft Azure OpenAI</strong>: språkmodellen bak tilbakemeldinger, spørsmål
+              og ordinnhold.
+            </li>
+            <li>
+              <strong>Google Cloud tekst til tale og Google Gemini</strong>: lyd i lytteøvinger og
+              ordlister, og bilder i Lær ord. Dette gjelder bare tekst og ord som læreren har lagt
+              inn. Google kan behandle data utenfor EU.
+            </li>
+            <li>
+              <strong>Supabase</strong>: innlogging og lagring av grupper, ordlister og
+              lytteøvinger.
+            </li>
+            <li>
+              <strong>Hetzner</strong>: drift av nettsiden, i EU.
+            </li>
+          </ul>
+        </Section>
+
+        <Section title="Sikkerhet og informasjonskapsler">
+          <ul className="list-disc pl-5 space-y-2">
+            <li>All trafikk til appen går over HTTPS.</li>
+            <li>
+              Tilgangen til data i databasen er begrenset per bruker, slik at du bare ser dine egne
+              grupper og ordlister og dem som er delt med deg.
+            </li>
+            <li>
+              Antall forespørsler per IP-adresse begrenses for å hindre misbruk. IP-adressen holdes
+              bare i minnet på serveren en kort stund og lagres ikke i databasen.
+            </li>
+            <li>
+              Vi bruker bare nødvendige informasjonskapsler for tilgangskode og innlogging, ikke til
+              sporing eller markedsføring.
+            </li>
+          </ul>
+        </Section>
+
+        <Section title="Dine rettigheter">
+          <p>
+            Du har rett til innsyn i, retting av og sletting av opplysninger om deg, og rett til å
+            protestere mot behandlingen. Ta kontakt på{' '}
+            <a href="mailto:post@vlfk.no" className="text-blue-700 underline underline-offset-4">
+              post@vlfk.no
+            </a>{' '}
+            hvis du vil bruke rettighetene dine eller slette kontoen din.
+          </p>
+          <p>
+            Mener du at vi ikke behandler opplysningene dine riktig, kan du klage til{' '}
+            <a
+              href="https://www.datatilsynet.no"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-700 underline underline-offset-4"
+            >
+              Datatilsynet
+            </a>
+            .
+          </p>
+        </Section>
+
+        <p className="text-sm text-gray-500">Sist oppdatert: {SIST_OPPDATERT}</p>
+      </div>
+    </OmPage>
+  )
+}
