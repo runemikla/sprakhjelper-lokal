@@ -24,6 +24,12 @@ export interface Endringsoppforing {
 
 export const ENDRINGSLOGG: Endringsoppforing[] = [
   {
+    dato: '2026-11-09',
+    endringer: [
+      { type: 'forbedret', tekst: 'Siden «Om verktøyene» har fått illustrasjoner av Skrivehjelp, Grammatikkøving, Lytteøving og Lær ord.' },
+    ],
+  },
+  {
     dato: '2026-11-03',
     tittel: 'Om Språkhjelp og bedre ordlister',
     endringer: [
