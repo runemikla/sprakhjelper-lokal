@@ -3,6 +3,8 @@ import { Geist } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "sonner";
 import "./globals.css";
+import { UserRolesProvider } from "@/components/auth/user-roles-provider";
+import { getPageUser } from "@/lib/auth/page-user";
 
 const defaultUrl = process.env.VERCEL_URL
   ? `https://${process.env.VERCEL_URL}`
@@ -20,11 +22,13 @@ const geistSans = Geist({
   subsets: ["latin"],
 });
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const { user, isAdmin, isTeacher, isStudent } = await getPageUser();
+  const roles = { loggedIn: Boolean(user), isAdmin, isTeacher, isStudent };
   return (
     <html lang="no" suppressHydrationWarning>
       <body className={`${geistSans.className} antialiased`}>
@@ -34,7 +38,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          {children}
+          <UserRolesProvider roles={roles}>{children}</UserRolesProvider>
           <Toaster />
         </ThemeProvider>
       </body>
