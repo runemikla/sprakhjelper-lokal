@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Menu, X } from 'lucide-react'
 import { LogoutButton } from '@/components/logout-button'
 import { KiToolsMenu, KiToolsMobileLinks } from '@/components/landing/ki-tools-menu'
+import { useUserRoles } from '@/components/auth/user-roles-provider'
 
 interface NavbarProps {
   userEmail?: string | null
@@ -16,6 +17,8 @@ interface NavbarProps {
 
 export function Navbar({ userEmail = null, isAdmin = false }: NavbarProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  // Students find the tools as cards on the start page instead of in a menu.
+  const { isStudent } = useUserRoles()
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-200">
@@ -35,7 +38,7 @@ export function Navbar({ userEmail = null, isAdmin = false }: NavbarProps) {
 
           {/* Desktop Navigation Links */}
           <div className="hidden md:flex items-center gap-8">
-            <KiToolsMenu isAdmin={isAdmin} loggedIn={Boolean(userEmail)} />
+            {!isStudent && <KiToolsMenu isAdmin={isAdmin} loggedIn={Boolean(userEmail)} />}
             {userEmail && (
               <Link
                 href="/grupper"
@@ -85,11 +88,13 @@ export function Navbar({ userEmail = null, isAdmin = false }: NavbarProps) {
         {mobileMenuOpen && (
           <div className="md:hidden py-4 border-t border-gray-200">
             <div className="flex flex-col space-y-4">
-              <KiToolsMobileLinks
-                isAdmin={isAdmin}
-                loggedIn={Boolean(userEmail)}
-                onNavigate={() => setMobileMenuOpen(false)}
-              />
+              {!isStudent && (
+                <KiToolsMobileLinks
+                  isAdmin={isAdmin}
+                  loggedIn={Boolean(userEmail)}
+                  onNavigate={() => setMobileMenuOpen(false)}
+                />
+              )}
               {userEmail && (
                 <Link
                   href="/grupper"
