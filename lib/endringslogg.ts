@@ -24,6 +24,13 @@ export interface Endringsoppforing {
 
 export const ENDRINGSLOGG: Endringsoppforing[] = [
   {
+    dato: '2026-11-09',
+    endringer: [
+      { type: 'nytt', tekst: 'Ny startside for elever: når en elev logger inn, vises Skrivehjelp, Lytteøving, Lær ord og Grammatikkøving som kort med bilde, sammen med ordlistene fra gruppene eleven er med i. Menyen «KI-verktøy» er borte for elever.' },
+      { type: 'forbedret', tekst: 'Siden «Om verktøyene» har fått illustrasjoner av Skrivehjelp, Grammatikkøving, Lytteøving og Lær ord.' },
+    ],
+  },
+  {
     dato: '2026-11-03',
     tittel: 'Om Språkhjelp og bedre ordlister',
     endringer: [

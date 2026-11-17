@@ -13,6 +13,8 @@ const tools = [
   {
     href: '/spraakhjelper',
     title: 'Skrivehjelp',
+    image: '/images/verktoy/skrivehjelp.webp',
+    imageAlt: 'En elev skriver på en bærbar PC ved et skrivebord.',
     icon: PenLine,
     who: 'For elever. Krever ikke innlogging.',
     description:
@@ -28,6 +30,8 @@ const tools = [
   {
     href: '/grammatikk',
     title: 'Grammatikkøving',
+    image: '/images/verktoy/grammatikk.webp',
+    imageAlt: 'Hender på et nettbrett drar et ord på plass i en setning.',
     icon: ArrowDownUp,
     who: 'For elever. Krever ikke innlogging.',
     description:
@@ -41,6 +45,8 @@ const tools = [
   {
     href: '/lytteoving',
     title: 'Lytteøving',
+    image: '/images/verktoy/lytteoving.webp',
+    imageAlt: 'En elev med hodetelefoner svarer på sant/usant-oppgaver på et nettbrett.',
     icon: Headphones,
     who: 'Læreren lager øvingen (innlogget). Elevene åpner den med en kode.',
     description:
@@ -54,6 +60,8 @@ const tools = [
   {
     href: '/laer-ord',
     title: 'Lær ord',
+    image: '/images/verktoy/laer-ord.webp',
+    imageAlt: 'Hender holder et nettbrett med et bildekort av et eple.',
     icon: BookOpen,
     who: 'Krever innlogging. Lærere lager ordlister, elever øver.',
     description:
@@ -104,6 +112,16 @@ export default function OmVerktoyenePage() {
                 <p className="text-sm text-gray-500">{tool.who}</p>
               </CardHeader>
               <CardContent className="space-y-4">
+                {'image' in tool && tool.image ? (
+                  <Image
+                    src={tool.image}
+                    alt={tool.imageAlt ?? ''}
+                    width={800}
+                    height={597}
+                    sizes="(min-width: 768px) 320px, 100vw"
+                    className="w-full md:float-right md:ml-6 md:mb-2 md:w-80 rounded-lg"
+                  />
+                ) : null}
                 <p className="text-gray-700 leading-relaxed">{tool.description}</p>
                 {'credit' in tool && tool.credit ? (
                   <p className="text-gray-700 leading-relaxed">{tool.credit}</p>
@@ -115,7 +133,7 @@ export default function OmVerktoyenePage() {
                 </ul>
                 <Link
                   href={tool.href}
-                  className="inline-flex font-medium text-blue-700 underline underline-offset-4 hover:text-blue-800"
+                  className="clear-both inline-flex font-medium text-blue-700 underline underline-offset-4 hover:text-blue-800"
                 >
                   Åpne {tool.title.toLowerCase()}
                 </Link>
