@@ -24,6 +24,12 @@ export interface Endringsoppforing {
 
 export const ENDRINGSLOGG: Endringsoppforing[] = [
   {
+    dato: '2026-11-20',
+    endringer: [
+      { type: 'nytt', tekst: 'Skrivehjelp: etter sammendraget kan eleven trykke på «Generer øvingsoppgaver». Eleven velger nivå (A1–B2), og Språkhjelp finner feilene i teksten, velger 1–3 feiltyper å øve på og lager øvinger til dem: bygg setningen med ord fra en ordbank, og fyll inn riktig ord. Den første øvingen bruker elevens egen setning.' },
+    ],
+  },
+  {
     dato: '2026-11-09',
     endringer: [
       { type: 'nytt', tekst: 'Ny startside for elever: når en elev logger inn, vises Skrivehjelp, Lytteøving, Lær ord og Grammatikkøving som kort med bilde, sammen med ordlistene fra gruppene eleven er med i. Menyen «KI-verktøy» er borte for elever.' },

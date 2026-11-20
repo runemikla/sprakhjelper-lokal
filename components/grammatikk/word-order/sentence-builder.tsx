@@ -18,6 +18,10 @@ interface SentenceBuilderProps {
   // Drop before a specific token (insert/reorder).
   onDropBefore: (token: WordToken) => void
   onChipClick: (token: WordToken, fromZone: Zone) => void
+  // Fixed start of the sentence shown before the chips (not draggable).
+  prefix?: string
+  // Fixed ending (for example "." or "?") shown after the chips.
+  suffix?: string
 }
 
 export function SentenceBuilder({
@@ -30,6 +34,8 @@ export function SentenceBuilder({
   onDropToEnd,
   onDropBefore,
   onChipClick,
+  prefix,
+  suffix,
 }: SentenceBuilderProps) {
   return (
     <div>
@@ -49,9 +55,12 @@ export function SentenceBuilder({
           status === 'correct' && 'border-green-400 bg-green-50',
           status === 'wrong' && 'border-red-400 bg-red-50',
           status === 'idle' && 'border-blue-300 bg-blue-50/40',
-          tokens.length === 0 && 'justify-center'
+          tokens.length === 0 && !prefix && 'justify-center'
         )}
       >
+        {prefix && (
+          <span className="text-lg font-medium text-gray-700">{prefix}</span>
+        )}
         {tokens.length === 0 ? (
           <span className="text-sm text-gray-400">
             Dra ordene hit for å bygge en setning
@@ -74,6 +83,9 @@ export function SentenceBuilder({
               onClick={onChipClick}
             />
           ))
+        )}
+        {suffix && tokens.length > 0 && (
+          <span className="-ml-2 text-lg font-medium text-gray-700">{suffix}</span>
         )}
       </div>
     </div>

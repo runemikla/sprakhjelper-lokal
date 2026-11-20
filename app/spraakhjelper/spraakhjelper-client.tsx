@@ -17,6 +17,7 @@ import { Confetti } from '@/components/ui/confetti'
 import { Navbar } from '@/components/landing/navbar'
 import { sanitizeMarkdown } from '@/lib/sanitize'
 import { fetchWithTimeout } from '@/lib/fetch-with-timeout'
+import { OvingerSeksjon } from '@/components/skrivehjelp/ovinger/ovinger-seksjon'
 
 interface SentenceResult {
   bruker_setning: string;
@@ -1335,6 +1336,18 @@ export default function SpraakhjelpperClient({ user, isAdmin = false }: Spraakhj
                       </div>
                     )}
                   </div>
+
+                  {/* Tilpassede øvinger fra feilene i teksten */}
+                  <OvingerSeksjon
+                    originalText={result.originalText}
+                    morsmaal={result.morsmaal}
+                    morsmaalNavn={motherTongueName}
+                    morsmaalFlagg={languages.find((lang) => lang.code === result.morsmaal)?.flag}
+                    setninger={result.results.map((r) => ({
+                      elev: r.bruker_setning,
+                      rettet: r.riktig_setning,
+                    }))}
+                  />
 
                   {/* PDF Download Section */}
                   <div className="border-t pt-8 mt-8">
