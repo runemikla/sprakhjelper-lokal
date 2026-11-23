@@ -2,16 +2,16 @@ import Link from 'next/link'
 
 export function Footer() {
   return (
-    <footer className="bg-gray-900 text-gray-300 py-12">
+    <footer className="relative z-10 bg-vlfk-ink text-gray-300 py-12">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Brand */}
           <div className="col-span-1 md:col-span-2">
             <div className="mb-4">
-              <span className="text-white text-2xl font-bold">Språkhjelp</span>
+              <span className="text-white text-2xl font-semibold font-slab">Språkhjelp</span>
             </div>
             <p className="text-gray-400 max-w-md">
-              Et KI-verktøy som hjelper deg å skrive bedre norsk.
+              KI-verktøy for deg som lærer norsk: skriv, lytt, lær ord og øv på grammatikk.
             </p>
           </div>
 
