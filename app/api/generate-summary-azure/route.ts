@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { checkRateLimit, validateResponseSize } from '@/lib/api-helpers';
 import { getInstruction } from '@/lib/ai/instruction-store';
 import { azureChatCompletion, isAzureConfigured } from '@/lib/ai/azure';
+import { SAMMENDRAG_SVARSKJEMA, normaliserAnalyse } from '@/lib/sammendrag/analyse';
 
 // Input validation schema
 const summarySchema = z.object({
@@ -31,50 +32,6 @@ export async function POST(req: Request) {
     // version (or the default)
     const systemPrompt = await getInstruction('skrivehjelp_sammendrag', { morsmaal });
 
-    // Define JSON Schema for structured output
-    const responseSchema = {
-      type: "object",
-      properties: {
-        hva_var_bra: {
-          type: "string",
-          description: "Oppmuntrende tilbakemelding på hva som var bra med teksten. 2-4 setninger."
-        },
-        hva_var_bra_morsmaal: {
-          type: "string",
-          description: `Oversettelse av 'hva_var_bra' til ${morsmaal}.`
-        },
-        hva_kan_bli_bedre: {
-          type: "string",
-          description: "Konstruktiv kritikk og områder som trenger forbedring. Formater som en kompakt punktliste med 2-3 punkter. Bruk markdown format med bindestreker (- punkt 1\n- punkt 2). Beskriv hva eleven kan gjøre for å forbedre seg."
-        },
-        hva_kan_bli_bedre_morsmaal: {
-          type: "string",
-          description: `Oversettelse av 'hva_kan_bli_bedre' til ${morsmaal}.`
-        },
-        ordliste: {
-          type: "array",
-          description: "Liste over ord eleven har skrevet feil.",
-          items: {
-            type: "object",
-            properties: {
-              feil: {
-                type: "string",
-                description: "Ordet slik eleven skrev det (feil stavemåte)"
-              },
-              riktig: {
-                type: "string",
-                description: "Korrekt stavemåte"
-              }
-            },
-            required: ["feil", "riktig"],
-            additionalProperties: false
-          }
-        }
-      },
-      required: ["hva_var_bra", "hva_var_bra_morsmaal", "hva_kan_bli_bedre", "hva_kan_bli_bedre_morsmaal", "ordliste"],
-      additionalProperties: false
-    };
-
     // Make API call to Azure OpenAI
     console.log('Calling Azure OpenAI for summary generation...');
     const response = await azureChatCompletion({
@@ -82,14 +39,15 @@ export async function POST(req: Request) {
         { role: 'system', content: systemPrompt },
         { role: 'user', content: `Tekst fra eleven:\n\n${originalText}` }
       ],
-      temperature: 0.7,
-      max_completion_tokens: 2000,
+      // Lav temperatur gir mer stabil telling av feil.
+      temperature: 0.3,
+      max_completion_tokens: 6000,
       response_format: {
         type: "json_schema",
         json_schema: {
           name: "text_analysis",
           strict: true,
-          schema: responseSchema
+          schema: SAMMENDRAG_SVARSKJEMA
         }
       }
     });
@@ -116,7 +74,7 @@ export async function POST(req: Request) {
     console.log('Received summary from Azure OpenAI');
 
     // Parse JSON response
-    const parsedResponse = JSON.parse(aiResponse);
+    const parsedResponse = normaliserAnalyse(JSON.parse(aiResponse));
 
     return NextResponse.json({
       success: true,
