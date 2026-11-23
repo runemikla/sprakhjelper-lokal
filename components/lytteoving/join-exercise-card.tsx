@@ -1,6 +1,6 @@
 'use client'
 
-import { type FormEvent, useState } from 'react'
+import { type FormEvent, type ReactNode, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -11,7 +11,7 @@ import {
   normalizeAccessCode,
 } from '@/lib/lytteoving'
 
-export function JoinExerciseCard() {
+export function JoinExerciseCard({ children }: { children?: ReactNode }) {
   const router = useRouter()
   const [code, setCode] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -31,13 +31,6 @@ export function JoinExerciseCard() {
 
   return (
     <Card className="bg-white/95 backdrop-blur-sm border-white/20 shadow-xl">
-      <div className="px-6 pt-6 pb-4 border-b border-gray-200">
-        <h2 className="text-2xl font-bold text-gray-900 mb-1">Har du en kode?</h2>
-        <p className="text-sm text-gray-600">
-          Skriv inn koden fra læreren for å åpne lytteøvingen. Du trenger ikke
-          logge inn.
-        </p>
-      </div>
       <CardContent className="pt-6">
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="mx-auto flex w-full max-w-sm flex-col gap-4">
@@ -50,7 +43,7 @@ export function JoinExerciseCard() {
               autoComplete="off"
               spellCheck={false}
               placeholder="ABCD"
-              className="h-28 border border-gray-200 bg-white shadow-none focus-visible:ring-1 text-center text-3xl font-semibold tracking-[0.35em] uppercase md:text-3xl"
+              className="h-20 border border-gray-200 bg-white shadow-none focus-visible:ring-1 text-center text-3xl font-semibold tracking-[0.35em] uppercase md:text-3xl"
               onChange={(event) => {
                 setCode(normalizeAccessCode(event.target.value).slice(0, ACCESS_CODE_LENGTH))
                 setError(null)
@@ -66,6 +59,7 @@ export function JoinExerciseCard() {
             </Button>
           </div>
         </form>
+        {children}
       </CardContent>
     </Card>
   )

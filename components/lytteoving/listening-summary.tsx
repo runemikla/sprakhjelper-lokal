@@ -207,20 +207,13 @@ export function ListeningSummary({
 
   return (
     <Card className="border-white/20 bg-white/95 shadow-xl backdrop-blur-sm">
-      <div className="flex items-start justify-between gap-4 border-b border-gray-200 px-6 pb-4 pt-6">
-        <div>
-          <h2 className="mb-1 text-2xl font-bold text-gray-900">Lytteøving</h2>
-          <p className="text-sm text-gray-600">
-            Kode: <span className="font-mono font-semibold tracking-[0.2em]">{code}</span>
-          </p>
-        </div>
-        <Button variant="outline" onClick={onBack}>
-          Tilbake til oppgaver
-        </Button>
-      </div>
-
       <CardHeader>
-        <h2 className="text-2xl font-semibold">Sammendrag</h2>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-2xl font-semibold">Sammendrag</h2>
+          <Button variant="outline" onClick={onBack}>
+            Tilbake til oppgaver
+          </Button>
+        </div>
       </CardHeader>
 
       <CardContent>
@@ -316,7 +309,9 @@ export function ListeningSummary({
             <Button
               onClick={() => void downloadPDF()}
               disabled={isGeneratingPDF}
-              className="w-full border border-gray-300 bg-white py-6 text-lg text-gray-900 hover:bg-gray-50"
+              variant="outline"
+              size="lg"
+              className="w-full"
             >
               {isGeneratingPDF ? 'Genererer PDF...' : 'Last ned sammendrag (PDF)'}
             </Button>

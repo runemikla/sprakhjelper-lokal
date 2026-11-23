@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, Dumbbell, PenLine } from 'lucide-react'
+import { PenLine } from 'lucide-react'
 import { FjordPageShell } from '@/components/landing/fjord-page-shell'
+import { PageHeader } from '@/components/landing/page-header'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { OvingerSeksjon } from '@/components/grammatikk/ovinger/ovinger-seksjon'
@@ -25,22 +26,14 @@ export default function OvPaFeileneClient({ userEmail, isAdmin }: Props) {
   }, [])
 
   return (
-    <FjordPageShell userEmail={userEmail} isAdmin={isAdmin} maxWidth="max-w-3xl">
-      <Link
-        href="/grammatikk"
-        className="mb-6 inline-flex items-center gap-2 text-sm font-medium text-white/90 hover:text-white"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        Tilbake til temaene
-      </Link>
-
-      <h1 className="mb-2 flex items-center gap-3 text-3xl font-bold text-white drop-shadow">
-        <Dumbbell className="h-7 w-7" />
-        Øv på feilene dine
-      </h1>
-      <p className="mb-8 text-white/90 drop-shadow">
-        Øvinger laget ut fra feilene i teksten du skrev i Skrivehjelp.
-      </p>
+    <FjordPageShell userEmail={userEmail} isAdmin={isAdmin}>
+      <PageHeader
+        backHref="/grammatikk"
+        backLabel="Tilbake til temaene"
+        title="Øv på feilene dine"
+        description="Øvinger laget ut fra feilene i teksten du skrev i Skrivehjelp."
+        className="mb-8"
+      />
 
       <Card className="bg-white/95 backdrop-blur-sm border-white/20 shadow-xl">
         <CardContent className="pt-6">
@@ -69,7 +62,7 @@ export default function OvPaFeileneClient({ userEmail, isAdmin }: Props) {
                 Skriv en tekst i Skrivehjelp først. Når du har fått tilbakemelding, trykker du på
                 «Øv på feilene dine» i sammendraget, så kommer du hit med teksten din.
               </p>
-              <Button asChild className="bg-blue-600 hover:bg-blue-700">
+              <Button asChild>
                 <Link href="/spraakhjelper">
                   <PenLine className="h-4 w-4" />
                   Gå til Skrivehjelp

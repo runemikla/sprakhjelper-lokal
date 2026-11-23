@@ -1,4 +1,5 @@
 import { FjordPageShell } from '@/components/landing/fjord-page-shell'
+import { PageHeader } from '@/components/landing/page-header'
 import { TopicCard } from '@/components/grammatikk/topic-card'
 import { getPageUser } from '@/lib/auth/page-user'
 import { ArrowDownUp, BookA, Dumbbell, Verified } from 'lucide-react'
@@ -36,27 +37,30 @@ const topics = [
   },
 ]
 
+const comingSoon = topics.filter((topic) => topic.comingSoon)
+
 export default async function GrammatikkPage() {
   const { email, isAdmin } = await getPageUser()
 
   return (
-    <FjordPageShell userEmail={email} isAdmin={isAdmin} maxWidth="max-w-5xl">
-      {/* Header */}
-      <div className="text-center mb-10 mt-6">
-        <h1 className="text-4xl font-bold text-white drop-shadow mb-4">
-          Grammatikk øving
-        </h1>
-        <p className="text-xl text-white/90 drop-shadow">
-          Velg et tema og øv på norsk grammatikk på din egen måte.
-        </p>
-      </div>
+    <FjordPageShell userEmail={email} isAdmin={isAdmin}>
+      <PageHeader
+        title="Grammatikkøving"
+        description="Velg et tema og øv på norsk grammatikk på din egen måte."
+      />
 
       {/* Topic grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {topics.map((topic) => (
+        {topics.filter((topic) => !topic.comingSoon).map((topic) => (
           <TopicCard key={topic.title} {...topic} />
         ))}
       </div>
+
+      {comingSoon.length > 0 && (
+        <p className="mt-6 text-sm text-white/90 drop-shadow">
+          Kommer snart: {new Intl.ListFormat('nb', { type: 'conjunction' }).format(comingSoon.map((topic) => topic.title))}
+        </p>
+      )}
     </FjordPageShell>
   )
 }

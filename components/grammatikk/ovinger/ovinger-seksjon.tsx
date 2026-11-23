@@ -161,7 +161,7 @@ export function OvingerSeksjon({
               {feilmelding}
             </p>
           )}
-          <Button onClick={generer} className="bg-blue-600 hover:bg-blue-700">
+          <Button onClick={generer}>
             <Sparkles className="h-4 w-4" />
             Generer øvingsoppgaver
           </Button>
@@ -230,7 +230,7 @@ export function OvingerSeksjon({
                     <Button
                       size="lg"
                       onClick={() => setStartet(true)}
-                      className="bg-blue-600 hover:bg-blue-700"
+                     
                       disabled={ovinger.length === 0}
                     >
                       <Play className="h-4 w-4" />
@@ -328,7 +328,7 @@ export function OvingerSeksjon({
                       <RotateCcw className="h-4 w-4" />
                       Gjør de samme øvingene igjen
                     </Button>
-                    <Button onClick={generer} className="bg-blue-600 hover:bg-blue-700">
+                    <Button onClick={generer}>
                       <Sparkles className="h-4 w-4" />
                       Lag nye øvinger
                     </Button>

@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { groupStore } from '@/lib/ordlister/db-store'
 import type { Group } from '@/lib/ordlister/types'
+import { PageHeader } from '@/components/landing/page-header'
 
 const card = 'bg-white/95 backdrop-blur-sm border-white/20 shadow-xl'
 
@@ -50,14 +51,14 @@ export function GroupsClient({ isTeacher, isAdmin }: GroupsClientProps) {
 
   return (
     <>
-      <div>
-        <h1 className="text-3xl font-bold text-white drop-shadow">Grupper</h1>
-        <p className="mt-1 text-white/90 drop-shadow">
-          {isTeacher
+      <PageHeader
+        title="Grupper"
+        description={
+          isTeacher
             ? 'Lag en gruppe for klassen din og gi elevene tilgangskoden. Ordlister i Lær ord deles med gruppene.'
-            : 'Bli med i gruppen din med koden fra læreren. Da ser du ordlistene som er delt med gruppen i Lær ord.'}
-        </p>
-      </div>
+            : 'Bli med i gruppen din med koden fra læreren. Da ser du ordlistene som er delt med gruppen i Lær ord.'
+        }
+      />
 
       {error && (
         <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">{error}</p>

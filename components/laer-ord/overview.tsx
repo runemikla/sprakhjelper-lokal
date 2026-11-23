@@ -10,6 +10,7 @@ import { wordListStore } from '@/lib/ordlister/db-store'
 import { importTheme } from '@/lib/ordlister/import-themes'
 import { mediaUrl } from '@/lib/ordlister/media'
 import type { WordList } from '@/lib/ordlister/types'
+import { PageHeader } from '@/components/landing/page-header'
 
 const card = 'bg-white/95 backdrop-blur-sm border-white/20 shadow-xl'
 
@@ -78,15 +79,14 @@ export function WordListOverview({ isTeacher, isAdmin, userId }: WordListOvervie
 
   return (
     <>
-      <div>
-        <h1 className="text-3xl font-bold text-white drop-shadow">Lær ord</h1>
-        <p className="mt-1 text-white/90 drop-shadow">
-          Lær nye ord med bilde, lyd og setninger.
-          {isTeacher
-            ? ' Lag egne ordlister og del dem med gruppene dine.'
-            : ' Her ser du ordlistene læreren har delt med gruppen din.'}
-        </p>
-      </div>
+      <PageHeader
+        title="Lær ord"
+        description={
+          isTeacher
+            ? 'Lær nye ord med bilde, lyd og setninger. Lag egne ordlister og del dem med gruppene dine.'
+            : 'Lær nye ord med bilde, lyd og setninger. Her ser du ordlistene læreren har delt med gruppen din.'
+        }
+      />
 
       <Card className={card}>
         <div className="flex items-start justify-between gap-4 border-b border-gray-200 px-6 pt-6 pb-4">
