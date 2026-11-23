@@ -13,7 +13,7 @@ export async function AuthShell({ children }: AuthShellProps) {
 
       <AppNavbar />
 
-      <div className="relative z-10 flex min-h-screen items-center justify-center p-4 pt-24 pb-12">
+      <div className="relative z-10 flex min-h-screen items-center justify-center px-2 sm:px-4 pt-24 pb-12">
         <div className="w-full max-w-md">{children}</div>
       </div>
     </div>

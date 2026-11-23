@@ -100,7 +100,7 @@ export function Exercises({ userEmail = null, isAdmin = false, canEdit = false, 
 
       <Navbar userEmail={userEmail} isAdmin={isAdmin} />
 
-      <div className="relative z-10 container mx-auto px-4 pb-16 pt-24 sm:px-6 lg:px-8">
+      <div className="relative z-10 container mx-auto px-2 pb-16 pt-24 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-4xl">
           <Link
             href="/laer-ord"
