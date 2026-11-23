@@ -142,7 +142,7 @@ export function InstructionVersions({
 
   return (
     <details className="group rounded-lg border border-gray-200 bg-white">
-      <summary className="flex cursor-pointer items-center justify-between gap-2 px-4 py-3 font-medium text-gray-800 hover:text-blue-600">
+      <summary className="flex cursor-pointer items-center justify-between gap-2 px-4 py-3 font-medium text-gray-800 hover:text-vlfk-ink">
         <span>
           {title}
           <span className="ml-2 text-xs font-normal text-gray-400">{route}</span>
@@ -162,7 +162,7 @@ export function InstructionVersions({
 
       <div className="space-y-4 border-t border-gray-100 px-4 py-4">
         {variables.length > 0 && (
-          <div className="rounded-md bg-blue-50 px-3 py-2 text-sm text-gray-700">
+          <div className="rounded-md bg-vlfk-lyseblaa/15 px-3 py-2 text-sm text-gray-700">
             <p className="mb-1 font-medium">Variabler som fylles inn per forespørsel:</p>
             <ul className="space-y-1">
               {variables.map((variable) => (
@@ -234,7 +234,7 @@ export function InstructionVersions({
 
         {/* Editor for a new version, or the selected version read-only */}
         {editor ? (
-          <div className="space-y-3 rounded-md border border-blue-200 p-3">
+          <div className="space-y-3 rounded-md border border-vlfk-lyseblaa p-3">
             <div className="space-y-1">
               <Label htmlFor={`${instructionKey}-name`}>Navn på ny versjon</Label>
               <Input

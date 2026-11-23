@@ -42,7 +42,7 @@ export default function PersonvernPage() {
             Spørsmål om selve tjenesten kan sendes til{' '}
             <a
               href="mailto:rune.mikal.birkeland@vlfk.no"
-              className="text-blue-700 underline underline-offset-4"
+              className="text-vlfk-ink underline underline-offset-4"
             >
               rune.mikal.birkeland@vlfk.no
             </a>

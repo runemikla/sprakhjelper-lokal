@@ -45,8 +45,8 @@ export function Slider({
       onKeyUp={handleCommit}
       onTouchEnd={handleCommit}
       className={cn(
-        'h-2 w-full cursor-pointer appearance-none rounded-full bg-gray-200 accent-blue-600 outline-none',
-        'focus-visible:ring-2 focus-visible:ring-blue-400',
+        'h-2 w-full cursor-pointer appearance-none rounded-full bg-gray-200 accent-vlfk-ink outline-none',
+        'focus-visible:ring-2 focus-visible:ring-vlfk-ink',
         disabled && 'cursor-not-allowed opacity-50',
         className
       )}

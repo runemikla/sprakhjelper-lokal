@@ -372,7 +372,7 @@ export default function OrdrekkefolgeClient({
                   {/* Compact level header with score */}
                   <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2 border-b border-gray-200 pb-4">
                     <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                      <span className="text-sm font-semibold text-blue-600">
+                      <span className="text-sm font-semibold text-vlfk-ink">
                         Nivå {level} av {MAX_LEVEL}
                       </span>
                       <span className="text-base font-semibold text-gray-900">
@@ -431,7 +431,7 @@ export default function OrdrekkefolgeClient({
                     />
 
                     {showAnswer && correctWords.length > 0 && (
-                      <div className="flex items-start gap-2 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800">
+                      <div className="flex items-start gap-2 rounded-xl border border-vlfk-lyseblaa bg-vlfk-lyseblaa/15 px-4 py-3 text-sm text-vlfk-ink">
                         <Eye className="mt-0.5 h-4 w-4 shrink-0" />
                         <span>
                           Fasit:{' '}

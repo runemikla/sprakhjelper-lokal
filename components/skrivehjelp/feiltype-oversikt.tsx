@@ -7,14 +7,14 @@ import type { FeiltypeOversikt as Feiltype } from '@/lib/sammendrag/analyse'
 
 // Hovedgruppene i feilkodene (første bokstav i koden), med farge.
 const KATEGORIER: Record<string, { navn: string; farge: string }> = {
-  R: { navn: 'Staving', farge: 'bg-amber-500' },
-  S: { navn: 'Substantiv', farge: 'bg-sky-500' },
-  P: { navn: 'Pronomen', farge: 'bg-violet-500' },
-  A: { navn: 'Adjektiv', farge: 'bg-pink-500' },
-  V: { navn: 'Verb', farge: 'bg-emerald-500' },
-  O: { navn: 'Ordstilling', farge: 'bg-blue-600' },
-  K: { navn: 'Bindeord', farge: 'bg-orange-500' },
-  L: { navn: 'Ordvalg', farge: 'bg-teal-600' },
+  R: { navn: 'Staving', farge: 'bg-vlfk-gul' },
+  S: { navn: 'Substantiv', farge: 'bg-vlfk-lyseblaa' },
+  P: { navn: 'Pronomen', farge: 'bg-vlfk-lilla' },
+  A: { navn: 'Adjektiv', farge: 'bg-vlfk-mork-rosa' },
+  V: { navn: 'Verb', farge: 'bg-vlfk-morkegronn' },
+  O: { navn: 'Ordstilling', farge: 'bg-vlfk-oransje' },
+  K: { navn: 'Bindeord', farge: 'bg-vlfk-rod-oransje' },
+  L: { navn: 'Ordvalg', farge: 'bg-vlfk-turkis' },
 }
 
 const UKJENT = { navn: 'Annet', farge: 'bg-gray-400' }
@@ -37,7 +37,7 @@ export function FeiltypeOversikt({ feiltyper, totalt }: Props) {
     return (
       <div>
         <h4 className="text-md font-semibold mb-2">Feiltyper i teksten</h4>
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
+        <div className="bg-vlfk-lyseblaa/15 border border-vlfk-lyseblaa rounded-lg p-4 text-center">
           <p className="text-sm text-gray-700">🎉 Ingen feil funnet i teksten!</p>
         </div>
       </div>
@@ -97,7 +97,7 @@ function GrafiskVisning({ feiltyper, totalt }: Props) {
   const grupperSortert = [...grupper.entries()].sort((a, b) => b[1] - a[1])
 
   return (
-    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-5">
+    <div className="bg-vlfk-lyseblaa/15 border border-vlfk-lyseblaa rounded-lg p-4 space-y-5">
       {/* Fordeling på hovedgrupper */}
       <div>
         <div
@@ -150,18 +150,18 @@ function GrafiskVisning({ feiltyper, totalt }: Props) {
 
 function DetaljertVisning({ feiltyper }: { feiltyper: Feiltype[] }) {
   return (
-    <div className="bg-blue-50 border border-blue-200 rounded-lg divide-y divide-blue-200">
+    <div className="bg-vlfk-lyseblaa/15 border border-vlfk-lyseblaa rounded-lg divide-y divide-vlfk-lyseblaa">
       {feiltyper.map((f) => (
         <div key={f.kode} className="p-3 sm:p-4">
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-start gap-2 min-w-0">
-              <span className="flex-shrink-0 rounded bg-blue-700 px-1.5 py-0.5 text-xs font-bold text-white">
+              <span className="flex-shrink-0 rounded bg-vlfk-ink px-1.5 py-0.5 text-xs font-bold text-white">
                 {f.kode}
               </span>
               <span className="text-sm font-semibold text-gray-900">{f.feiltype}</span>
             </div>
             <span
-              className="flex-shrink-0 rounded-full bg-white border border-blue-300 px-2.5 py-0.5 text-sm font-semibold text-blue-800"
+              className="flex-shrink-0 rounded-full bg-white border border-vlfk-lyseblaa px-2.5 py-0.5 text-sm font-semibold text-vlfk-ink"
               aria-label={`${f.antall} ganger`}
             >
               {f.antall}×

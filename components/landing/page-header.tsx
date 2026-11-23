@@ -42,7 +42,7 @@ export function PageHeader({
         <div className="min-w-0">
           <h1
             className={cn(
-              'font-bold text-white drop-shadow',
+              'font-semibold text-white drop-shadow',
               compact ? 'text-2xl sm:text-3xl' : 'text-3xl'
             )}
           >

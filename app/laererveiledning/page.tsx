@@ -18,7 +18,7 @@ function Step({ title, children }: { title: string; children: React.ReactNode })
   )
 }
 
-const linkClass = 'text-blue-700 underline underline-offset-4 hover:text-blue-800'
+const linkClass = 'text-vlfk-ink underline underline-offset-4 hover:text-vlfk-ink'
 
 export default function LaererveiledningPage() {
   return (

@@ -20,27 +20,27 @@ export function Footer() {
             <h3 className="text-white font-semibold mb-4">Lenker</h3>
             <ul className="space-y-2">
               <li>
-                <Link href="/spraakhjelper" className="hover:text-blue-400 transition-colors">
+                <Link href="/spraakhjelper" className="hover:text-white transition-colors">
                   Kom i gang
                 </Link>
               </li>
               <li>
-                <Link href="/laererveiledning" className="hover:text-blue-400 transition-colors">
+                <Link href="/laererveiledning" className="hover:text-white transition-colors">
                   Lærerveiledning
                 </Link>
               </li>
               <li>
-                <Link href="/om" className="hover:text-blue-400 transition-colors">
+                <Link href="/om" className="hover:text-white transition-colors">
                   Om verktøyene
                 </Link>
               </li>
               <li>
-                <Link href="/personvern" className="hover:text-blue-400 transition-colors">
+                <Link href="/personvern" className="hover:text-white transition-colors">
                   Personvern og GDPR
                 </Link>
               </li>
               <li>
-                <Link href="/endringslogg" className="hover:text-blue-400 transition-colors">
+                <Link href="/endringslogg" className="hover:text-white transition-colors">
                   Endringslogg
                 </Link>
               </li>
@@ -52,12 +52,12 @@ export function Footer() {
             <h3 className="text-white font-semibold mb-4">Støtte</h3>
             <ul className="space-y-2">
               <li>
-                <a href="#" className="hover:text-blue-400 transition-colors">
+                <a href="#" className="hover:text-white transition-colors">
                   Hjelp
                 </a>
               </li>
               <li>
-                <a href="mailto:rune.mikal.birkeland@vlfk.no" className="hover:text-blue-400 transition-colors">
+                <a href="mailto:rune.mikal.birkeland@vlfk.no" className="hover:text-white transition-colors">
                   Kontakt oss
                 </a>
               </li>

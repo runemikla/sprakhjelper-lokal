@@ -125,7 +125,7 @@ function GroupSection({ title, description, newButton, empty, groups, manage = f
     <Card className={card}>
       <div className="flex items-start justify-between gap-4 border-b border-gray-200 px-6 pt-6 pb-4">
         <div>
-          <h2 className="mb-1 text-2xl font-bold text-gray-900">{title}</h2>
+          <h2 className="mb-1 text-2xl font-semibold text-gray-900">{title}</h2>
           {description && <p className="text-sm text-gray-600">{description}</p>}
         </div>
         {newButton && (
@@ -225,7 +225,7 @@ function GroupRow({ group, manage, onChanged }: { group: Group; manage: boolean;
         <div className="flex shrink-0 flex-wrap items-center gap-2">
           {manage && group.accessCode && (
             <>
-              <span className="font-mono text-xl font-bold tracking-[0.25em] text-blue-700">
+              <span className="font-mono text-xl font-bold tracking-[0.25em] text-vlfk-ink">
                 {group.accessCode}
               </span>
               <Button

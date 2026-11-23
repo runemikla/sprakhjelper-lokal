@@ -62,7 +62,7 @@ export function StudentHome({ userEmail, wordLists }: StudentHomeProps) {
 
       <main className="relative z-10 container mx-auto max-w-4xl px-4 pt-24 pb-12">
         <section className="rounded-2xl bg-white/95 backdrop-blur-sm border border-white/20 shadow-xl p-5 sm:p-8">
-          <h1 className="text-3xl font-bold text-gray-900">Hei!</h1>
+          <h1 className="text-3xl font-semibold text-gray-900">Hei!</h1>
           <p className="mt-1 mb-6 text-gray-600">Velg hva du vil øve på i dag.</p>
 
           <ul className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -120,7 +120,7 @@ export function StudentHome({ userEmail, wordLists }: StudentHomeProps) {
             ) : (
               <p className="text-sm text-gray-600">
                 Ingen ordlister ennå. Har du fått en kode fra læreren?{' '}
-                <Link href="/grupper" className="font-medium text-blue-700 underline underline-offset-4">
+                <Link href="/grupper" className="font-medium text-vlfk-ink underline underline-offset-4">
                   Bli med i gruppen din
                 </Link>
                 .

@@ -426,7 +426,7 @@ export function LytteovingPlayClient({
                   <div className="w-full">
                     <div className="h-2 overflow-hidden rounded-full bg-gray-200">
                       <div
-                        className="h-full bg-blue-500 transition-all duration-300 ease-out"
+                        className="h-full bg-vlfk-ink transition-all duration-300 ease-out"
                         style={{
                           width: `${((currentIndex + 1) / tasks.length) * 100}%`,
                         }}

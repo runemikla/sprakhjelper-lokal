@@ -42,14 +42,14 @@ export function Navbar({ userEmail = null, isAdmin = false }: NavbarProps) {
             {userEmail && (
               <Link
                 href="/grupper"
-                className="text-gray-700 hover:text-blue-600 transition-colors font-medium"
+                className="text-gray-700 hover:text-vlfk-ink transition-colors font-medium"
               >
                 Grupper
               </Link>
             )}
             <Link
               href="/om"
-              className="text-gray-700 hover:text-blue-600 transition-colors font-medium"
+              className="text-gray-700 hover:text-vlfk-ink transition-colors font-medium"
             >
               Om Språkhjelp
             </Link>
@@ -98,7 +98,7 @@ export function Navbar({ userEmail = null, isAdmin = false }: NavbarProps) {
               {userEmail && (
                 <Link
                   href="/grupper"
-                  className="text-gray-700 hover:text-blue-600 transition-colors font-medium px-2"
+                  className="text-gray-700 hover:text-vlfk-ink transition-colors font-medium px-2"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   Grupper
@@ -106,7 +106,7 @@ export function Navbar({ userEmail = null, isAdmin = false }: NavbarProps) {
               )}
               <Link
                 href="/om"
-                className="text-gray-700 hover:text-blue-600 transition-colors font-medium px-2"
+                className="text-gray-700 hover:text-vlfk-ink transition-colors font-medium px-2"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Om Språkhjelp

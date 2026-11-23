@@ -25,12 +25,12 @@ export function TopicCard({
         'h-full transition-all',
         comingSoon
           ? 'opacity-60'
-          : 'hover:shadow-lg hover:-translate-y-1 cursor-pointer focus-within:ring-2 focus-within:ring-blue-400'
+          : 'hover:shadow-lg hover:-translate-y-1 cursor-pointer focus-within:ring-2 focus-within:ring-vlfk-ink'
       )}
     >
       <CardHeader>
         <div className="flex items-center gap-3">
-          <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#9ADBE8]/30 text-blue-700">
+          <span className="flex h-12 w-12 items-center justify-center rounded-lg bg-vlfk-gul text-vlfk-ink">
             <Icon className="h-6 w-6" />
           </span>
           <CardTitle className="text-xl">{title}</CardTitle>
@@ -39,7 +39,7 @@ export function TopicCard({
       <CardContent>
         <p className="text-gray-600">{description}</p>
         {comingSoon && (
-          <span className="mt-4 inline-block rounded-full bg-gray-200 px-3 py-1 text-xs font-medium text-gray-600">
+          <span className="mt-4 inline-block rounded-sm bg-gray-200 px-3 py-1 text-xs font-medium text-gray-600">
             Kommer snart
           </span>
         )}

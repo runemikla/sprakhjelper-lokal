@@ -47,8 +47,8 @@ export function LanguagePicker({ value, onChange }: LanguagePickerProps) {
               className={cn(
                 'inline-flex items-center gap-1 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors',
                 on
-                  ? 'border-blue-600 bg-blue-600 text-white shadow-sm'
-                  : 'border-gray-300 bg-white text-gray-700 hover:border-blue-400 hover:text-blue-700'
+                  ? 'border-vlfk-ink bg-vlfk-ink text-white shadow-sm'
+                  : 'border-gray-300 bg-white text-gray-700 hover:border-vlfk-ink hover:text-vlfk-ink'
               )}
             >
               {language}

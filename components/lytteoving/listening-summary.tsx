@@ -72,7 +72,7 @@ function PieChart({
           cy="50"
           r={radius}
           fill="none"
-          stroke="#10b981"
+          stroke="#50A684"
           strokeWidth="8"
           strokeLinecap="round"
           strokeDasharray={circumference}
@@ -85,7 +85,7 @@ function PieChart({
             cy="50"
             r={radius}
             fill="none"
-            stroke="#ef4444"
+            stroke="#E06287"
             strokeWidth="8"
             strokeLinecap="round"
             strokeDasharray={`${(wrongPercentage / 100) * circumference} ${circumference}`}
@@ -221,7 +221,7 @@ export function ListeningSummary({
           <div className="grid grid-cols-1 items-start gap-6 md:grid-cols-2">
             <div className="space-y-2">
               <h3 className="text-lg font-semibold">Statistikk</h3>
-              <div className="space-y-3 rounded-lg border border-blue-200 bg-blue-50 p-4">
+              <div className="space-y-3 rounded-lg border border-vlfk-lyseblaa bg-vlfk-lyseblaa/15 p-4">
                 <div className="flex justify-between">
                   <span className="text-sm font-semibold">Antall spørsmål:</span>
                   <span className="text-sm font-semibold">{totalCount}</span>

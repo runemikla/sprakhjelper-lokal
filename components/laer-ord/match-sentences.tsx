@@ -98,8 +98,8 @@ export function MatchSentences({ words }: { words: Word[] }) {
                 onClick={() => pickWord(word)}
                 disabled={isDone}
                 className={cn(
-                  'rounded-xl border-2 border-gray-200 bg-white px-3 py-2 text-left text-lg font-semibold text-gray-900 hover:border-blue-500',
-                  selected === word.id && 'border-blue-500 bg-blue-50',
+                  'rounded-xl border-2 border-gray-200 bg-white px-3 py-2 text-left text-lg font-semibold text-gray-900 hover:border-vlfk-ink',
+                  selected === word.id && 'border-vlfk-ink bg-vlfk-lyseblaa/15',
                   isDone && 'cursor-default border-green-500 bg-green-50 opacity-60 hover:border-green-500'
                 )}
               >
@@ -118,7 +118,7 @@ export function MatchSentences({ words }: { words: Word[] }) {
                 type="button"
                 onClick={() => pickSentence(word)}
                 className={cn(
-                  'flex items-center gap-3 rounded-xl border-2 border-gray-200 bg-white px-3 py-1.5 text-left text-gray-900 hover:border-blue-500',
+                  'flex items-center gap-3 rounded-xl border-2 border-gray-200 bg-white px-3 py-1.5 text-left text-gray-900 hover:border-vlfk-ink',
                   isDone && 'border-green-500 bg-green-50 hover:border-green-500',
                   isWrong && 'animate-shake border-red-400'
                 )}
