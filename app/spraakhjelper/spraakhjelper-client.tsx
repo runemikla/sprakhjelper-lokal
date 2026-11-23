@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import type { TekstAnalyse as TextAnalysis } from '@/lib/sammendrag/analyse'
+import { FeiltypeOversikt } from '@/components/skrivehjelp/feiltype-oversikt'
 import Image from 'next/image'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
@@ -1292,49 +1293,10 @@ export default function SpraakhjelpperClient({ user, isAdmin = false }: Spraakhj
                         )}
 
                         {/* Error types overview */}
-                        <div>
-                          <div className="flex items-baseline justify-between gap-2 mb-2">
-                            <h4 className="text-md font-semibold">Feiltyper i teksten</h4>
-                            {textAnalysis.feiltyper.length > 0 && (
-                              <span className="text-sm text-gray-600">
-                                {textAnalysis.totalt_antall_feil} {textAnalysis.totalt_antall_feil === 1 ? 'feil' : 'feil totalt'}
-                              </span>
-                            )}
-                          </div>
-                          {textAnalysis.feiltyper.length > 0 ? (
-                            <div className="bg-blue-50 border border-blue-200 rounded-lg divide-y divide-blue-200">
-                              {textAnalysis.feiltyper.map((f) => (
-                                <div key={f.kode} className="p-3 sm:p-4">
-                                  <div className="flex items-start justify-between gap-3">
-                                    <div className="flex items-start gap-2 min-w-0">
-                                      <span className="flex-shrink-0 rounded bg-blue-700 px-1.5 py-0.5 text-xs font-bold text-white">
-                                        {f.kode}
-                                      </span>
-                                      <span className="text-sm font-semibold text-gray-900">{f.feiltype}</span>
-                                    </div>
-                                    <span
-                                      className="flex-shrink-0 rounded-full bg-white border border-blue-300 px-2.5 py-0.5 text-sm font-semibold text-blue-800"
-                                      aria-label={`${f.antall} ganger`}
-                                    >
-                                      {f.antall}×
-                                    </span>
-                                  </div>
-                                  {(f.eksempel.feil || f.eksempel.riktig) && (
-                                    <p className="mt-1.5 text-sm">
-                                      <span className="text-red-600 line-through decoration-red-300">{f.eksempel.feil}</span>
-                                      <span className="mx-2 text-gray-400">→</span>
-                                      <span className="text-green-700 font-medium">{f.eksempel.riktig}</span>
-                                    </p>
-                                  )}
-                                </div>
-                              ))}
-                            </div>
-                          ) : (
-                            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
-                              <p className="text-sm text-gray-700">🎉 Ingen feil funnet i teksten!</p>
-                            </div>
-                          )}
-                        </div>
+                        <FeiltypeOversikt
+                          feiltyper={textAnalysis.feiltyper}
+                          totalt={textAnalysis.totalt_antall_feil}
+                        />
 
                         {/* Word list */}
                         {textAnalysis.ordliste && textAnalysis.ordliste.length > 0 && (

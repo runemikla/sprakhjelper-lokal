@@ -26,7 +26,7 @@ export const ENDRINGSLOGG: Endringsoppforing[] = [
   {
     dato: '2026-11-23',
     endringer: [
-      { type: 'forbedret', tekst: 'Skrivehjelp: sammendraget viser nå en oversikt over feiltypene i teksten, med hvor mange ganger hver feil kommer og ett eksempel fra teksten (feil → riktig). «Hva kan bli bedre» er en kort oppsummering av hva eleven bør øve på, og så kommer feiltypene og stavefeilene.' },
+      { type: 'forbedret', tekst: 'Skrivehjelp: sammendraget viser nå en oversikt over feiltypene i teksten, med hvor mange ganger hver feil kommer og ett eksempel fra teksten (feil → riktig). «Hva kan bli bedre» er en kort oppsummering av hva eleven bør øve på, og så kommer feiltypene og stavefeilene. Feiltypene kan vises grafisk (stolper per feiltype og fordeling på verb, ordstilling, staving osv.) eller detaljert med eksempel.' },
     ],
   },
   {
