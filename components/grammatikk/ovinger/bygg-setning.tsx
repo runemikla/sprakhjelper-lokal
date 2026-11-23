@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Eye } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { WordBank } from '@/components/grammatikk/word-order/word-bank'
@@ -29,9 +29,11 @@ interface ByggSetningProps {
   // Kalles første gang eleven sjekker svaret.
   onForsteSvar: (riktig: boolean) => void
   onRiktig: () => void
+  // Kalles hver gang svarstatusen endres (brukes til lærerbildet).
+  onStatus?: (status: Svarstatus) => void
 }
 
-export function ByggSetning({ oving, onForsteSvar, onRiktig }: ByggSetningProps) {
+export function ByggSetning({ oving, onForsteSvar, onRiktig, onStatus }: ByggSetningProps) {
   const startOrd = useMemo<WordToken[]>(
     () => blandOrd(oving.ord).map((text) => ({ id: crypto.randomUUID(), text })),
     [oving]
@@ -42,6 +44,10 @@ export function ByggSetning({ oving, onForsteSvar, onRiktig }: ByggSetningProps)
   const [harSvart, setHarSvart] = useState(false)
   const [visFasit, setVisFasit] = useState(false)
   const [draggingId, setDraggingId] = useState<string | null>(null)
+
+  useEffect(() => {
+    onStatus?.(status)
+  }, [status, onStatus])
   const draggingIdRef = useRef<string | null>(null)
 
   const flytt = useCallback(

@@ -17,6 +17,8 @@ interface Props {
 export default function OvPaFeileneClient({ userEmail, isAdmin }: Props) {
   // undefined = ikke lest ennå (sessionStorage finnes bare i nettleseren).
   const [tekst, setTekst] = useState<TekstForOvinger | null | undefined>(undefined)
+  // Mens eleven jobber med oppgavene, vises bare oppgavene.
+  const [jobber, setJobber] = useState(false)
 
   useEffect(() => {
     setTekst(hentTekstForOvinger())
@@ -44,18 +46,21 @@ export default function OvPaFeileneClient({ userEmail, isAdmin }: Props) {
         <CardContent className="pt-6">
           {tekst === undefined ? null : tekst ? (
             <div className="space-y-6">
-              <details className="rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm">
-                <summary className="cursor-pointer font-medium text-gray-700">Teksten din</summary>
-                <p className="mt-3 whitespace-pre-wrap leading-relaxed text-gray-800">
-                  {tekst.originalText}
-                </p>
-              </details>
+              {!jobber && (
+                <details className="rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm">
+                  <summary className="cursor-pointer font-medium text-gray-700">Teksten din</summary>
+                  <p className="mt-3 whitespace-pre-wrap leading-relaxed text-gray-800">
+                    {tekst.originalText}
+                  </p>
+                </details>
+              )}
               <OvingerSeksjon
                 originalText={tekst.originalText}
                 morsmaal={tekst.morsmaal}
                 morsmaalNavn={tekst.morsmaalNavn}
                 morsmaalFlagg={tekst.morsmaalFlagg}
                 setninger={tekst.setninger}
+                onStartetEndret={setJobber}
               />
             </div>
           ) : (

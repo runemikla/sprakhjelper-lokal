@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
-import { ArrowRight, RotateCcw, Sparkles } from 'lucide-react'
+import { useCallback, useEffect, useState } from 'react'
+import Image from 'next/image'
+import { ArrowRight, Play, RotateCcw, Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { LoadingAnimation } from '@/components/ui/loading-animation'
@@ -11,6 +12,7 @@ import { NIVAAER, finnFeiltype, type Nivaa } from '@/lib/ovinger/feiltyper'
 import type { OvingerResultat } from '@/lib/ovinger/types'
 import { ByggSetning } from './bygg-setning'
 import { VelgOrd } from './velg-ord'
+import type { Svarstatus } from './tilbakemelding'
 
 const NIVAA_TEKST: Record<Nivaa, string> = {
   A1: 'Nybegynner',
@@ -26,6 +28,9 @@ interface OvingerSeksjonProps {
   morsmaalFlagg?: string
   // Setningene slik Skrivehjelp har rettet dem.
   setninger: { elev: string; rettet: string }[]
+  // Sier fra når eleven starter eller går ut av øvingene, slik at siden kan
+  // skjule alt annet mens eleven jobber.
+  onStartetEndret?: (startet: boolean) => void
 }
 
 // «Øv på feilene dine» under Grammatikkøving (/grammatikk/ov-pa-feilene), med
@@ -37,6 +42,7 @@ export function OvingerSeksjon({
   morsmaalNavn,
   morsmaalFlagg,
   setninger,
+  onStartetEndret,
 }: OvingerSeksjonProps) {
   const [nivaa, setNivaa] = useState<Nivaa>('A2')
   const [laster, setLaster] = useState(false)
@@ -46,6 +52,22 @@ export function OvingerSeksjon({
   const [lost, setLost] = useState(false)
   const [forsteForsok, setForsteForsok] = useState<boolean[]>([])
   const [paaNorsk, setPaaNorsk] = useState(true)
+  // Eleven ser først oversikten over hva hen skal øve på, og trykker Start.
+  const [startet, setStartet] = useState(false)
+  // Samme lærere som i Ordrekkefølge: én tilfeldig lærer per besøk, og bildet
+  // viser glad lærer når svaret er riktig.
+  const [laerer, setLaerer] = useState<'gunhild' | 'jonas'>('gunhild')
+  const [svarstatus, setSvarstatus] = useState<Svarstatus>('idle')
+
+  useEffect(() => {
+    setLaerer(Math.random() < 0.5 ? 'gunhild' : 'jonas')
+  }, [])
+
+  useEffect(() => {
+    onStartetEndret?.(startet)
+  }, [startet, onStartetEndret])
+
+  const oppdaterStatus = useCallback((status: Svarstatus) => setSvarstatus(status), [])
   // Ny nøkkel per runde, slik at øvingene starter på nytt.
   const [runde, setRunde] = useState(0)
 
@@ -70,6 +92,7 @@ export function OvingerSeksjon({
       }
       const data = (await response.json()) as OvingerResultat & { success: boolean }
       setResultat(data)
+      setStartet(false)
       setIndeks(0)
       setLost(false)
       setForsteForsok([])
@@ -147,12 +170,6 @@ export function OvingerSeksjon({
 
       {!laster && resultat && (
         <div className="space-y-6">
-          {resultat.positivt && (
-            <div className="rounded-lg border border-green-200 bg-green-50 p-4 text-sm text-green-900">
-              {paaNorsk ? resultat.positivt : resultat.positivt_morsmaal || resultat.positivt}
-            </div>
-          )}
-
           {resultat.valgte_feiltyper.length === 0 ? (
             <div className="rounded-lg border border-blue-200 bg-blue-50 p-6 text-center">
               <p className="text-sm text-gray-700">
@@ -161,57 +178,70 @@ export function OvingerSeksjon({
             </div>
           ) : (
             <>
-              {/* Hva eleven skal øve på */}
-              <div>
-                <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                  <h4 className="text-md font-semibold">Dette skal du øve på</h4>
-                  <div className="flex gap-2">
+              {/* Hva eleven skal øve på, før øvingene starter */}
+              {!startet && (
+                <div>
+                  <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                    <h4 className="text-md font-semibold">Dette skal du øve på først</h4>
+                    <div className="flex gap-2">
+                      <Button
+                        variant={paaNorsk ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setPaaNorsk(true)}
+                      >
+                        <span className="mr-1">🇳🇴</span>
+                        Norsk
+                      </Button>
+                      <Button
+                        variant={!paaNorsk ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setPaaNorsk(false)}
+                      >
+                        <span className="mr-1">{morsmaalFlagg ?? '🌐'}</span>
+                        {morsmaalNavn}
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="space-y-3">
+                    {resultat.valgte_feiltyper.map((v) => {
+                      const eksempler = resultat.feil.filter((f) => f.kode === v.kode).slice(0, 3)
+                      return (
+                        <div key={v.kode} className="rounded-lg border border-blue-200 bg-blue-50 p-4">
+                          <p className="font-semibold text-gray-900">{v.navn}</p>
+                          <p className="mt-1 text-sm text-gray-800">
+                            {paaNorsk ? v.regel : v.regel_morsmaal || v.regel}
+                          </p>
+                          {eksempler.length > 0 && (
+                            <ul className="mt-3 space-y-1 text-sm">
+                              {eksempler.map((f, i) => (
+                                <li key={i} className="flex flex-wrap gap-x-2">
+                                  <span className="text-red-600 line-through">{f.utdrag}</span>
+                                  <span className="text-gray-500">→</span>
+                                  <span className="font-medium text-green-700">{f.rettet}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                        </div>
+                      )
+                    })}
+                  </div>
+                  <div className="mt-6 flex justify-center">
                     <Button
-                      variant={paaNorsk ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => setPaaNorsk(true)}
+                      size="lg"
+                      onClick={() => setStartet(true)}
+                      className="bg-blue-600 hover:bg-blue-700"
+                      disabled={ovinger.length === 0}
                     >
-                      <span className="mr-1">🇳🇴</span>
-                      Norsk
-                    </Button>
-                    <Button
-                      variant={!paaNorsk ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => setPaaNorsk(false)}
-                    >
-                      <span className="mr-1">{morsmaalFlagg ?? '🌐'}</span>
-                      {morsmaalNavn}
+                      <Play className="h-4 w-4" />
+                      Start øvingene ({ovinger.length} oppgaver)
                     </Button>
                   </div>
                 </div>
-                <div className="space-y-3">
-                  {resultat.valgte_feiltyper.map((v) => {
-                    const eksempler = resultat.feil.filter((f) => f.kode === v.kode).slice(0, 3)
-                    return (
-                      <div key={v.kode} className="rounded-lg border border-blue-200 bg-blue-50 p-4">
-                        <p className="font-semibold text-gray-900">{v.navn}</p>
-                        <p className="mt-1 text-sm text-gray-800">
-                          {paaNorsk ? v.regel : v.regel_morsmaal || v.regel}
-                        </p>
-                        {eksempler.length > 0 && (
-                          <ul className="mt-3 space-y-1 text-sm">
-                            {eksempler.map((f, i) => (
-                              <li key={i} className="flex flex-wrap gap-x-2">
-                                <span className="text-red-600 line-through">{f.utdrag}</span>
-                                <span className="text-gray-500">→</span>
-                                <span className="font-medium text-green-700">{f.rettet}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        )}
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
+              )}
 
               {/* Øvingene, én om gangen */}
-              {!ferdig && oving && (
+              {startet && !ferdig && oving && (
                 <div className="rounded-xl border-2 border-blue-100 bg-white p-5 shadow-sm">
                   <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
                     <span className="text-sm font-semibold text-blue-600">
@@ -231,23 +261,38 @@ export function OvingerSeksjon({
                       style={{ width: `${(indeks / ovinger.length) * 100}%` }}
                     />
                   </div>
-                  <p className="mb-4 font-medium text-gray-900">{oving.instruksjon}</p>
+                  <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+                    <div className="min-w-0 flex-1">
+                      <p className="mb-4 font-medium text-gray-900">{oving.instruksjon}</p>
 
-                  {oving.format === 'bygg_setning' ? (
-                    <ByggSetning
-                      key={`${runde}-${indeks}`}
-                      oving={oving}
-                      onForsteSvar={(r) => setForsteForsok((f) => [...f, r])}
-                      onRiktig={() => setLost(true)}
-                    />
-                  ) : (
-                    <VelgOrd
-                      key={`${runde}-${indeks}`}
-                      oving={oving}
-                      onForsteSvar={(r) => setForsteForsok((f) => [...f, r])}
-                      onRiktig={() => setLost(true)}
-                    />
-                  )}
+                      {oving.format === 'bygg_setning' ? (
+                        <ByggSetning
+                          key={`${runde}-${indeks}`}
+                          oving={oving}
+                          onForsteSvar={(r) => setForsteForsok((f) => [...f, r])}
+                          onRiktig={() => setLost(true)}
+                          onStatus={oppdaterStatus}
+                        />
+                      ) : (
+                        <VelgOrd
+                          key={`${runde}-${indeks}`}
+                          oving={oving}
+                          onForsteSvar={(r) => setForsteForsok((f) => [...f, r])}
+                          onRiktig={() => setLost(true)}
+                          onStatus={oppdaterStatus}
+                        />
+                      )}
+                    </div>
+                    <div className="flex shrink-0 justify-center sm:w-36">
+                      <Image
+                        src={`/images/${laerer}_${svarstatus === 'riktig' ? 'riktig' : 'feil'}.png`}
+                        alt="Lærer"
+                        width={144}
+                        height={144}
+                        className="h-28 w-28 object-contain sm:h-36 sm:w-36"
+                      />
+                    </div>
+                  </div>
 
                   <div className="mt-5 flex justify-end gap-3">
                     {!lost && (
@@ -265,8 +310,15 @@ export function OvingerSeksjon({
                 </div>
               )}
 
-              {ferdig && (
+              {startet && ferdig && (
                 <div className="space-y-4 rounded-xl border-2 border-green-200 bg-green-50 p-6 text-center">
+                  <Image
+                    src={`/images/${laerer}_riktig.png`}
+                    alt="Lærer"
+                    width={144}
+                    height={144}
+                    className="mx-auto h-32 w-32 object-contain"
+                  />
                   <p className="text-lg font-semibold text-green-900">Ferdig!</p>
                   <p className="text-sm text-green-900">
                     Du fikk {antallRiktige} av {ovinger.length} riktig på første forsøk.
@@ -286,7 +338,7 @@ export function OvingerSeksjon({
             </>
           )}
 
-          {andreFeil.length > 0 && (
+          {!startet && andreFeil.length > 0 && (
             <details className="rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm">
               <summary className="cursor-pointer font-medium text-gray-700">
                 Se også: andre feil i teksten ({andreFeil.length})
@@ -310,15 +362,20 @@ export function OvingerSeksjon({
             </p>
           )}
 
-          <div className="text-center">
-            <button
-              type="button"
-              onClick={() => setResultat(null)}
-              className="text-sm text-gray-500 underline hover:text-gray-700"
-            >
-              Velg et annet nivå
-            </button>
-          </div>
+          {(!startet || ferdig) && (
+            <div className="text-center">
+              <button
+                type="button"
+                onClick={() => {
+                  setResultat(null)
+                  setStartet(false)
+                }}
+                className="text-sm text-gray-500 underline hover:text-gray-700"
+              >
+                Velg et annet nivå
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>
