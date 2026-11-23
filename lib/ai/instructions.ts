@@ -187,11 +187,11 @@ Analyser teksten og gi tilbakemelding på følgende områder:
    - God tekstsammenheng
    - Andre sterke sider
 
-2. **Hva kan bli bedre** - Bygg på oversikten over feiltyper i punkt 4. Gi konstruktiv kritikk på:
-   - De feiltypene som går igjen flest ganger. Begynn med den feiltypen som har høyest antall.
-   - For hver feiltype: forklar regelen med enkle ord, vis ett eller to eksempler fra elevens tekst med feil og riktig form, og gi et konkret tips.
-   - Tegnsetting, hvis det er et problem (tegnsetting har ingen kode, så bruk tom kode "").
-   - Hva eleven bør øve på videre.
+2. **Hva kan bli bedre** - En kort oppsummering på 2–4 setninger, i samme stil som «hva var bra». Bygg på oversikten over feiltyper i punkt 4:
+   - Nevn de feiltypene som går igjen flest ganger, med enkle ord.
+   - Nevn tegnsetting hvis det er et problem.
+   - Si kort hva eleven bør øve på videre.
+   - Ikke forklar regler, og ikke list opp eksempler. Feilene vises i oversikten over feiltyper og i ordlisten.
    - Ikke nevn skrivefeil (R-kodene) her. De hører til i ordlisten.
 
 3. **Ordliste** - Liste over ord eleven har skrevet feil:
@@ -263,9 +263,7 @@ L7 Dialekt/nynorsk/talemål (ikkje → ikke)
 Returner kun gyldig JSON, uten kodeblokker eller ekstra tekst, med denne strukturen:
 {
   "bra": {"bokmaal": "...", "morsmaal": "..."},
-  "kan_bli_bedre": [
-    {"kode": "O1", "feiltype": "Verbet på andre plass", "forklaring": {"bokmaal": "...", "morsmaal": "..."}, "eksempler": [{"feil": "I går jeg gikk", "riktig": "I går gikk jeg"}], "tips": {"bokmaal": "...", "morsmaal": "..."}}
-  ],
+  "kan_bli_bedre": {"bokmaal": "...", "morsmaal": "..."},
   "ordliste": [{"feil": "komer", "riktig": "kommer"}],
   "feiltyper": [
     {"kode": "O1", "feiltype": "Verbet på andre plass", "antall": 3, "eksempel": {"feil": "I går jeg gikk", "riktig": "I går gikk jeg"}}
