@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
-import { ChevronLeft, ChevronRight, Languages, Copy, BarChart3, Check, Loader2 } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Languages, Copy, BarChart3, Check, Loader2, Dumbbell, ArrowRight } from 'lucide-react'
 import { toast } from 'sonner'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
@@ -19,7 +19,8 @@ import { Confetti } from '@/components/ui/confetti'
 import { Navbar } from '@/components/landing/navbar'
 import { sanitizeMarkdown } from '@/lib/sanitize'
 import { fetchWithTimeout } from '@/lib/fetch-with-timeout'
-import { OvingerSeksjon } from '@/components/skrivehjelp/ovinger/ovinger-seksjon'
+import { useRouter } from 'next/navigation'
+import { lagreTekstForOvinger } from '@/lib/ovinger/fra-skrivehjelp'
 
 interface SentenceResult {
   bruker_setning: string;
@@ -95,6 +96,7 @@ interface SpraakhjelpperClientProps {
 }
 
 export default function SpraakhjelpperClient({ user, isAdmin = false }: SpraakhjelpperClientProps) {
+  const router = useRouter()
   const [inputValue, setInputValue] = useState('')
   const [selectedLanguage, setSelectedLanguage] = useState<string>('')
 
@@ -682,6 +684,23 @@ export default function SpraakhjelpperClient({ user, isAdmin = false }: Spraakhj
 
   const motherTongueName =
     (result?.morsmaal && languages.find((lang) => lang.code === result.morsmaal)?.name) || 'Morsmål'
+
+  // Tar teksten med til «Øv på feilene dine» under Grammatikkøving.
+  const goToExercises = () => {
+    if (!result) return
+    const saved = lagreTekstForOvinger({
+      originalText: result.originalText,
+      morsmaal: result.morsmaal,
+      morsmaalNavn: motherTongueName,
+      morsmaalFlagg: languages.find((lang) => lang.code === result.morsmaal)?.flag,
+      setninger: result.results.map((r) => ({ elev: r.bruker_setning, rettet: r.riktig_setning })),
+    })
+    if (!saved) {
+      toast.error('Kunne ikke ta med teksten. Prøv igjen.')
+      return
+    }
+    router.push('/grammatikk/ov-pa-feilene')
+  }
 
   return (
     <div className="min-h-screen relative">
@@ -1335,16 +1354,23 @@ export default function SpraakhjelpperClient({ user, isAdmin = false }: Spraakhj
                   </div>
 
                   {/* Tilpassede øvinger fra feilene i teksten */}
-                  <OvingerSeksjon
-                    originalText={result.originalText}
-                    morsmaal={result.morsmaal}
-                    morsmaalNavn={motherTongueName}
-                    morsmaalFlagg={languages.find((lang) => lang.code === result.morsmaal)?.flag}
-                    setninger={result.results.map((r) => ({
-                      elev: r.bruker_setning,
-                      rettet: r.riktig_setning,
-                    }))}
-                  />
+                  <div className="border-t pt-8">
+                    <div className="flex flex-col gap-4 rounded-lg border border-blue-200 bg-blue-50 p-5 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="flex items-start gap-3">
+                        <Dumbbell className="mt-0.5 h-5 w-5 flex-shrink-0 text-blue-600" />
+                        <div>
+                          <p className="font-semibold text-gray-900">Øv på feilene dine</p>
+                          <p className="text-sm text-gray-600">
+                            Få øvinger i Grammatikkøving som passer til feilene i teksten din.
+                          </p>
+                        </div>
+                      </div>
+                      <Button onClick={goToExercises} className="bg-blue-600 hover:bg-blue-700 sm:flex-shrink-0">
+                        Øv på feilene
+                        <ArrowRight className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
 
                   {/* PDF Download Section */}
                   <div className="border-t pt-8 mt-8">
