@@ -13,14 +13,14 @@ export function FjordBackground({ mobileCredit = true }: { mobileCredit?: boolea
     <>
       <div className="fixed inset-0 z-0">
         <Image
-          src="/images/Aurlandsfjorden-blaa.jpg"
+          src="/images/Aurlandsfjorden-duotone.jpg"
           alt="Aurlandsfjorden bakgrunn"
           fill
           className="object-cover"
           priority
           quality={90}
         />
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-900/70 via-blue-800/60 to-cyan-700/50" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#1d1d1b]/45 via-[#1d1d1b]/15 to-[#1d1d1b]/5" />
         <div className="absolute bottom-4 right-4 z-10 hidden rounded bg-black/20 px-3 py-1.5 text-xs text-white/70 backdrop-blur-sm sm:block">
           {CREDIT}
         </div>

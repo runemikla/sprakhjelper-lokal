@@ -26,6 +26,7 @@ export const ENDRINGSLOGG: Endringsoppforing[] = [
   {
     dato: '2026-11-23',
     endringer: [
+      { type: 'forbedret', tekst: 'Fjordbildet i bakgrunnen følger nå den grafiske profilen til Vestland fylkeskommune: svart/kvitt med lyseblått, uten det blå laget oppå.' },
       { type: 'forbedret', tekst: '«Øv på feilene dine» er flyttet til Grammatikkøving. I sammendraget i Skrivehjelp er det nå en knapp som tar eleven dit med teksten sin. Eleven ser først hva hen skal øve på, og trykker Start for å gå gjennom oppgavene.' },
       { type: 'forbedret', tekst: 'Grammatikkøving har fått samme fjordbakgrunn som de andre sidene.' },
       { type: 'forbedret', tekst: 'Alle verktøyene har fått samme sidetopp: tittel og en kort forklaring over fjorden, og innholdet i et hvitt felt med samme bredde. Knappene ser like ut overalt.' },

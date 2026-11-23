@@ -47,14 +47,14 @@ export default function TilgangPage() {
       {/* Background Image with Overlay — same as front page */}
       <div className="absolute inset-0 z-0">
         <Image
-          src="/images/Aurlandsfjorden-blaa.jpg"
+          src="/images/Aurlandsfjorden-duotone.jpg"
           alt="Aurlandsfjorden bakgrunn"
           fill
           className="object-cover"
           priority
           quality={90}
         />
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-900/70 via-blue-800/60 to-cyan-700/50" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#1d1d1b]/45 via-[#1d1d1b]/15 to-[#1d1d1b]/5" />
         <div className="absolute bottom-4 right-4 text-white/70 text-xs bg-black/20 backdrop-blur-sm px-3 py-1.5 rounded">
           Foto: Silje Alvsaker / Vestland fylkeskommune
         </div>

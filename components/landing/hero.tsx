@@ -24,7 +24,7 @@ export function Hero() {
       {/* Background Image with Overlay */}
       <div className="absolute inset-0 z-0">
         <Image
-          src="/images/Aurlandsfjorden-blaa.jpg"
+          src="/images/Aurlandsfjorden-duotone.jpg"
           alt="Aurlandsfjorden - Norwegian fjord background"
           fill
           className="object-cover"
@@ -32,7 +32,7 @@ export function Hero() {
           quality={90}
         />
         {/* Gradient overlay for better text readability */}
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-900/70 via-blue-800/60 to-cyan-700/50" />
+        <div className="absolute inset-0 bg-[#1d1d1b]/40" />
         {/* Photo credit */}
         <div className="absolute bottom-4 right-4 text-white/70 text-xs bg-black/20 backdrop-blur-sm px-3 py-1.5 rounded">
           Foto: Silje Alvsaker / Vestland fylkeskommune
