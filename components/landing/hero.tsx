@@ -24,7 +24,7 @@ export function Hero() {
       {/* Background Image with Overlay */}
       <div className="absolute inset-0 z-0">
         <Image
-          src="/images/Aurlandsfjorden-blaa.jpg"
+          src="/images/Aurlandsfjorden-duotone.jpg"
           alt="Aurlandsfjorden - Norwegian fjord background"
           fill
           className="object-cover"
@@ -32,7 +32,7 @@ export function Hero() {
           quality={90}
         />
         {/* Gradient overlay for better text readability */}
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-900/70 via-blue-800/60 to-cyan-700/50" />
+        <div className="absolute inset-0 bg-[#1d1d1b]/40" />
         {/* Photo credit */}
         <div className="absolute bottom-4 right-4 text-white/70 text-xs bg-black/20 backdrop-blur-sm px-3 py-1.5 rounded">
           Foto: Silje Alvsaker / Vestland fylkeskommune
@@ -43,12 +43,12 @@ export function Hero() {
       <div className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8 py-24">
         <div className="max-w-4xl mx-auto text-center">
           {/* Main Heading */}
-          <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold text-white mb-6 leading-tight animate-fade-in-up">
+          <h1 className="text-5xl sm:text-6xl lg:text-7xl font-semibold text-white mb-6 leading-tight animate-fade-in-up">
             Skriv bedre norsk med hjelp fra KI
           </h1>
 
           {/* Subheading */}
-          <p className="text-xl sm:text-2xl text-blue-50 mb-12 max-w-3xl mx-auto leading-relaxed animate-fade-in-up animation-delay-200">
+          <p className="text-xl sm:text-2xl text-white/90 mb-12 max-w-3xl mx-auto leading-relaxed animate-fade-in-up animation-delay-200">
             Skrivehjelp bruker kunstig intelligens for å hjelpe deg å skrive bedre norsk. Den gir forklaringer og forslag på både norsk og ditt eget morsmål, slik at du forstår hvordan teksten kan forbedres. <br /> Du får også tips til videre arbeid og en oversiktlig rapport du kan dele med læreren din.
           </p>
 

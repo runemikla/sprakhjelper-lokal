@@ -54,7 +54,7 @@ export function SentenceBuilder({
           'flex min-h-[80px] flex-wrap content-start items-center gap-3 rounded-xl border-2 p-4 transition-colors',
           status === 'correct' && 'border-green-400 bg-green-50',
           status === 'wrong' && 'border-red-400 bg-red-50',
-          status === 'idle' && 'border-blue-300 bg-blue-50/40',
+          status === 'idle' && 'border-vlfk-lyseblaa bg-vlfk-lyseblaa/10',
           tokens.length === 0 && !prefix && 'justify-center'
         )}
       >

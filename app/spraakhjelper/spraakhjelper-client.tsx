@@ -419,7 +419,7 @@ export default function SpraakhjelpperClient({ user, isAdmin = false }: Spraakhj
           description: getUserCorrectedText() !== result.originalText
             ? '💡 Denne teksten oppdateres når du korrigerer setninger'
             : 'Du har ikke gjort noen korrigeringer ennå',
-          bgColor: 'bg-blue-50 border-blue-200',
+          bgColor: 'bg-vlfk-lyseblaa/15 border-vlfk-lyseblaa',
           copyText: getUserCorrectedText()
         }
       default:
@@ -444,14 +444,14 @@ export default function SpraakhjelpperClient({ user, isAdmin = false }: Spraakhj
         <svg className="w-32 h-32 transform -rotate-90" viewBox="0 0 100 100">
           <circle cx="50" cy="50" r={radius} fill="none" stroke="#e5e7eb" strokeWidth="8" />
           <circle
-            cx="50" cy="50" r={radius} fill="none" stroke="#10b981" strokeWidth="8"
+            cx="50" cy="50" r={radius} fill="none" stroke="#50A684" strokeWidth="8"
             strokeLinecap="round" strokeDasharray={originalStrokeDasharray}
             strokeDashoffset={originalStrokeDashoffset}
             className="transition-all duration-500"
           />
           {correctedPercentage > 0 && (
             <circle
-              cx="50" cy="50" r={radius} fill="none" stroke="#3b82f6" strokeWidth="8"
+              cx="50" cy="50" r={radius} fill="none" stroke="#9ADBE8" strokeWidth="8"
               strokeLinecap="round"
               strokeDasharray={`${(correctedPercentage / 100) * circumference} ${circumference}`}
               className="transition-all duration-500"
@@ -838,12 +838,12 @@ export default function SpraakhjelpperClient({ user, isAdmin = false }: Spraakhj
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                    <h3 className="font-semibold mb-3 text-blue-900">Setninger funnet:</h3>
+                  <div className="bg-vlfk-lyseblaa/15 border border-vlfk-lyseblaa rounded-lg p-4">
+                    <h3 className="font-semibold mb-3 text-vlfk-ink">Setninger funnet:</h3>
                     <div className="space-y-2">
                       {editableSentences.map((sentence, index) => (
-                        <div key={index} className="flex items-start gap-2 py-2 px-3 bg-white rounded-md border border-blue-100">
-                          <span className="font-semibold text-blue-700 flex-shrink-0">{index + 1}.</span>
+                        <div key={index} className="flex items-start gap-2 py-2 px-3 bg-white rounded-md border border-vlfk-lyseblaa/60">
+                          <span className="font-semibold text-vlfk-ink flex-shrink-0">{index + 1}.</span>
                           <span className="text-gray-800">{sentence}</span>
                         </div>
                       ))}
@@ -970,13 +970,13 @@ export default function SpraakhjelpperClient({ user, isAdmin = false }: Spraakhj
                       </div>
                     </div>
 
-                    <div className={`text-sm rounded-lg p-3 sm:p-4 ${showNorwegianExplanation ? 'bg-blue-50 border border-blue-200' : 'bg-purple-50 border border-purple-200'
+                    <div className={`text-sm rounded-lg p-3 sm:p-4 ${showNorwegianExplanation ? 'bg-vlfk-lyseblaa/15 border border-vlfk-lyseblaa' : 'bg-vlfk-lilla/20 border border-vlfk-lilla'
                       }`}>
                       <div className="space-y-2">
                         {formatExplanation(showNorwegianExplanation ? currentSentence.forklaring : currentSentence.forklaring_morsmaal)
                           .map((point, index) => (
                             <div key={index} className="flex gap-2">
-                              <span className={`font-medium flex-shrink-0 ${showNorwegianExplanation ? 'text-blue-700' : 'text-purple-700'
+                              <span className={`font-medium flex-shrink-0 ${showNorwegianExplanation ? 'text-vlfk-ink' : 'text-vlfk-ink'
                                 }`}>
                                 {point.number}
                               </span>
@@ -1009,7 +1009,7 @@ export default function SpraakhjelpperClient({ user, isAdmin = false }: Spraakhj
                                           href={sanitizedHref}
                                           target="_blank"
                                           rel="noopener noreferrer"
-                                          className="text-blue-600 hover:underline"
+                                          className="text-vlfk-ink hover:underline"
                                         >
                                           {children}
                                         </a>
@@ -1033,7 +1033,7 @@ export default function SpraakhjelpperClient({ user, isAdmin = false }: Spraakhj
                   <div className="w-full">
                     <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-blue-500 transition-all duration-300 ease-out"
+                        className="h-full bg-vlfk-ink transition-all duration-300 ease-out"
                         style={{ width: `${((currentSentenceIndex + 1) / result.results.length) * 100}%` }}
                       />
                     </div>
@@ -1142,7 +1142,7 @@ export default function SpraakhjelpperClient({ user, isAdmin = false }: Spraakhj
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <h3 className="text-lg font-semibold">Statistikk</h3>
-                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-3">
+                      <div className="bg-vlfk-lyseblaa/15 border border-vlfk-lyseblaa rounded-lg p-4 space-y-3">
                         <div className="flex justify-between">
                           <span className="text-sm font-semibold">Antall setninger:</span>
                           <span className="text-sm font-semibold">{getStatistics().totalSentences}</span>
@@ -1155,7 +1155,7 @@ export default function SpraakhjelpperClient({ user, isAdmin = false }: Spraakhj
                         </div>
                         <div className="flex justify-between">
                           <span className="text-sm font-semibold">Korrigerte av deg:</span>
-                          <span className="text-sm font-semibold text-blue-600">
+                          <span className="text-sm font-semibold text-vlfk-ink">
                             {getStatistics().correctedSentences} av {getStatistics().totalSentences}
                           </span>
                         </div>
@@ -1225,7 +1225,7 @@ export default function SpraakhjelpperClient({ user, isAdmin = false }: Spraakhj
                         {/* What was good */}
                         <div>
                           <h4 className="text-md font-semibold mb-2">Hva var bra med teksten</h4>
-                          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                          <div className="bg-vlfk-lyseblaa/15 border border-vlfk-lyseblaa rounded-lg p-4">
                             <div className="text-sm leading-relaxed whitespace-pre-wrap">
                               <ReactMarkdown
                                 remarkPlugins={[remarkGfm]}
@@ -1242,7 +1242,7 @@ export default function SpraakhjelpperClient({ user, isAdmin = false }: Spraakhj
                         {textAnalysis.kan_bli_bedre.bokmaal && (
                           <div>
                             <h4 className="text-md font-semibold mb-2">Hva kan bli bedre</h4>
-                            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                            <div className="bg-vlfk-lyseblaa/15 border border-vlfk-lyseblaa rounded-lg p-4">
                               <div className="text-sm leading-relaxed whitespace-pre-wrap">
                                 <ReactMarkdown
                                   remarkPlugins={[remarkGfm]}
@@ -1266,18 +1266,18 @@ export default function SpraakhjelpperClient({ user, isAdmin = false }: Spraakhj
                         {textAnalysis.ordliste && textAnalysis.ordliste.length > 0 && (
                           <div>
                             <h4 className="text-md font-semibold mb-2">Stavefeil</h4>
-                            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                            <div className="bg-vlfk-lyseblaa/15 border border-vlfk-lyseblaa rounded-lg p-4">
                               <div className="overflow-x-auto">
                                 <table className="w-full text-sm">
                                   <thead>
-                                    <tr className="border-b border-blue-300">
+                                    <tr className="border-b border-vlfk-lyseblaa">
                                       <th className="text-left py-2 px-3 font-semibold text-red-700">Feil</th>
                                       <th className="text-left py-2 px-3 font-semibold text-green-700">Riktig</th>
                                     </tr>
                                   </thead>
                                   <tbody>
                                     {textAnalysis.ordliste.map((ord, index) => (
-                                      <tr key={index} className="border-b border-blue-200 last:border-b-0">
+                                      <tr key={index} className="border-b border-vlfk-lyseblaa last:border-b-0">
                                         <td className="py-2 px-3 text-red-600 font-medium">{ord.feil}</td>
                                         <td className="py-2 px-3 text-green-600 font-medium">{ord.riktig}</td>
                                       </tr>
@@ -1290,7 +1290,7 @@ export default function SpraakhjelpperClient({ user, isAdmin = false }: Spraakhj
                         )}
 
                         {textAnalysis.ordliste && textAnalysis.ordliste.length === 0 && (
-                          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
+                          <div className="bg-vlfk-lyseblaa/15 border border-vlfk-lyseblaa rounded-lg p-4 text-center">
                             <p className="text-sm text-gray-700">🎉 Ingen stavefeil funnet!</p>
                           </div>
                         )}
@@ -1300,9 +1300,9 @@ export default function SpraakhjelpperClient({ user, isAdmin = false }: Spraakhj
 
                   {/* Tilpassede øvinger fra feilene i teksten */}
                   <div className="border-t pt-8">
-                    <div className="flex flex-col gap-4 rounded-lg border border-blue-200 bg-blue-50 p-5 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex flex-col gap-4 rounded-lg border border-vlfk-lyseblaa bg-vlfk-lyseblaa/15 p-5 sm:flex-row sm:items-center sm:justify-between">
                       <div className="flex items-start gap-3">
-                        <Dumbbell className="mt-0.5 h-5 w-5 flex-shrink-0 text-blue-600" />
+                        <Dumbbell className="mt-0.5 h-5 w-5 flex-shrink-0 text-vlfk-ink" />
                         <div>
                           <p className="font-semibold text-gray-900">Øv på feilene dine</p>
                           <p className="text-sm text-gray-600">

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist } from "next/font/google";
+import localFont from "next/font/local";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "sonner";
 import "./globals.css";
@@ -16,10 +16,21 @@ export const metadata: Metadata = {
   description: "En AI-drevet språkassistent for å lære norsk",
 };
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+// VLFK profile fonts: Roboto for text, Roboto Slab for page and section titles.
+const roboto = localFont({
+  src: [
+    { path: "./fonts/Roboto.woff2", weight: "100 900", style: "normal" },
+    { path: "./fonts/Roboto-Italic.woff2", weight: "100 900", style: "italic" },
+  ],
+  variable: "--font-roboto",
   display: "swap",
-  subsets: ["latin"],
+});
+
+const robotoSlab = localFont({
+  src: "./fonts/RobotoSlab.woff2",
+  weight: "100 900",
+  variable: "--font-roboto-slab",
+  display: "swap",
 });
 
 export default async function RootLayout({
@@ -31,7 +42,7 @@ export default async function RootLayout({
   const roles = { loggedIn: Boolean(user), isAdmin, isTeacher, isStudent };
   return (
     <html lang="no" suppressHydrationWarning>
-      <body className={`${geistSans.className} antialiased`}>
+      <body className={`${roboto.variable} ${robotoSlab.variable} font-sans antialiased`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"

@@ -46,7 +46,7 @@ export function VelgOrd({ oving, onForsteSvar, onRiktig, onStatus }: VelgOrdProp
 
   return (
     <div className="space-y-5">
-      <p className="rounded-xl border-2 border-blue-300 bg-blue-50/40 p-4 text-lg leading-relaxed text-gray-900">
+      <p className="rounded-xl border-2 border-vlfk-lyseblaa bg-vlfk-lyseblaa/10 p-4 text-lg leading-relaxed text-gray-900">
         {oving.foer_luke}
         <span
           className={cn(
@@ -71,8 +71,8 @@ export function VelgOrd({ oving, onForsteSvar, onRiktig, onStatus }: VelgOrdProp
               disabled={ferdig || erProvdFeil}
               className={cn(
                 'rounded-lg border-2 px-5 py-2 text-lg font-medium shadow-sm transition-all',
-                'border-blue-200 bg-white text-gray-900',
-                !ferdig && !erProvdFeil && 'hover:border-blue-400 hover:shadow',
+                'border-vlfk-lyseblaa bg-white text-gray-900',
+                !ferdig && !erProvdFeil && 'hover:border-vlfk-ink hover:shadow',
                 erProvdFeil && 'border-red-300 bg-red-50 text-red-400 line-through',
                 erRiktigValgt && 'border-green-400 bg-green-50 text-green-800',
                 ferdig && !erRiktigValgt && 'opacity-60'

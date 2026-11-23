@@ -140,7 +140,7 @@ export function ByggSetning({ oving, onForsteSvar, onRiktig, onStatus }: ByggSet
       />
 
       {visFasit && (
-        <div className="flex items-start gap-2 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800">
+        <div className="flex items-start gap-2 rounded-xl border border-vlfk-lyseblaa bg-vlfk-lyseblaa/15 px-4 py-3 text-sm text-vlfk-ink">
           <Eye className="mt-0.5 h-4 w-4 shrink-0" />
           <span>
             Fasit: <span className="font-semibold">{fasit}</span>

@@ -114,8 +114,8 @@ export function SayWord({ word, className }: SayWordProps) {
         play(word, 'w')
       }}
       className={cn(
-        'border-b-2 border-dotted border-blue-500 font-semibold hover:text-blue-600',
-        playing === `${word.id}:w` && 'rounded bg-blue-100',
+        'border-b-2 border-dotted border-vlfk-ink font-semibold hover:text-vlfk-ink',
+        playing === `${word.id}:w` && 'rounded bg-vlfk-lyseblaa/30',
         className
       )}
     >
@@ -135,7 +135,7 @@ export function Sentence({ word }: { word: Word }) {
       {match ? (
         <>
           {match[1]}
-          <b className="text-blue-700">{match[2]}</b>
+          <b className="text-vlfk-ink">{match[2]}</b>
           {match[3]}
         </>
       ) : (
@@ -149,8 +149,8 @@ export function Sentence({ word }: { word: Word }) {
         }}
         aria-label="Hør setningen"
         className={cn(
-          'ml-1 inline-flex items-center gap-1 whitespace-nowrap rounded-full border border-gray-200 bg-white px-2.5 py-0.5 align-middle text-xs font-medium text-blue-600 hover:border-blue-400',
-          isPlaying && 'bg-blue-100'
+          'ml-1 inline-flex items-center gap-1 whitespace-nowrap rounded-full border border-gray-200 bg-white px-2.5 py-0.5 align-middle text-xs font-medium text-vlfk-ink hover:border-vlfk-ink',
+          isPlaying && 'bg-vlfk-lyseblaa/30'
         )}
       >
         <Volume2 className="h-3 w-3" aria-hidden="true" />
@@ -181,7 +181,7 @@ export function WordImageFill({ word, alt = '', sizes }: { word: Word; alt?: str
   const src = wordImageSrc(word)
   if (!src) {
     return (
-      <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-blue-50 to-cyan-50 text-blue-900/40">
+      <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-vlfk-lyseblaa/15 to-vlfk-lyseblaa/25 text-vlfk-ink/40">
         <ImageIcon className="h-1/3 w-1/3" aria-hidden="true" />
       </div>
     )

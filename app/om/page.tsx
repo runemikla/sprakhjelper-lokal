@@ -4,6 +4,7 @@ import Image from 'next/image'
 import { OmPage } from '@/components/om/om-page'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ArrowDownUp, BookOpen, Headphones, PenLine, Settings, Users } from 'lucide-react'
+import { VERKTOY_FARGE } from '@/components/landing/verktoy-farger'
 
 export const metadata: Metadata = {
   title: 'Om verktøyene - Språkhjelp',
@@ -105,8 +106,12 @@ export default function OmVerktoyenePage() {
           return (
             <Card key={tool.href}>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Icon className="h-6 w-6 text-[#9ADBE8]" />
+                <CardTitle className="flex items-center gap-3">
+                  <span
+                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-vlfk-ink ${VERKTOY_FARGE[tool.href] ?? 'bg-vlfk-surface-muted'}`}
+                  >
+                    <Icon className="h-5 w-5" />
+                  </span>
                   {tool.title}
                 </CardTitle>
                 <p className="text-sm text-gray-500">{tool.who}</p>
@@ -133,7 +138,7 @@ export default function OmVerktoyenePage() {
                 </ul>
                 <Link
                   href={tool.href}
-                  className="clear-both inline-flex font-medium text-blue-700 underline underline-offset-4 hover:text-blue-800"
+                  className="clear-both inline-flex font-medium text-vlfk-ink underline underline-offset-4 hover:text-vlfk-ink"
                 >
                   Åpne {tool.title.toLowerCase()}
                 </Link>
@@ -144,8 +149,10 @@ export default function OmVerktoyenePage() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Settings className="h-6 w-6 text-[#9ADBE8]" />
+            <CardTitle className="flex items-center gap-3">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-vlfk-surface-muted text-vlfk-ink">
+                <Settings className="h-5 w-5" />
+              </span>
               For administratorer
             </CardTitle>
           </CardHeader>
@@ -160,14 +167,14 @@ export default function OmVerktoyenePage() {
         </Card>
       </div>
 
-      <h2 className="text-2xl font-bold text-gray-900 mb-4">Teknologien bak</h2>
+      <h2 className="text-2xl font-semibold text-gray-900 mb-4">Teknologien bak</h2>
       <ul className="list-disc pl-5 space-y-2 text-gray-700 leading-relaxed mb-12">
         <li>Tilbakemeldinger, spørsmål og ordinnhold lages med språkmodeller i Microsoft Azure OpenAI.</li>
         <li>Lyd lages med Google Cloud tekst til tale og Google Gemini. Bildene i Lær ord lages med Google Gemini.</li>
         <li>Innlogging, grupper, ordlister og lytteøvinger lagres i Supabase.</li>
         <li>
           Nettsiden driftes hos Hetzner i EU. Les mer under{' '}
-          <Link href="/personvern" className="text-blue-700 underline underline-offset-4">
+          <Link href="/personvern" className="text-vlfk-ink underline underline-offset-4">
             Personvern og GDPR
           </Link>
           .

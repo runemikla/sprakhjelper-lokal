@@ -301,7 +301,7 @@ export function WordListEditor({ listId, userEmail = null, isAdmin = false }: Wo
         >
           <ArrowLeft className="h-4 w-4" /> Alle ordlister
         </Link>
-        <h1 className="text-3xl font-bold text-white drop-shadow">
+        <h1 className="text-3xl font-semibold text-white drop-shadow">
           {saved ? 'Rediger ordliste' : 'Lag ny ordliste'}
         </h1>
         <p className="mt-1 text-white/90 drop-shadow">
@@ -407,7 +407,7 @@ export function WordListEditor({ listId, userEmail = null, isAdmin = false }: Wo
             <p className="text-base font-semibold text-gray-900">Del med grupper</p>
             <p className="text-sm text-gray-600">
               Elevene i gruppene du velger, ser ordlisten i Lær ord.{' '}
-              <Link href="/grupper" className="font-medium text-blue-700 hover:underline">
+              <Link href="/grupper" className="font-medium text-vlfk-ink hover:underline">
                 Lag og administrer grupper
               </Link>
             </p>
@@ -428,8 +428,8 @@ export function WordListEditor({ listId, userEmail = null, isAdmin = false }: Wo
                       key={group.id}
                       className={`inline-flex cursor-pointer items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
                         checked
-                          ? 'border-blue-600 bg-blue-600 text-white'
-                          : 'border-gray-300 bg-white text-gray-800 hover:border-blue-400'
+                          ? 'border-vlfk-ink bg-vlfk-ink text-white'
+                          : 'border-gray-300 bg-white text-gray-800 hover:border-vlfk-ink'
                       }`}
                     >
                       <input
@@ -576,7 +576,7 @@ export function WordListEditor({ listId, userEmail = null, isAdmin = false }: Wo
               <button
                 type="button"
                 onClick={() => setShowBulk(true)}
-                className="inline-flex items-center gap-1.5 text-sm font-medium text-blue-700 hover:underline"
+                className="inline-flex items-center gap-1.5 text-sm font-medium text-vlfk-ink hover:underline"
               >
                 <ClipboardList className="h-4 w-4" /> Lim inn mange ord på en gang
               </button>

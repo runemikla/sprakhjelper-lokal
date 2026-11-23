@@ -146,8 +146,8 @@ export function OvingerSeksjon({
                   className={cn(
                     'rounded-lg border-2 px-3 py-2 text-left transition-colors',
                     nivaa === n
-                      ? 'border-blue-600 bg-blue-50'
-                      : 'border-gray-200 bg-white hover:border-blue-300'
+                      ? 'border-vlfk-ink bg-vlfk-lyseblaa/15'
+                      : 'border-gray-200 bg-white hover:border-vlfk-lyseblaa'
                   )}
                 >
                   <span className="block font-semibold text-gray-900">{n}</span>
@@ -171,7 +171,7 @@ export function OvingerSeksjon({
       {!laster && resultat && (
         <div className="space-y-6">
           {resultat.valgte_feiltyper.length === 0 ? (
-            <div className="rounded-lg border border-blue-200 bg-blue-50 p-6 text-center">
+            <div className="rounded-lg border border-vlfk-lyseblaa bg-vlfk-lyseblaa/15 p-6 text-center">
               <p className="text-sm text-gray-700">
                 🎉 Vi fant ingen feil du trenger å øve på i denne teksten. Godt skrevet!
               </p>
@@ -206,7 +206,7 @@ export function OvingerSeksjon({
                     {resultat.valgte_feiltyper.map((v) => {
                       const eksempler = resultat.feil.filter((f) => f.kode === v.kode).slice(0, 3)
                       return (
-                        <div key={v.kode} className="rounded-lg border border-blue-200 bg-blue-50 p-4">
+                        <div key={v.kode} className="rounded-lg border border-vlfk-lyseblaa bg-vlfk-lyseblaa/15 p-4">
                           <p className="font-semibold text-gray-900">{v.navn}</p>
                           <p className="mt-1 text-sm text-gray-800">
                             {paaNorsk ? v.regel : v.regel_morsmaal || v.regel}
@@ -242,9 +242,9 @@ export function OvingerSeksjon({
 
               {/* Øvingene, én om gangen */}
               {startet && !ferdig && oving && (
-                <div className="rounded-xl border-2 border-blue-100 bg-white p-5 shadow-sm">
+                <div className="rounded-xl border-2 border-vlfk-lyseblaa/60 bg-white p-5 shadow-sm">
                   <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-                    <span className="text-sm font-semibold text-blue-600">
+                    <span className="text-sm font-semibold text-vlfk-ink">
                       Oppgave {indeks + 1} av {ovinger.length}
                     </span>
                     <div className="flex flex-wrap gap-2">
@@ -257,7 +257,7 @@ export function OvingerSeksjon({
                     aria-hidden="true"
                   >
                     <div
-                      className="h-full rounded-full bg-blue-500 transition-all"
+                      className="h-full rounded-full bg-vlfk-ink transition-all"
                       style={{ width: `${(indeks / ovinger.length) * 100}%` }}
                     />
                   </div>

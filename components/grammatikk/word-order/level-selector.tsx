@@ -24,7 +24,7 @@ export function LevelSelector({
     <div>
       <div className="mb-2 flex items-baseline justify-between gap-3">
         <span className="text-sm font-medium text-gray-500">Vanskelighetsgrad</span>
-        <span className="text-sm font-semibold text-blue-600">
+        <span className="text-sm font-semibold text-vlfk-ink">
           Nivå {value} av {MAX_LEVEL}
         </span>
       </div>

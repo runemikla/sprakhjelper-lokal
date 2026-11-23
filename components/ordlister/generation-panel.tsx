@@ -66,7 +66,7 @@ export function GenerationPanel({
 
       <div className="mt-3 h-2 overflow-hidden rounded-full bg-gray-100">
         <div
-          className="h-full rounded-full bg-blue-600 transition-all"
+          className="h-full rounded-full bg-vlfk-ink transition-all"
           style={{ width: `${total ? (readyCount / total) * 100 : 0}%` }}
         />
       </div>
@@ -91,7 +91,7 @@ export function GenerationPanel({
                 ) : s.status === 'venter' ? (
                   <span className="h-4 w-4 rounded-full border-2 border-gray-200" />
                 ) : (
-                  <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
+                  <Loader2 className="h-4 w-4 animate-spin text-vlfk-ink" />
                 )}
                 <span className="font-medium text-gray-900">{w.word}</span>
                 <span className={cn('text-gray-500', s.status === 'feil' && 'text-red-700')}>

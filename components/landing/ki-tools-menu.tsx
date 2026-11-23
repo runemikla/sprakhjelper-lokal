@@ -75,7 +75,7 @@ export function KiToolsMenu({ onNavigate, isAdmin = false, loggedIn = false }: K
     <div ref={containerRef} className="relative">
       <button
         type="button"
-        className="inline-flex items-center gap-1 text-gray-700 hover:text-blue-600 transition-colors font-medium"
+        className="inline-flex items-center gap-1 text-gray-700 hover:text-vlfk-ink transition-colors font-medium"
         aria-haspopup="menu"
         aria-expanded={isOpen}
         onClick={() => setIsOpen((current) => !current)}
@@ -98,7 +98,7 @@ export function KiToolsMenu({ onNavigate, isAdmin = false, loggedIn = false }: K
               key={tool.href}
               href={tool.href}
               role="menuitem"
-              className="block px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-blue-600"
+              className="block px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-vlfk-ink"
               onClick={(event) => handleToolClick(event, tool.href, tool.clearsSession)}
             >
               {tool.label}
@@ -111,7 +111,7 @@ export function KiToolsMenu({ onNavigate, isAdmin = false, loggedIn = false }: K
               <Link
                 href="/instrukser"
                 role="menuitem"
-                className="block px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-blue-600"
+                className="block px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-vlfk-ink"
                 onClick={() => {
                   setIsOpen(false)
                   onNavigate?.()
@@ -122,7 +122,7 @@ export function KiToolsMenu({ onNavigate, isAdmin = false, loggedIn = false }: K
               <Link
                 href="/sprakmodell"
                 role="menuitem"
-                className="block px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-blue-600"
+                className="block px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-vlfk-ink"
                 onClick={() => {
                   setIsOpen(false)
                   onNavigate?.()
@@ -162,7 +162,7 @@ export function KiToolsMobileLinks({
           <a
             key={tool.href}
             href={tool.href}
-            className="block px-4 text-gray-700 hover:text-blue-600 transition-colors font-medium"
+            className="block px-4 text-gray-700 hover:text-vlfk-ink transition-colors font-medium"
             onClick={(event) => {
               event.preventDefault()
               onNavigate()
@@ -175,7 +175,7 @@ export function KiToolsMobileLinks({
           <Link
             key={tool.href}
             href={tool.href}
-            className="block px-4 text-gray-700 hover:text-blue-600 transition-colors font-medium"
+            className="block px-4 text-gray-700 hover:text-vlfk-ink transition-colors font-medium"
             onClick={onNavigate}
           >
             {tool.label}
@@ -187,14 +187,14 @@ export function KiToolsMobileLinks({
         <>
           <Link
             href="/instrukser"
-            className="block px-4 text-gray-700 hover:text-blue-600 transition-colors font-medium"
+            className="block px-4 text-gray-700 hover:text-vlfk-ink transition-colors font-medium"
             onClick={onNavigate}
           >
             Instrukser
           </Link>
           <Link
             href="/sprakmodell"
-            className="block px-4 text-gray-700 hover:text-blue-600 transition-colors font-medium"
+            className="block px-4 text-gray-700 hover:text-vlfk-ink transition-colors font-medium"
             onClick={onNavigate}
           >
             Språkmodell

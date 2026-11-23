@@ -49,7 +49,7 @@ export function OmPage({ current, title, intro, children }: OmPageProps) {
           </nav>
 
           <div className="rounded-2xl bg-white/95 p-5 shadow-xl backdrop-blur-sm sm:p-8">
-            <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">{title}</h1>
+            <h1 className="text-3xl sm:text-4xl font-semibold text-gray-900 mb-4">{title}</h1>
             {intro ? <div className="text-lg text-gray-600 mb-8 max-w-3xl">{intro}</div> : null}
             {children}
           </div>

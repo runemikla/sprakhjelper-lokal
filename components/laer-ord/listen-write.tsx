@@ -93,7 +93,7 @@ export function ListenWrite({ words }: { words: Word[] }) {
               spellCheck={false}
               placeholder="Skriv ordet"
               className={cn(
-                'w-full max-w-xs rounded-xl border-2 border-gray-200 bg-white px-4 py-2 text-2xl font-semibold text-gray-900 outline-none focus:border-blue-500',
+                'w-full max-w-xs rounded-xl border-2 border-gray-200 bg-white px-4 py-2 text-2xl font-semibold text-gray-900 outline-none focus:border-vlfk-ink',
                 solved && 'border-green-500 bg-green-50'
               )}
             />

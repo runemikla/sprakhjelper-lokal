@@ -110,7 +110,7 @@ export function Exercises({ userEmail = null, isAdmin = false, canEdit = false, 
           </Link>
           <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-white drop-shadow">{title}</h1>
+              <h1 className="text-3xl font-semibold text-white drop-shadow">{title}</h1>
             </div>
             <div className="flex flex-wrap items-center gap-3">
               {list && list.languages.length > 0 && (
@@ -153,7 +153,7 @@ export function Exercises({ userEmail = null, isAdmin = false, canEdit = false, 
                   className={cn(
                     'shrink-0 rounded-full border px-4 py-2 text-sm font-semibold transition-colors',
                     a.key === activity.key
-                      ? 'border-white bg-white text-blue-700 shadow'
+                      ? 'border-white bg-white text-vlfk-ink shadow'
                       : 'border-white/40 bg-white/10 text-white hover:bg-white/20'
                   )}
                 >
