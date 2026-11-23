@@ -20,6 +20,7 @@ import {
   type QuestionType,
 } from '@/lib/lytteoving'
 import { DEFAULT_CHOSEN_VOICE } from '@/lib/tts/gemini-voices'
+import { PageHeader } from '@/components/landing/page-header'
 
 const GENERATE_TIMEOUT_MS = 60000
 
@@ -251,21 +252,13 @@ export function CreateListeningClient({
 
   return (
     <ListeningPageShell userEmail={userEmail} isAdmin={isAdmin}>
+      <PageHeader
+        backHref="/lytteoving"
+        backLabel="Alle lytteøvinger"
+        title="Ny lytteøving"
+        description={`Lag inntil ${MAX_LISTENING_TASKS} oppgaver med hver sin tekst, lyd og spørsmål. Av teksten du legger inn blir det generert en lydfil. Elevene åpner hele øvingen med én kode.`}
+      />
       <Card className="bg-white/95 backdrop-blur-sm border-white/20 shadow-xl">
-        <div className="flex items-start justify-between gap-4 px-6 pt-6 pb-4 border-b border-gray-200">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-1">Ny lytteøving</h2>
-            <p className="text-sm text-gray-600">
-              Lag inntil {MAX_LISTENING_TASKS} oppgaver med hver sin tekst, lyd
-              og spørsmål. Av teksten du legger inn blir det generert en lydfil.
-              Elevene åpner hele øvingen med én kode.
-            </p>
-          </div>
-          <Button asChild variant="outline">
-            <Link href="/lytteoving">Tilbake</Link>
-          </Button>
-        </div>
-
         <CardContent className="space-y-6 pt-6">
           {tasks.map((task, index) => (
             <TaskEditor

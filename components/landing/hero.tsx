@@ -57,14 +57,14 @@ export function Hero() {
             <Button 
               onClick={handleKomIGang}
               size="lg" 
-              className="bg-transparent text-white border-2 border-white hover:bg-white/10 hover:text-white shadow-lg text-lg px-8 py-4 h-auto hover:scale-105 transition-all"
+              className="bg-white text-gray-900 hover:bg-white/90 shadow-lg text-lg px-8 py-4 h-auto"
             >
               Kom i gang
             </Button>
             <Button 
               asChild 
               size="lg" 
-              className="bg-transparent text-white border-2 border-white hover:bg-white/10 hover:text-white shadow-lg text-lg px-8 py-4 h-auto hover:scale-105 transition-all"
+              className="bg-transparent text-white border-2 border-white hover:bg-white/10 hover:text-white text-lg px-8 py-4 h-auto"
             >
               <Link href="/om">
                 Les mer

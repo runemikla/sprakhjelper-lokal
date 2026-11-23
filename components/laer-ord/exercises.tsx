@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useMemo, useState, type ComponentType } from 'react'
-import Image from 'next/image'
 import Link from 'next/link'
 import { ArrowLeft, Loader2, Pencil } from 'lucide-react'
 import { Navbar } from '@/components/landing/navbar'
@@ -20,6 +19,7 @@ import { Flashcards } from '@/components/laer-ord/flashcards'
 import { wordListStore } from '@/lib/ordlister/db-store'
 import { listWords } from '@/lib/ordlister/to-words'
 import type { WordList as TeacherWordList } from '@/lib/ordlister/types'
+import { FjordBackground } from '@/components/landing/fjord-background'
 
 const ACTIVITIES: {
   key: string
@@ -96,21 +96,7 @@ export function Exercises({ userEmail = null, isAdmin = false, canEdit = false, 
 
   return (
     <div className="relative min-h-screen">
-      {/* Background image with overlay (matches the other tools) */}
-      <div className="fixed inset-0 z-0">
-        <Image
-          src="/images/Aurlandsfjorden-blaa.jpg"
-          alt="Aurlandsfjorden bakgrunn"
-          fill
-          className="object-cover"
-          priority
-          quality={90}
-        />
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-900/70 via-blue-800/60 to-cyan-700/50" />
-        <div className="absolute bottom-4 right-4 z-10 rounded bg-black/20 px-3 py-1.5 text-xs text-white/70 backdrop-blur-sm">
-          Foto: Silje Alvsaker / Vestland fylkeskommune
-        </div>
-      </div>
+      <FjordBackground />
 
       <Navbar userEmail={userEmail} isAdmin={isAdmin} />
 

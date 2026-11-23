@@ -45,7 +45,7 @@ export default function EndringsloggPage() {
               {entry.endringer.map((endring) => {
                 const type = TYPE_LABEL[endring.type]
                 return (
-                  <li key={endring.tekst} className="flex items-start gap-3 text-gray-700 leading-relaxed">
+                  <li key={endring.tekst} className="flex flex-col items-start gap-1 text-gray-700 leading-relaxed sm:flex-row sm:gap-3">
                     <span
                       className={cn(
                         'mt-0.5 inline-flex w-20 shrink-0 justify-center rounded-full px-2 py-0.5 text-xs font-semibold',

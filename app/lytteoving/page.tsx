@@ -5,7 +5,7 @@ import { mapSavedExercise, type ListeningExerciseListRow, type SavedListeningExe
 import { JoinExerciseCard } from '@/components/lytteoving/join-exercise-card'
 import { ListeningPageShell } from '@/components/lytteoving/page-shell'
 import { TeacherHomeClient } from '@/components/lytteoving/teacher-home'
-import { Card, CardContent } from '@/components/ui/card'
+import { PageHeader } from '@/components/landing/page-header'
 
 export default async function LytteovingPage() {
   const user = await getUser()
@@ -35,27 +35,28 @@ export default async function LytteovingPage() {
 
   return (
     <ListeningPageShell userEmail={user?.email ?? null} isAdmin={admin}>
-      <JoinExerciseCard />
-      <Card className="bg-white/95 backdrop-blur-sm border-white/20 shadow-xl">
-        <CardContent className="pt-6">
-          <p className="text-gray-700">
-            Bare lærere kan lage og lagre lytteøvinger.{' '}
-            {user ? (
-              'Kontoen din har ikke lærerrolle.'
-            ) : (
-              <>
-                <Link
-                  href="/auth/login?next=/lytteoving"
-                  className="font-medium underline underline-offset-4"
-                >
-                  Logg inn
-                </Link>{' '}
-                som lærer for å opprette en øving.
-              </>
-            )}
-          </p>
-        </CardContent>
-      </Card>
+      <PageHeader
+        title="Lytteøving"
+        description="Skriv inn koden fra læreren for å åpne lytteøvingen. Du trenger ikke logge inn."
+      />
+      <JoinExerciseCard>
+        <p className="mt-6 border-t border-gray-200 pt-4 text-sm text-gray-600">
+          Bare lærere kan lage og lagre lytteøvinger.{' '}
+          {user ? (
+            'Kontoen din har ikke lærerrolle.'
+          ) : (
+            <>
+              <Link
+                href="/auth/login?next=/lytteoving"
+                className="font-medium underline underline-offset-4"
+              >
+                Logg inn
+              </Link>{' '}
+              som lærer for å opprette en øving.
+            </>
+          )}
+        </p>
+      </JoinExerciseCard>
     </ListeningPageShell>
   )
 }

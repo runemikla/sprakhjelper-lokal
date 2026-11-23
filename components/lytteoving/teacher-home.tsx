@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { ListeningPageShell } from '@/components/lytteoving/page-shell'
 import { type SavedListeningExercise } from '@/lib/lytteoving'
+import { PageHeader } from '@/components/landing/page-header'
 
 interface TeacherHomeClientProps {
   userEmail?: string | null
@@ -70,20 +71,16 @@ export function TeacherHomeClient({
 
   return (
     <ListeningPageShell userEmail={userEmail} isAdmin={isAdmin}>
-      <Card className="bg-white/95 backdrop-blur-sm border-white/20 shadow-xl">
-        <div className="flex items-start justify-between gap-4 px-6 pt-6 pb-4 border-b border-gray-200">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-1">Lytteøving</h2>
-            <p className="text-sm text-gray-600">
-              Åpne en øving for å spille den av, eller slett den. Del koden med
-              elevene — de trenger ikke logge inn.
-            </p>
-          </div>
-          <Button asChild className="shrink-0">
+      <PageHeader
+        title="Lytteøving"
+        description="Åpne en øving for å spille den av, eller slett den. Del koden med elevene — de trenger ikke logge inn."
+        actions={
+          <Button asChild variant="outline">
             <Link href="/lytteoving/ny">Lag ny</Link>
           </Button>
-        </div>
-
+        }
+      />
+      <Card className="bg-white/95 backdrop-blur-sm border-white/20 shadow-xl">
         <CardContent className="pt-6">
           {error && (
             <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">

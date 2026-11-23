@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { ArrowRight } from 'lucide-react'
 import { Navbar } from '@/components/landing/navbar'
+import { FjordBackground } from '@/components/landing/fjord-background'
 
 // The four tools a student can open, in the order they appear on the cards.
 const STUDENT_TOOLS = [
@@ -55,20 +56,7 @@ export function StudentHome({ userEmail, wordLists }: StudentHomeProps) {
 
   return (
     <div className="relative min-h-screen">
-      <div className="fixed inset-0 z-0">
-        <Image
-          src="/images/Aurlandsfjorden-blaa.jpg"
-          alt="Aurlandsfjorden bakgrunn"
-          fill
-          className="object-cover"
-          priority
-          quality={90}
-        />
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-900/70 via-blue-800/60 to-cyan-700/50" />
-        <div className="absolute bottom-4 right-4 text-white/70 text-xs bg-black/20 backdrop-blur-sm px-3 py-1.5 rounded z-10">
-          Foto: Silje Alvsaker / Vestland fylkeskommune
-        </div>
-      </div>
+      <FjordBackground />
 
       <Navbar userEmail={userEmail} />
 

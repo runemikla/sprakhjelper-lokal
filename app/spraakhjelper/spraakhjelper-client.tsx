@@ -21,6 +21,8 @@ import { sanitizeMarkdown } from '@/lib/sanitize'
 import { fetchWithTimeout } from '@/lib/fetch-with-timeout'
 import { useRouter } from 'next/navigation'
 import { lagreTekstForOvinger } from '@/lib/ovinger/fra-skrivehjelp'
+import { FjordBackground } from '@/components/landing/fjord-background'
+import { PageHeader } from '@/components/landing/page-header'
 
 interface SentenceResult {
   bruker_setning: string;
@@ -273,6 +275,8 @@ export default function SpraakhjelpperClient({ user, isAdmin = false }: Spraakhj
   }
 
   const currentSentence = result?.results[currentSentenceIndex]
+  // The sentence-by-sentence step fills the screen, so the page header is compact there.
+  const isSentenceStep = Boolean(result && result.results && result.results.length > 0 && !showSummary && currentSentence)
 
   // Sync retryInput with currentSentence.bruker_setning when it changes
   useEffect(() => {
@@ -704,43 +708,29 @@ export default function SpraakhjelpperClient({ user, isAdmin = false }: Spraakhj
 
   return (
     <div className="min-h-screen relative">
-      {/* Background Image with Overlay */}
-      <div className="fixed inset-0 z-0">
-        <Image
-          src="/images/Aurlandsfjorden-blaa.jpg"
-          alt="Aurlandsfjorden - Norwegian fjord background"
-          fill
-          className="object-cover"
-          priority
-          quality={90}
-        />
-        {/* Gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-900/70 via-blue-800/60 to-cyan-700/50" />
-        {/* Photo credit */}
-        <div className="absolute bottom-4 right-4 text-white/70 text-xs bg-black/20 backdrop-blur-sm px-3 py-1.5 rounded z-10">
-          Foto: Silje Alvsaker / Vestland fylkeskommune
-        </div>
-      </div>
+      <FjordBackground />
 
       {/* Navbar */}
       <Navbar userEmail={user.email ?? null} isAdmin={isAdmin} />
 
       {/* Content */}
-      <div className="relative z-10 container mx-auto pt-24 pb-2 px-2 sm:pb-8 sm:px-4 max-w-4xl">
+      <div className="relative z-10 container mx-auto pt-24 pb-10 px-2 sm:px-4 max-w-4xl">
+        <PageHeader
+          title="Skrivehjelp"
+          description="Få tilbakemeldinger fra KI på teksten din."
+          compact={isSentenceStep}
+          className="px-2 sm:px-0"
+          actions={
+            !showForm && (
+              <Button variant="outline" size={isSentenceStep ? 'sm' : 'default'} onClick={showInputForm}>
+                Ny tekst
+              </Button>
+            )
+          }
+        />
         <div className="space-y-8">
           {showForm && (
             <Card className="bg-white/95 backdrop-blur-sm border-white/20 shadow-xl">
-              {/* Mini Header */}
-              <div className="px-6 pt-6 pb-4 border-b border-gray-200">
-                <div className="flex items-start justify-between">
-                  <div className="cursor-pointer hover:opacity-80 transition-opacity flex-1" onClick={showInputForm}>
-                    <h2 className="text-2xl font-bold text-gray-900 mb-1">Skrivehjelp</h2>
-                    <p className="text-sm text-gray-600">
-                      Få tilbakemeldinger fra KI på teksten din.
-                    </p>
-                  </div>
-                </div>
-              </div>
 
               <CardContent className="pt-6">
                 <form onSubmit={handleSubmit} className="space-y-4">
@@ -837,17 +827,6 @@ export default function SpraakhjelpperClient({ user, isAdmin = false }: Spraakhj
           {/* Step 1 Result: Overview of split sentences */}
           {showSplitOverview && splitResult && (
             <Card className="bg-white/95 backdrop-blur-sm border-white/20 shadow-xl">
-              {/* Mini Header */}
-              <div className="px-6 pt-6 pb-4 border-b border-gray-200">
-                <div className="flex items-start justify-between">
-                  <div className="cursor-pointer hover:opacity-80 transition-opacity flex-1" onClick={showInputForm}>
-                    <h2 className="text-2xl font-bold text-gray-900 mb-1">Skrivehjelp</h2>
-                    <p className="text-sm text-gray-600">
-                      Få tilbakemeldinger fra KI på teksten din.
-                    </p>
-                  </div>
-                </div>
-              </div>
 
               <CardHeader>
                 <div>
@@ -876,7 +855,6 @@ export default function SpraakhjelpperClient({ user, isAdmin = false }: Spraakhj
                       onClick={handleAnalyze}
                       disabled={isSubmitting}
                       size="lg"
-                      className="bg-white hover:bg-gray-50 text-gray-900 border border-gray-300"
                     >
                       {isSubmitting ? 'Analyserer...' : 'Analyser setninger'}
                     </Button>
@@ -888,17 +866,6 @@ export default function SpraakhjelpperClient({ user, isAdmin = false }: Spraakhj
 
           {error && (
             <Card className="border-red-300 bg-red-50/95 backdrop-blur-sm shadow-xl">
-              {/* Mini Header */}
-              <div className="px-6 pt-6 pb-4 border-b border-gray-200">
-                <div className="flex items-start justify-between">
-                  <div className="cursor-pointer hover:opacity-80 transition-opacity flex-1" onClick={showInputForm}>
-                    <h2 className="text-2xl font-bold text-gray-900 mb-1">Skrivehjelp</h2>
-                    <p className="text-sm text-gray-600">
-                      Få tilbakemeldinger fra KI på teksten din.
-                    </p>
-                  </div>
-                </div>
-              </div>
 
               <CardContent className="pt-6">
                 <h2 className="text-lg font-medium text-red-600 mb-2">Feil</h2>
@@ -908,18 +875,7 @@ export default function SpraakhjelpperClient({ user, isAdmin = false }: Spraakhj
           )}
 
           {result && result.results && result.results.length > 0 && !showSummary && currentSentence && (
-            <Card className="flex flex-col h-[calc(100vh-8rem)] bg-white/95 backdrop-blur-sm border-white/20 shadow-xl">
-              {/* Mini Header */}
-              <div className="px-3 py-2 sm:px-6 sm:pt-4 sm:pb-4 border-b border-gray-200 flex-shrink-0">
-                <div className="flex items-start justify-between">
-                  <div className="cursor-pointer hover:opacity-80 transition-opacity flex-1" onClick={showInputForm}>
-                    <h2 className="text-xl sm:text-2xl font-bold text-gray-900 sm:mb-1">Skrivehjelp</h2>
-                    <p className="hidden sm:block text-sm text-gray-600">
-                      Få tilbakemeldinger fra KI på teksten din.
-                    </p>
-                  </div>
-                </div>
-              </div>
+            <Card className="flex flex-col h-[calc(100dvh-11rem)] sm:h-[calc(100dvh-15rem)] bg-white/95 backdrop-blur-sm border-white/20 shadow-xl">
 
               <CardContent className="flex-1 flex flex-col overflow-hidden p-3 sm:p-6">
                 <div className="space-y-4 sm:space-y-6 flex-1 overflow-y-auto">
@@ -1133,17 +1089,6 @@ export default function SpraakhjelpperClient({ user, isAdmin = false }: Spraakhj
           {/* Summary View */}
           {showSummary && result && (
             <Card className="bg-white/95 backdrop-blur-sm border-white/20 shadow-xl">
-              {/* Mini Header */}
-              <div className="px-6 pt-6 pb-4 border-b border-gray-200">
-                <div className="flex items-start justify-between">
-                  <div className="cursor-pointer hover:opacity-80 transition-opacity flex-1" onClick={showInputForm}>
-                    <h2 className="text-2xl font-bold text-gray-900 mb-1">Skrivehjelp</h2>
-                    <p className="text-sm text-gray-600">
-                      Få tilbakemeldinger fra KI på teksten din.
-                    </p>
-                  </div>
-                </div>
-              </div>
 
               <CardHeader>
                 <div className="flex items-center justify-between">
@@ -1249,7 +1194,7 @@ export default function SpraakhjelpperClient({ user, isAdmin = false }: Spraakhj
                         <p className="text-sm text-gray-600 mb-4">
                           Få en detaljert analyse av hva du gjorde bra og hva du kan forbedre.
                         </p>
-                        <Button onClick={generateTextAnalysis} className="bg-blue-600 hover:bg-blue-700">
+                        <Button onClick={generateTextAnalysis}>
                           Generer analyse
                         </Button>
                       </div>
@@ -1365,7 +1310,7 @@ export default function SpraakhjelpperClient({ user, isAdmin = false }: Spraakhj
                           </p>
                         </div>
                       </div>
-                      <Button onClick={goToExercises} className="bg-blue-600 hover:bg-blue-700 sm:flex-shrink-0">
+                      <Button onClick={goToExercises} className="sm:flex-shrink-0">
                         Øv på feilene
                         <ArrowRight className="h-4 w-4" />
                       </Button>
@@ -1377,7 +1322,9 @@ export default function SpraakhjelpperClient({ user, isAdmin = false }: Spraakhj
                     <Button
                       onClick={downloadPDF}
                       disabled={isGeneratingPDF}
-                      className="w-full bg-white hover:bg-gray-50 text-gray-900 border border-gray-300 py-6 text-lg"
+                      variant="outline"
+                      size="lg"
+                      className="w-full"
                     >
                       {isGeneratingPDF ? (
                         <>
