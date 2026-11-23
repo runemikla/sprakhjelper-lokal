@@ -525,8 +525,8 @@ export const INSTRUCTION_DEFINITIONS: InstructionDefinition[] = [
   },
   {
     key: 'skrivehjelp_ovinger',
-    tool: 'Skrivehjelp',
-    title: 'Tilpassede øvinger fra feilene i teksten',
+    tool: 'Grammatikk øving',
+    title: 'Øv på feilene dine (øvinger fra feilene i en Skrivehjelp-tekst)',
     route: 'app/api/generate-exercises',
     variables: [
       MORSMAAL_VARIABLE,

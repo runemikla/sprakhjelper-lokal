@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { ArrowRight, Dumbbell, RotateCcw, Sparkles } from 'lucide-react'
+import { ArrowRight, RotateCcw, Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { LoadingAnimation } from '@/components/ui/loading-animation'
@@ -28,8 +28,9 @@ interface OvingerSeksjonProps {
   setninger: { elev: string; rettet: string }[]
 }
 
-// «Generer øvingsoppgaver» i sammendraget i Skrivehjelp: språkmodellen finner
-// feilene i teksten, velger 1–3 feiltyper og lager øvinger til dem.
+// «Øv på feilene dine» under Grammatikkøving (/grammatikk/ov-pa-feilene), med
+// teksten eleven tok med fra Skrivehjelp: språkmodellen finner feilene i
+// teksten, velger 1–3 feiltyper og lager øvinger til dem.
 export function OvingerSeksjon({
   originalText,
   morsmaal,
@@ -100,16 +101,12 @@ export function OvingerSeksjon({
   const antallRiktige = forsteForsok.filter(Boolean).length
 
   return (
-    <div className="border-t pt-8">
-      <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold">
-        <Dumbbell className="h-5 w-5 text-blue-600" />
-        Øv på feilene dine
-      </h3>
+    <div>
 
       {laster && <LoadingAnimation isVisible={true} />}
 
       {!laster && !resultat && (
-        <div className="space-y-5 rounded-lg border border-gray-200 bg-gray-50 p-6">
+        <div className="space-y-5">
           <p className="text-sm text-gray-600">
             Få øvinger som passer til feilene i teksten din. Velg nivået ditt først.
           </p>
