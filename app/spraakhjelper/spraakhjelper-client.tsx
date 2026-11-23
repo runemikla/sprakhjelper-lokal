@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import type { TekstAnalyse as TextAnalysis } from '@/lib/sammendrag/analyse'
 import Image from 'next/image'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
@@ -50,17 +51,6 @@ interface SplitSentencesResult {
   morsmaal: string;
   originalText: string;
   provider?: string;
-}
-
-interface TextAnalysis {
-  hva_var_bra: string;
-  hva_var_bra_morsmaal: string;
-  hva_kan_bli_bedre: string;
-  hva_kan_bli_bedre_morsmaal: string;
-  ordliste: Array<{
-    feil: string;
-    riktig: string;
-  }>;
 }
 
 interface AnalysisResult {
@@ -591,17 +581,41 @@ export default function SpraakhjelpperClient({ user, isAdmin = false }: Spraakhj
         // What was good
         addText('Hva var bra', 14, true, [22, 163, 74])
         addSpace(5)
-        addText(textAnalysis.hva_var_bra, 10)
+        addText(textAnalysis.bra.bokmaal, 10)
         addSpace(10)
+
+        // Error types
+        if (textAnalysis.feiltyper.length > 0) {
+          addText(`Feiltyper i teksten (${textAnalysis.totalt_antall_feil} feil)`, 14, true, [31, 41, 55])
+          addSpace(5)
+          textAnalysis.feiltyper.forEach((f) => {
+            addText(`${f.kode} ${f.feiltype}: ${f.antall}`, 10, true)
+            if (f.eksempel.feil || f.eksempel.riktig) {
+              addText(`   ${f.eksempel.feil} → ${f.eksempel.riktig}`, 10)
+            }
+          })
+          addSpace(10)
+        }
 
         // What can be improved
         addText('Hva kan bli bedre', 14, true, [234, 88, 12])
         addSpace(5)
-        addText(textAnalysis.hva_kan_bli_bedre, 10)
+        if (textAnalysis.kan_bli_bedre.length > 0) {
+          textAnalysis.kan_bli_bedre.forEach((punkt) => {
+            const tittel = [punkt.kode, punkt.feiltype].filter(Boolean).join(' ')
+            if (tittel) addText(tittel, 11, true)
+            addText(punkt.forklaring.bokmaal, 10)
+            punkt.eksempler.forEach((e) => addText(`   ${e.feil} → ${e.riktig}`, 10))
+            if (punkt.tips.bokmaal) addText(`Tips: ${punkt.tips.bokmaal}`, 10)
+            addSpace(5)
+          })
+        } else if (textAnalysis.kan_bli_bedre_tekst) {
+          addText(textAnalysis.kan_bli_bedre_tekst.bokmaal, 10)
+        }
         addSpace(10)
 
         // Word list
-        if (textAnalysis.ordliste && textAnalysis.ordliste.length > 0) {
+        if (textAnalysis.ordliste.length > 0) {
           addText('Stavefeil', 14, true, [59, 130, 246])
           addSpace(5)
 
@@ -1262,44 +1276,130 @@ export default function SpraakhjelpperClient({ user, isAdmin = false }: Spraakhj
                                 disallowedElements={['script', 'iframe', 'object', 'embed', 'form', 'input']}
                                 unwrapDisallowed={true}
                               >
-                                {sanitizeMarkdown(showAnalysisInNorwegian ? textAnalysis.hva_var_bra : textAnalysis.hva_var_bra_morsmaal)}
+                                {sanitizeMarkdown(showAnalysisInNorwegian ? textAnalysis.bra.bokmaal : textAnalysis.bra.morsmaal)}
                               </ReactMarkdown>
                             </div>
                           </div>
                         </div>
 
-                        {/* What can be improved */}
+                        {/* Error types overview */}
                         <div>
-                          <h4 className="text-md font-semibold mb-2">Hva kan bli bedre</h4>
-                          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                            <div className="text-sm leading-relaxed">
-                              <ReactMarkdown
-                                remarkPlugins={[remarkGfm]}
-                                components={{
-                                  a: ({ node, ...props }) => {
-                                    const href = props.href || '';
-                                    if (href.startsWith('http://') || href.startsWith('https://')) {
-                                      return <a {...props} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline" />;
-                                    }
-                                    return <span>{props.children}</span>;
-                                  },
-                                  ul: ({ node, ...props }) => <ul className="space-y-1 list-none" {...props} />,
-                                  li: ({ node, ...props }) => (
-                                    <li className="flex gap-2" {...props}>
-                                      <span className="font-bold text-blue-700 flex-shrink-0">•</span>
-                                      <span className="flex-1">{props.children}</span>
-                                    </li>
-                                  ),
-                                  p: ({ node, ...props }) => <span {...props} />,
-                                }}
-                                disallowedElements={['script', 'iframe', 'object', 'embed', 'form', 'input']}
-                                unwrapDisallowed={true}
-                              >
-                                {sanitizeMarkdown(showAnalysisInNorwegian ? textAnalysis.hva_kan_bli_bedre : textAnalysis.hva_kan_bli_bedre_morsmaal)}
-                              </ReactMarkdown>
-                            </div>
+                          <div className="flex items-baseline justify-between gap-2 mb-2">
+                            <h4 className="text-md font-semibold">Feiltyper i teksten</h4>
+                            {textAnalysis.feiltyper.length > 0 && (
+                              <span className="text-sm text-gray-600">
+                                {textAnalysis.totalt_antall_feil} {textAnalysis.totalt_antall_feil === 1 ? 'feil' : 'feil totalt'}
+                              </span>
+                            )}
                           </div>
+                          {textAnalysis.feiltyper.length > 0 ? (
+                            <div className="bg-blue-50 border border-blue-200 rounded-lg divide-y divide-blue-200">
+                              {textAnalysis.feiltyper.map((f) => (
+                                <div key={f.kode} className="p-3 sm:p-4">
+                                  <div className="flex items-start justify-between gap-3">
+                                    <div className="flex items-start gap-2 min-w-0">
+                                      <span className="flex-shrink-0 rounded bg-blue-700 px-1.5 py-0.5 text-xs font-bold text-white">
+                                        {f.kode}
+                                      </span>
+                                      <span className="text-sm font-semibold text-gray-900">{f.feiltype}</span>
+                                    </div>
+                                    <span
+                                      className="flex-shrink-0 rounded-full bg-white border border-blue-300 px-2.5 py-0.5 text-sm font-semibold text-blue-800"
+                                      aria-label={`${f.antall} ganger`}
+                                    >
+                                      {f.antall}×
+                                    </span>
+                                  </div>
+                                  {(f.eksempel.feil || f.eksempel.riktig) && (
+                                    <p className="mt-1.5 text-sm">
+                                      <span className="text-red-600 line-through decoration-red-300">{f.eksempel.feil}</span>
+                                      <span className="mx-2 text-gray-400">→</span>
+                                      <span className="text-green-700 font-medium">{f.eksempel.riktig}</span>
+                                    </p>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
+                              <p className="text-sm text-gray-700">🎉 Ingen feil funnet i teksten!</p>
+                            </div>
+                          )}
                         </div>
+
+                        {/* What can be improved */}
+                        {(textAnalysis.kan_bli_bedre.length > 0 || textAnalysis.kan_bli_bedre_tekst) && (
+                          <div>
+                            <h4 className="text-md font-semibold mb-2">Hva kan bli bedre</h4>
+                            {textAnalysis.kan_bli_bedre.length > 0 ? (
+                              <div className="space-y-3">
+                                {textAnalysis.kan_bli_bedre.map((punkt, index) => {
+                                  const forklaring = showAnalysisInNorwegian ? punkt.forklaring.bokmaal : punkt.forklaring.morsmaal
+                                  const tips = showAnalysisInNorwegian ? punkt.tips.bokmaal : punkt.tips.morsmaal
+                                  return (
+                                    <div key={`${punkt.kode}-${index}`} className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-2">
+                                      {(punkt.kode || punkt.feiltype) && (
+                                        <div className="flex items-start gap-2">
+                                          {punkt.kode && (
+                                            <span className="flex-shrink-0 rounded bg-blue-700 px-1.5 py-0.5 text-xs font-bold text-white">
+                                              {punkt.kode}
+                                            </span>
+                                          )}
+                                          <span className="text-sm font-semibold text-gray-900">{punkt.feiltype}</span>
+                                        </div>
+                                      )}
+                                      <p className="text-sm leading-relaxed whitespace-pre-wrap">{forklaring}</p>
+                                      {punkt.eksempler.length > 0 && (
+                                        <ul className="space-y-1">
+                                          {punkt.eksempler.map((e, i) => (
+                                            <li key={i} className="text-sm">
+                                              <span className="text-red-600 line-through decoration-red-300">{e.feil}</span>
+                                              <span className="mx-2 text-gray-400">→</span>
+                                              <span className="text-green-700 font-medium">{e.riktig}</span>
+                                            </li>
+                                          ))}
+                                        </ul>
+                                      )}
+                                      {tips && (
+                                        <p className="text-sm leading-relaxed">
+                                          <span className="font-semibold">💡 Tips: </span>
+                                          {tips}
+                                        </p>
+                                      )}
+                                    </div>
+                                  )
+                                })}
+                              </div>
+                            ) : (
+                              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                <div className="text-sm leading-relaxed">
+                                  <ReactMarkdown
+                                    remarkPlugins={[remarkGfm]}
+                                    components={{
+                                      a: ({ node, ...props }) => <span>{props.children}</span>,
+                                      ul: ({ node, ...props }) => <ul className="space-y-1 list-none" {...props} />,
+                                      li: ({ node, ...props }) => (
+                                        <li className="flex gap-2" {...props}>
+                                          <span className="font-bold text-blue-700 flex-shrink-0">•</span>
+                                          <span className="flex-1">{props.children}</span>
+                                        </li>
+                                      ),
+                                      p: ({ node, ...props }) => <span {...props} />,
+                                    }}
+                                    disallowedElements={['script', 'iframe', 'object', 'embed', 'form', 'input']}
+                                    unwrapDisallowed={true}
+                                  >
+                                    {sanitizeMarkdown(
+                                      showAnalysisInNorwegian
+                                        ? textAnalysis.kan_bli_bedre_tekst!.bokmaal
+                                        : textAnalysis.kan_bli_bedre_tekst!.morsmaal
+                                    )}
+                                  </ReactMarkdown>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
 
                         {/* Word list */}
                         {textAnalysis.ordliste && textAnalysis.ordliste.length > 0 && (

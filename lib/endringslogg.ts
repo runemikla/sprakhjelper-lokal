@@ -24,6 +24,12 @@ export interface Endringsoppforing {
 
 export const ENDRINGSLOGG: Endringsoppforing[] = [
   {
+    dato: '2026-11-23',
+    endringer: [
+      { type: 'forbedret', tekst: 'Skrivehjelp: sammendraget viser nå en oversikt over feiltypene i teksten, med hvor mange ganger hver feil kommer og ett eksempel fra teksten (feil → riktig). «Hva kan bli bedre» tar for seg de vanligste feiltypene først, med regel, eksempler og et tips.' },
+    ],
+  },
+  {
     dato: '2026-11-20',
     endringer: [
       { type: 'nytt', tekst: 'Skrivehjelp: etter sammendraget kan eleven trykke på «Generer øvingsoppgaver». Eleven velger nivå (A1–B2), og Språkhjelp finner feilene i teksten, velger 1–3 feiltyper å øve på og lager øvinger til dem: bygg setningen med ord fra en ordbank, og fyll inn riktig ord. Den første øvingen bruker elevens egen setning.' },
