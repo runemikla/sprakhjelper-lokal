@@ -26,7 +26,7 @@ export const ENDRINGSLOGG: Endringsoppforing[] = [
   {
     dato: '2026-11-23',
     endringer: [
-      { type: 'forbedret', tekst: '«Øv på feilene dine» er flyttet til Grammatikkøving. I sammendraget i Skrivehjelp er det nå en knapp som tar eleven dit med teksten sin.' },
+      { type: 'forbedret', tekst: '«Øv på feilene dine» er flyttet til Grammatikkøving. I sammendraget i Skrivehjelp er det nå en knapp som tar eleven dit med teksten sin. Eleven ser først hva hen skal øve på, og trykker Start for å gå gjennom oppgavene.' },
       { type: 'forbedret', tekst: 'Grammatikkøving har fått samme fjordbakgrunn som de andre sidene.' },
       { type: 'forbedret', tekst: 'Skrivehjelp: sammendraget viser nå en oversikt over feiltypene i teksten, med hvor mange ganger hver feil kommer og ett eksempel fra teksten (feil → riktig). «Hva kan bli bedre» er en kort oppsummering av hva eleven bør øve på, og så kommer feiltypene og stavefeilene. Feiltypene kan vises grafisk (stolper per feiltype og fordeling på verb, ordstilling, staving osv.) eller detaljert med eksempel.' },
     ],
