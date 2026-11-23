@@ -54,7 +54,7 @@ export default async function SprakmodellPage() {
     <main className="min-h-screen bg-gradient-to-b from-vlfk-lyseblaa/15 to-white">
       <AppNavbar />
 
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-24 mt-16">
+      <div className="container mx-auto px-2 sm:px-6 lg:px-8 py-24 mt-16">
         <div className="max-w-4xl mx-auto">
           <div className="mb-12 text-center">
             <h1 className="mb-4 text-4xl font-semibold text-gray-900">Språkmodell</h1>

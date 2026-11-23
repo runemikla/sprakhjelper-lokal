@@ -27,7 +27,8 @@ export const ENDRINGSLOGG: Endringsoppforing[] = [
     dato: '2026-11-23',
     endringer: [
       { type: 'nytt', tekst: 'Språkhjelp kan legges til på hjemskjermen på mobil og nettbrett, og åpnes da som en egen app med eget ikon. På iPhone: trykk Del og «Legg til på Hjem-skjerm». På Android: trykk menyen og «Installer app» eller «Legg til på startskjermen».' },
-      { type: 'forbedret', tekst: 'Forsiden viser nå alle fire verktøyene som bildekort, med en kort forklaring under hvert bilde og en knapp for å logge inn. På mobil fyller verktøyene hele skjermen. Tilgangssiden har fått logoen til Vestland fylkeskommune.' },
+      { type: 'forbedret', tekst: 'På mobil har alle sidene nå samme smale marg rundt det hvite feltet, så det blir mer plass til innholdet.' },
+      { type: 'forbedret', tekst: 'Forsiden viser nå alle fire verktøyene som bildekort, med en kort forklaring under hvert bilde og en knapp for å logge inn. Tilgangssiden har fått logoen til Vestland fylkeskommune.' },
       { type: 'forbedret', tekst: 'Fjordbildet i bakgrunnen følger nå den grafiske profilen til Vestland fylkeskommune: svart/kvitt med lyseblått, uten det blå laget oppå.' },
       { type: 'forbedret', tekst: 'Språkhjelp bruker nå skriften og fargene i den grafiske profilen: Roboto og Roboto Slab, sort i stedet for blått på knapper og lenker, mindre runde hjørner og én profilfarge per verktøy.' },
       { type: 'forbedret', tekst: '«Øv på feilene dine» er flyttet til Grammatikkøving. I sammendraget i Skrivehjelp er det nå en knapp som tar eleven dit med teksten sin. Eleven ser først hva hen skal øve på, og trykker Start for å gå gjennom oppgavene.' },

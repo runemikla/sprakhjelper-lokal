@@ -25,7 +25,7 @@ export function FjordPageShell({
 
       <Navbar userEmail={userEmail} isAdmin={isAdmin} />
 
-      <div className={cn('relative z-10 container mx-auto pt-24 pb-12 px-4', maxWidth)}>
+      <div className={cn('relative z-10 container mx-auto pt-24 pb-12 px-2 sm:px-4', maxWidth)}>
         {children}
       </div>
     </div>
