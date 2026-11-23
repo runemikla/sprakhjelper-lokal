@@ -17,14 +17,6 @@ export interface FeilEksempel {
   riktig: string
 }
 
-export interface ForbedringsPunkt {
-  kode: string
-  feiltype: string
-  forklaring: Tospraaklig
-  eksempler: FeilEksempel[]
-  tips: Tospraaklig
-}
-
 export interface FeiltypeOversikt {
   kode: string
   feiltype: string
@@ -34,11 +26,8 @@ export interface FeiltypeOversikt {
 
 export interface TekstAnalyse {
   bra: Tospraaklig
-  // Nytt format: ett punkt per feiltype.
-  kan_bli_bedre: ForbedringsPunkt[]
-  // Gammelt format (fritekst i markdown). Brukes bare når kan_bli_bedre er tom
-  // og modellen svarte i det gamle formatet.
-  kan_bli_bedre_tekst?: Tospraaklig
+  // Kort oppsummering (2–4 setninger), som «bra».
+  kan_bli_bedre: Tospraaklig
   ordliste: FeilEksempel[]
   feiltyper: FeiltypeOversikt[]
   totalt_antall_feil: number
@@ -61,8 +50,6 @@ const feilRiktig = {
 } as const
 
 const kode = { type: 'string', enum: FEILKODER } as const
-// Tegnsetting har ingen kode, så punktene i «kan bli bedre» kan ha tom kode.
-const kodeEllerTom = { type: 'string', enum: [...FEILKODER, ''] } as const
 
 // JSON-skjemaet modellen svarer etter (strict structured output). Det styrer
 // formatet uansett hvilken versjon av instruksen som er aktiv.
@@ -70,21 +57,7 @@ export const SAMMENDRAG_SVARSKJEMA = {
   type: 'object',
   properties: {
     bra: tospraaklig,
-    kan_bli_bedre: {
-      type: 'array',
-      items: {
-        type: 'object',
-        properties: {
-          kode: kodeEllerTom,
-          feiltype: str,
-          forklaring: tospraaklig,
-          eksempler: { type: 'array', items: feilRiktig },
-          tips: tospraaklig,
-        },
-        required: ['kode', 'feiltype', 'forklaring', 'eksempler', 'tips'],
-        additionalProperties: false,
-      },
-    },
+    kan_bli_bedre: tospraaklig,
     ordliste: { type: 'array', items: feilRiktig },
     feiltyper: {
       type: 'array',
@@ -154,20 +127,23 @@ export function normaliserAnalyse(raatt: unknown): TekstAnalyse {
       ? tilTospraaklig(r.bra)
       : { bokmaal: tekst(r.hva_var_bra), morsmaal: tekst(r.hva_var_bra_morsmaal) || tekst(r.hva_var_bra) }
 
-  const kanBliBedre = liste<ForbedringsPunkt>(r.kan_bli_bedre, (v) => {
-    if (!erObjekt(v)) return null
-    const k = normaliserKode(v.kode)
-    const forklaring = tilTospraaklig(v.forklaring)
-    if (!forklaring.bokmaal) return null
-    return {
-      // Punkt om tegnsetting har ingen kode, men skal likevel vises.
-      kode: k ?? '',
-      feiltype: tekst(v.feiltype) || (k ? finnFeiltype(k)?.navn ?? '' : ''),
-      forklaring,
-      eksempler: liste(v.eksempler, tilFeilRiktig),
-      tips: tilTospraaklig(v.tips),
+  // Nytt format: { bokmaal, morsmaal }. Eldre formater: en liste med ett punkt
+  // per feiltype (PR #49) eller hva_kan_bli_bedre som fritekst.
+  let kanBliBedre: Tospraaklig
+  if (Array.isArray(r.kan_bli_bedre)) {
+    const punkter = r.kan_bli_bedre.filter(erObjekt).map((v) => tilTospraaklig(v.forklaring))
+    kanBliBedre = {
+      bokmaal: punkter.map((p) => p.bokmaal).filter(Boolean).join(' '),
+      morsmaal: punkter.map((p) => p.morsmaal).filter(Boolean).join(' '),
     }
-  })
+  } else if (r.kan_bli_bedre !== undefined) {
+    kanBliBedre = tilTospraaklig(r.kan_bli_bedre)
+  } else {
+    kanBliBedre = {
+      bokmaal: tekst(r.hva_kan_bli_bedre),
+      morsmaal: tekst(r.hva_kan_bli_bedre_morsmaal) || tekst(r.hva_kan_bli_bedre),
+    }
+  }
 
   const perKode = new Map<string, FeiltypeOversikt>()
   for (const v of Array.isArray(r.feiltyper) ? r.feiltyper : []) {
@@ -189,20 +165,11 @@ export function normaliserAnalyse(raatt: unknown): TekstAnalyse {
   }
   const feiltyper = [...perKode.values()].sort((a, b) => b.antall - a.antall)
 
-  const analyse: TekstAnalyse = {
+  return {
     bra,
     kan_bli_bedre: kanBliBedre,
     ordliste: liste(r.ordliste, tilFeilRiktig),
     feiltyper,
     totalt_antall_feil: feiltyper.reduce((sum, f) => sum + f.antall, 0),
   }
-
-  if (kanBliBedre.length === 0 && tekst(r.hva_kan_bli_bedre)) {
-    analyse.kan_bli_bedre_tekst = {
-      bokmaal: tekst(r.hva_kan_bli_bedre),
-      morsmaal: tekst(r.hva_kan_bli_bedre_morsmaal) || tekst(r.hva_kan_bli_bedre),
-    }
-  }
-
-  return analyse
 }
