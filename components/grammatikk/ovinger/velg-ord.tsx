@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { cn } from '@/lib/utils'
 import type { VelgOrdOving } from '@/lib/ovinger/types'
 import { Tilbakemelding, type Svarstatus } from './tilbakemelding'
@@ -18,16 +18,22 @@ interface VelgOrdProps {
   oving: VelgOrdOving
   onForsteSvar: (riktig: boolean) => void
   onRiktig: () => void
+  // Kalles hver gang svarstatusen endres (brukes til lærerbildet).
+  onStatus?: (status: Svarstatus) => void
 }
 
 // «Fyll inn riktig ord»: eleven velger blant 2–4 alternativer.
-export function VelgOrd({ oving, onForsteSvar, onRiktig }: VelgOrdProps) {
+export function VelgOrd({ oving, onForsteSvar, onRiktig, onStatus }: VelgOrdProps) {
   const alternativer = useMemo(() => bland(oving.alternativer), [oving])
   const [valgt, setValgt] = useState<string | null>(null)
   const [provd, setProvd] = useState<string[]>([])
   const status: Svarstatus =
     valgt === null ? 'idle' : valgt === oving.riktig_svar ? 'riktig' : 'feil'
   const ferdig = status === 'riktig'
+
+  useEffect(() => {
+    onStatus?.(status)
+  }, [status, onStatus])
 
   const velg = (alt: string) => {
     if (ferdig || provd.includes(alt)) return

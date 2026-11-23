@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
+import Image from 'next/image'
 import { ArrowRight, Play, RotateCcw, Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -11,6 +12,7 @@ import { NIVAAER, finnFeiltype, type Nivaa } from '@/lib/ovinger/feiltyper'
 import type { OvingerResultat } from '@/lib/ovinger/types'
 import { ByggSetning } from './bygg-setning'
 import { VelgOrd } from './velg-ord'
+import type { Svarstatus } from './tilbakemelding'
 
 const NIVAA_TEKST: Record<Nivaa, string> = {
   A1: 'Nybegynner',
@@ -26,6 +28,9 @@ interface OvingerSeksjonProps {
   morsmaalFlagg?: string
   // Setningene slik Skrivehjelp har rettet dem.
   setninger: { elev: string; rettet: string }[]
+  // Sier fra når eleven starter eller går ut av øvingene, slik at siden kan
+  // skjule alt annet mens eleven jobber.
+  onStartetEndret?: (startet: boolean) => void
 }
 
 // «Øv på feilene dine» under Grammatikkøving (/grammatikk/ov-pa-feilene), med
@@ -37,6 +42,7 @@ export function OvingerSeksjon({
   morsmaalNavn,
   morsmaalFlagg,
   setninger,
+  onStartetEndret,
 }: OvingerSeksjonProps) {
   const [nivaa, setNivaa] = useState<Nivaa>('A2')
   const [laster, setLaster] = useState(false)
@@ -48,6 +54,20 @@ export function OvingerSeksjon({
   const [paaNorsk, setPaaNorsk] = useState(true)
   // Eleven ser først oversikten over hva hen skal øve på, og trykker Start.
   const [startet, setStartet] = useState(false)
+  // Samme lærere som i Ordrekkefølge: én tilfeldig lærer per besøk, og bildet
+  // viser glad lærer når svaret er riktig.
+  const [laerer, setLaerer] = useState<'gunhild' | 'jonas'>('gunhild')
+  const [svarstatus, setSvarstatus] = useState<Svarstatus>('idle')
+
+  useEffect(() => {
+    setLaerer(Math.random() < 0.5 ? 'gunhild' : 'jonas')
+  }, [])
+
+  useEffect(() => {
+    onStartetEndret?.(startet)
+  }, [startet, onStartetEndret])
+
+  const oppdaterStatus = useCallback((status: Svarstatus) => setSvarstatus(status), [])
   // Ny nøkkel per runde, slik at øvingene starter på nytt.
   const [runde, setRunde] = useState(0)
 
@@ -241,23 +261,38 @@ export function OvingerSeksjon({
                       style={{ width: `${(indeks / ovinger.length) * 100}%` }}
                     />
                   </div>
-                  <p className="mb-4 font-medium text-gray-900">{oving.instruksjon}</p>
+                  <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+                    <div className="min-w-0 flex-1">
+                      <p className="mb-4 font-medium text-gray-900">{oving.instruksjon}</p>
 
-                  {oving.format === 'bygg_setning' ? (
-                    <ByggSetning
-                      key={`${runde}-${indeks}`}
-                      oving={oving}
-                      onForsteSvar={(r) => setForsteForsok((f) => [...f, r])}
-                      onRiktig={() => setLost(true)}
-                    />
-                  ) : (
-                    <VelgOrd
-                      key={`${runde}-${indeks}`}
-                      oving={oving}
-                      onForsteSvar={(r) => setForsteForsok((f) => [...f, r])}
-                      onRiktig={() => setLost(true)}
-                    />
-                  )}
+                      {oving.format === 'bygg_setning' ? (
+                        <ByggSetning
+                          key={`${runde}-${indeks}`}
+                          oving={oving}
+                          onForsteSvar={(r) => setForsteForsok((f) => [...f, r])}
+                          onRiktig={() => setLost(true)}
+                          onStatus={oppdaterStatus}
+                        />
+                      ) : (
+                        <VelgOrd
+                          key={`${runde}-${indeks}`}
+                          oving={oving}
+                          onForsteSvar={(r) => setForsteForsok((f) => [...f, r])}
+                          onRiktig={() => setLost(true)}
+                          onStatus={oppdaterStatus}
+                        />
+                      )}
+                    </div>
+                    <div className="flex shrink-0 justify-center sm:w-36">
+                      <Image
+                        src={`/images/${laerer}_${svarstatus === 'riktig' ? 'riktig' : 'feil'}.png`}
+                        alt="Lærer"
+                        width={144}
+                        height={144}
+                        className="h-28 w-28 object-contain sm:h-36 sm:w-36"
+                      />
+                    </div>
+                  </div>
 
                   <div className="mt-5 flex justify-end gap-3">
                     {!lost && (
@@ -277,6 +312,13 @@ export function OvingerSeksjon({
 
               {startet && ferdig && (
                 <div className="space-y-4 rounded-xl border-2 border-green-200 bg-green-50 p-6 text-center">
+                  <Image
+                    src={`/images/${laerer}_riktig.png`}
+                    alt="Lærer"
+                    width={144}
+                    height={144}
+                    className="mx-auto h-32 w-32 object-contain"
+                  />
                   <p className="text-lg font-semibold text-green-900">Ferdig!</p>
                   <p className="text-sm text-green-900">
                     Du fikk {antallRiktige} av {ovinger.length} riktig på første forsøk.
@@ -320,18 +362,20 @@ export function OvingerSeksjon({
             </p>
           )}
 
-          <div className="text-center">
-            <button
-              type="button"
-              onClick={() => {
-                setResultat(null)
-                setStartet(false)
-              }}
-              className="text-sm text-gray-500 underline hover:text-gray-700"
-            >
-              Velg et annet nivå
-            </button>
-          </div>
+          {(!startet || ferdig) && (
+            <div className="text-center">
+              <button
+                type="button"
+                onClick={() => {
+                  setResultat(null)
+                  setStartet(false)
+                }}
+                className="text-sm text-gray-500 underline hover:text-gray-700"
+              >
+                Velg et annet nivå
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>
