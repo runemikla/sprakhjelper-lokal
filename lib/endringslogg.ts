@@ -27,6 +27,7 @@ export const ENDRINGSLOGG: Endringsoppforing[] = [
     dato: '2026-11-23',
     endringer: [
       { type: 'nytt', tekst: 'Språkhjelp kan legges til på hjemskjermen på mobil og nettbrett, og åpnes da som en egen app med eget ikon. På iPhone: trykk Del og «Legg til på Hjem-skjerm». På Android: trykk menyen og «Installer app» eller «Legg til på startskjermen».' },
+      { type: 'forbedret', tekst: 'Bunnteksten er enklere: hvit bakgrunn og bare lenkene Personvern og GDPR og Kontakt oss.' },
       { type: 'forbedret', tekst: 'På mobil har alle sidene nå samme smale marg rundt det hvite feltet, så det blir mer plass til innholdet.' },
       { type: 'forbedret', tekst: 'Forsiden viser nå alle fire verktøyene som bildekort, med en kort forklaring under hvert bilde og en knapp for å logge inn. Tilgangssiden har fått logoen til Vestland fylkeskommune.' },
       { type: 'forbedret', tekst: 'Fjordbildet i bakgrunnen følger nå den grafiske profilen til Vestland fylkeskommune: svart/kvitt med lyseblått, uten det blå laget oppå.' },
