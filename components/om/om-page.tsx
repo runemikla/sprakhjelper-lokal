@@ -22,7 +22,7 @@ export function OmPage({ current, title, intro, children }: OmPageProps) {
 
       <AppNavbar />
 
-      <div className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-16">
+      <div className="relative z-10 container mx-auto px-2 sm:px-6 lg:px-8 pt-24 pb-16">
         <div className="max-w-4xl mx-auto">
           <nav aria-label="Om Språkhjelp" className="mb-6">
             <ul className="flex flex-wrap gap-x-2 border-b border-white/30">

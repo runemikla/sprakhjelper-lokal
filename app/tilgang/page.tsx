@@ -44,7 +44,7 @@ export default function TilgangPage() {
   }
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center p-4">
+    <div className="relative min-h-screen flex items-center justify-center px-2 py-4 sm:p-4">
       <FjordBackground />
 
       <div className="relative z-10 w-full max-w-md">
