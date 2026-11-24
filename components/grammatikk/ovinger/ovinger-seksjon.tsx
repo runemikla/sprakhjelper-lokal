@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import Image from 'next/image'
-import { ArrowRight, Play, RotateCcw, Sparkles } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Flag, Play, RotateCcw, Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { LoadingAnimation } from '@/components/ui/loading-animation'
@@ -28,8 +28,8 @@ interface OvingerSeksjonProps {
   morsmaalFlagg?: string
   // Setningene slik Skrivehjelp har rettet dem.
   setninger: { elev: string; rettet: string }[]
-  // Sier fra når eleven starter eller går ut av øvingene, slik at siden kan
-  // skjule alt annet mens eleven jobber.
+  // Sier fra når eleven jobber med oppgavene (startet og ikke ferdig), slik at
+  // siden kan skjule alt annet og gi panelet fast høyde.
   onStartetEndret?: (startet: boolean) => void
 }
 
@@ -49,8 +49,9 @@ export function OvingerSeksjon({
   const [feilmelding, setFeilmelding] = useState<string | null>(null)
   const [resultat, setResultat] = useState<OvingerResultat | null>(null)
   const [indeks, setIndeks] = useState(0)
-  const [lost, setLost] = useState(false)
-  const [forsteForsok, setForsteForsok] = useState<boolean[]>([])
+  // Per oppgave (indeks): løst, og om første forsøk var riktig.
+  const [loste, setLoste] = useState<Record<number, boolean>>({})
+  const [forsteForsok, setForsteForsok] = useState<Record<number, boolean>>({})
   const [paaNorsk, setPaaNorsk] = useState(true)
   // Eleven ser først oversikten over hva hen skal øve på, og trykker Start.
   const [startet, setStartet] = useState(false)
@@ -63,9 +64,6 @@ export function OvingerSeksjon({
     setLaerer(Math.random() < 0.5 ? 'gunhild' : 'jonas')
   }, [])
 
-  useEffect(() => {
-    onStartetEndret?.(startet)
-  }, [startet, onStartetEndret])
 
   const oppdaterStatus = useCallback((status: Svarstatus) => setSvarstatus(status), [])
   // Ny nøkkel per runde, slik at øvingene starter på nytt.
@@ -94,8 +92,8 @@ export function OvingerSeksjon({
       setResultat(data)
       setStartet(false)
       setIndeks(0)
-      setLost(false)
-      setForsteForsok([])
+      setLoste({})
+      setForsteForsok({})
       setRunde((r) => r + 1)
     } catch (err) {
       setFeilmelding(err instanceof Error ? err.message : 'Noe gikk galt. Prøv igjen.')
@@ -106,26 +104,107 @@ export function OvingerSeksjon({
 
   const startPaaNytt = () => {
     setIndeks(0)
-    setLost(false)
-    setForsteForsok([])
+    setLoste({})
+    setForsteForsok({})
     setRunde((r) => r + 1)
   }
 
-  const neste = () => {
-    setIndeks((i) => i + 1)
-    setLost(false)
-  }
+  const neste = () => setIndeks((i) => i + 1)
+  const forrige = () => setIndeks((i) => Math.max(0, i - 1))
 
   const ovinger = resultat?.ovinger ?? []
   const ferdig = resultat !== null && ovinger.length > 0 && indeks >= ovinger.length
   const oving = ovinger[indeks]
   const valgteKoder = new Set(resultat?.valgte_feiltyper.map((v) => v.kode))
   const andreFeil = resultat?.feil.filter((f) => !valgteKoder.has(f.kode)) ?? []
-  const antallRiktige = forsteForsok.filter(Boolean).length
+  const antallRiktige = Object.values(forsteForsok).filter(Boolean).length
+  const jobber = startet && !ferdig && Boolean(oving)
+
+  useEffect(() => {
+    onStartetEndret?.(jobber)
+  }, [jobber, onStartetEndret])
+
+  // Oppgavene, én om gangen, bygd opp som setningsvisningen i Skrivehjelp:
+  // innholdet kan rulle, fremdrift og navigasjon står fast nederst.
+  if (!laster && jobber && oving) {
+    const lost = Boolean(loste[indeks])
+    const siste = indeks + 1 >= ovinger.length
+    const felles = {
+      oving,
+      onForsteSvar: (r: boolean) =>
+        setForsteForsok((f) => (indeks in f ? f : { ...f, [indeks]: r })),
+      onRiktig: () => setLoste((l) => ({ ...l, [indeks]: true })),
+      onStatus: oppdaterStatus,
+      merker: (
+        <>
+          <Badge variant="secondary">{finnFeiltype(oving.kode)?.navn ?? oving.kode}</Badge>
+          {oving.fra_elevteksten && (
+            <Badge variant="outline" className="hidden sm:inline-flex">
+              Fra teksten din
+            </Badge>
+          )}
+        </>
+      ),
+      bilde: (
+        <Image
+          src={`/images/${laerer}_${svarstatus === 'riktig' ? 'riktig' : 'feil'}.png`}
+          alt="Lærer"
+          width={192}
+          height={192}
+          className="h-48 w-48 object-contain"
+          priority
+        />
+      ),
+    }
+    return (
+      <div className="flex min-h-0 flex-1 flex-col">
+        <div className="flex-1 overflow-y-auto">
+          {oving.format === 'bygg_setning' ? (
+            <ByggSetning key={`${runde}-${indeks}`} {...felles} oving={oving} />
+          ) : (
+            <VelgOrd key={`${runde}-${indeks}`} {...felles} oving={oving} />
+          )}
+        </div>
+
+        <div className="mt-3 space-y-2 sm:mt-6 sm:space-y-4">
+          <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200" aria-hidden="true">
+            <div
+              className="h-full bg-vlfk-ink transition-all duration-300 ease-out"
+              style={{ width: `${((indeks + 1) / ovinger.length) * 100}%` }}
+            />
+          </div>
+          <div className="flex items-center justify-between">
+            <Button
+              variant="outline"
+              onClick={forrige}
+              disabled={indeks === 0}
+              aria-label="Forrige"
+              title="Forrige"
+            >
+              <ChevronLeft className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Forrige</span>
+            </Button>
+            <span className="text-sm text-gray-500">
+              Oppgave {indeks + 1} av {ovinger.length}
+            </span>
+            <Button
+              variant={lost ? 'default' : 'outline'}
+              onClick={neste}
+              aria-label={siste ? 'Se resultatet' : 'Neste'}
+              title={siste ? 'Se resultatet' : 'Neste'}
+            >
+              {siste ? <Flag className="h-4 w-4 sm:mr-2" /> : null}
+              <span className="hidden sm:inline">{siste ? 'Se resultatet' : 'Neste'}</span>
+              {siste ? null : <ChevronRight className="h-4 w-4 sm:ml-2" />}
+            </Button>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div>
-
       {laster && <LoadingAnimation isVisible={true} />}
 
       {!laster && !resultat && (
@@ -236,77 +315,6 @@ export function OvingerSeksjon({
                       <Play className="h-4 w-4" />
                       Start øvingene ({ovinger.length} oppgaver)
                     </Button>
-                  </div>
-                </div>
-              )}
-
-              {/* Øvingene, én om gangen */}
-              {startet && !ferdig && oving && (
-                <div className="rounded-xl border-2 border-vlfk-lyseblaa/60 bg-white p-5 shadow-sm">
-                  <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-                    <span className="text-sm font-semibold text-vlfk-ink">
-                      Oppgave {indeks + 1} av {ovinger.length}
-                    </span>
-                    <div className="flex flex-wrap gap-2">
-                      <Badge variant="secondary">{finnFeiltype(oving.kode)?.navn ?? oving.kode}</Badge>
-                      {oving.fra_elevteksten && <Badge variant="outline">Fra teksten din</Badge>}
-                    </div>
-                  </div>
-                  <div
-                    className="mb-5 h-1.5 w-full overflow-hidden rounded-full bg-gray-100"
-                    aria-hidden="true"
-                  >
-                    <div
-                      className="h-full rounded-full bg-vlfk-ink transition-all"
-                      style={{ width: `${(indeks / ovinger.length) * 100}%` }}
-                    />
-                  </div>
-                  <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
-                    <div className="min-w-0 flex-1">
-                      <p className="mb-4 font-medium text-gray-900">{oving.instruksjon}</p>
-
-                      {oving.format === 'bygg_setning' ? (
-                        <ByggSetning
-                          key={`${runde}-${indeks}`}
-                          oving={oving}
-                          onForsteSvar={(r) => setForsteForsok((f) => [...f, r])}
-                          onRiktig={() => setLost(true)}
-                          onStatus={oppdaterStatus}
-                        />
-                      ) : (
-                        <VelgOrd
-                          key={`${runde}-${indeks}`}
-                          oving={oving}
-                          onForsteSvar={(r) => setForsteForsok((f) => [...f, r])}
-                          onRiktig={() => setLost(true)}
-                          onStatus={oppdaterStatus}
-                        />
-                      )}
-                    </div>
-                    {/* Teacher image (not on phones, to save space) */}
-                    <div className="hidden shrink-0 justify-center sm:flex sm:w-36">
-                      <Image
-                        src={`/images/${laerer}_${svarstatus === 'riktig' ? 'riktig' : 'feil'}.png`}
-                        alt="Lærer"
-                        width={144}
-                        height={144}
-                        className="h-28 w-28 object-contain sm:h-36 sm:w-36"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="mt-5 flex justify-end gap-3">
-                    {!lost && (
-                      <Button variant="ghost" onClick={neste}>
-                        Hopp over
-                      </Button>
-                    )}
-                    {lost && (
-                      <Button onClick={neste}>
-                        {indeks + 1 < ovinger.length ? 'Neste oppgave' : 'Se resultatet'}
-                        <ArrowRight className="h-4 w-4" />
-                      </Button>
-                    )}
                   </div>
                 </div>
               )}

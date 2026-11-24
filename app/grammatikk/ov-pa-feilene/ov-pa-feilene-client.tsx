@@ -8,6 +8,7 @@ import { PageHeader } from '@/components/landing/page-header'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { OvingerSeksjon } from '@/components/grammatikk/ovinger/ovinger-seksjon'
+import { cn } from '@/lib/utils'
 import { hentTekstForOvinger, type TekstForOvinger } from '@/lib/ovinger/fra-skrivehjelp'
 
 interface Props {
@@ -32,13 +33,23 @@ export default function OvPaFeileneClient({ userEmail, isAdmin }: Props) {
         backLabel="Tilbake til temaene"
         title="Øv på feilene dine"
         description="Øvinger laget ut fra feilene i teksten du skrev i Skrivehjelp."
-        className="mb-8"
+        compact={jobber}
+        className={cn('px-2 sm:px-0', !jobber && 'mb-8')}
       />
 
-      <Card className="bg-white/95 backdrop-blur-sm border-white/20 shadow-xl">
-        <CardContent className="pt-6">
+      {/* Mens eleven jobber har panelet fast høyde, som i Skrivehjelp, slik at
+          det ikke hopper mellom oppgaver eller når tilbakemeldingen vises. */}
+      <Card
+        className={cn(
+          'bg-white/95 backdrop-blur-sm border-white/20 shadow-xl',
+          jobber && 'flex h-[calc(100dvh-13rem)] flex-col sm:h-[calc(100dvh-17rem)]'
+        )}
+      >
+        <CardContent
+          className={cn('pt-6', jobber && 'flex flex-1 flex-col overflow-hidden p-3 sm:p-6')}
+        >
           {tekst === undefined ? null : tekst ? (
-            <div className="space-y-6">
+            <div className={cn(jobber ? 'flex min-h-0 flex-1 flex-col' : 'space-y-6')}>
               {!jobber && (
                 <details className="rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm">
                   <summary className="cursor-pointer font-medium text-gray-700">Teksten din</summary>

@@ -1,9 +1,10 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { cn } from '@/lib/utils'
 import type { VelgOrdOving } from '@/lib/ovinger/types'
 import { Tilbakemelding, type Svarstatus } from './tilbakemelding'
+import { OVERSKRIFT, OppgaveTopp } from './oppgave-oppsett'
 
 function bland<T>(liste: T[]): T[] {
   const kopi = [...liste]
@@ -20,10 +21,12 @@ interface VelgOrdProps {
   onRiktig: () => void
   // Kalles hver gang svarstatusen endres (brukes til lærerbildet).
   onStatus?: (status: Svarstatus) => void
+  merker?: ReactNode
+  bilde?: ReactNode
 }
 
 // «Fyll inn riktig ord»: eleven velger blant 2–4 alternativer.
-export function VelgOrd({ oving, onForsteSvar, onRiktig, onStatus }: VelgOrdProps) {
+export function VelgOrd({ oving, onForsteSvar, onRiktig, onStatus, merker, bilde }: VelgOrdProps) {
   const alternativer = useMemo(() => bland(oving.alternativer), [oving])
   const [valgt, setValgt] = useState<string | null>(null)
   const [provd, setProvd] = useState<string[]>([])
@@ -45,8 +48,16 @@ export function VelgOrd({ oving, onForsteSvar, onRiktig, onStatus }: VelgOrdProp
   }
 
   return (
-    <div className="space-y-5">
-      <p className="rounded-xl border-2 border-vlfk-lyseblaa bg-vlfk-lyseblaa/10 p-4 text-lg leading-relaxed text-gray-900">
+    <div className="space-y-4 sm:space-y-6">
+      <OppgaveTopp merker={merker} bilde={bilde}>
+      <p
+        className={cn(
+          'rounded-lg border-2 p-2 text-lg leading-relaxed text-gray-900 transition-colors sm:p-4',
+          status === 'riktig' && 'border-green-300 bg-green-50',
+          status === 'feil' && 'border-red-300 bg-red-50',
+          status === 'idle' && 'border-vlfk-lyseblaa bg-vlfk-lyseblaa/10'
+        )}
+      >
         {oving.foer_luke}
         <span
           className={cn(
@@ -58,7 +69,11 @@ export function VelgOrd({ oving, onForsteSvar, onRiktig, onStatus }: VelgOrdProp
         </span>
         {oving.etter_luke}
       </p>
+      <p className="mt-2 text-sm text-gray-600 sm:mt-3">{oving.instruksjon}</p>
+      </OppgaveTopp>
 
+      <div className="space-y-1 sm:space-y-2">
+      <h3 className={OVERSKRIFT}>Velg riktig ord:</h3>
       <div className="grid grid-cols-2 gap-3 sm:flex sm:flex-wrap">
         {alternativer.map((alt) => {
           const erProvdFeil = provd.includes(alt) && alt !== oving.riktig_svar
@@ -82,6 +97,7 @@ export function VelgOrd({ oving, onForsteSvar, onRiktig, onStatus }: VelgOrdProp
             </button>
           )
         })}
+      </div>
       </div>
 
       <Tilbakemelding
