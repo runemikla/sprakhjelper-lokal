@@ -15,6 +15,8 @@ export interface ChatbotListItem {
   level: string | null
   groupCount: number
   canManage: boolean
+  // Teachers see the code so they can give it to their students.
+  showCode?: boolean
 }
 
 // The teacher's chatbots (with code, edit and delete), or the chatbots a
@@ -61,11 +63,13 @@ export function ChatbotList({ items, emptyText }: { items: ChatbotListItem[]; em
                 {bot.name}
               </Link>
               {bot.description && <p className="mt-0.5 text-sm text-gray-600">{bot.description}</p>}
-              {bot.canManage && (
+              {(bot.canManage || bot.showCode) && (
                 <p className="mt-1 text-xs text-gray-500">
                   Kode <span className="font-mono font-bold tracking-[0.2em] text-gray-900">{bot.accessCode}</span>
                   {bot.level ? ` · ${bot.level}` : ''}
-                  {` · ${bot.groupCount === 0 ? 'ikke delt med grupper' : bot.groupCount === 1 ? 'delt med 1 gruppe' : `delt med ${bot.groupCount} grupper`}`}
+                  {bot.canManage
+                    ? ` · ${bot.groupCount === 0 ? 'ikke delt med grupper' : bot.groupCount === 1 ? 'delt med 1 gruppe' : `delt med ${bot.groupCount} grupper`}`
+                    : ''}
                 </p>
               )}
             </div>

@@ -26,31 +26,32 @@ export default async function SnakkebotPage() {
   let items: ChatbotListItem[] = []
   if (user) {
     const supabase = await createClient()
-    // RLS: own chatbots, chatbots shared with the user's groups, or all (admins).
+    // RLS: chatbots shared with the user's groups; all of them for admins
+    // (and for teachers once 20261124200000_chatbots_admin_only.sql has run).
     const { data } = await supabase
       .from('chatbots')
       .select('id, name, description, access_code, level, created_by, chatbot_groups(group_id)')
       .order('updated_at', { ascending: false })
-    items = ((data ?? []) as Row[])
-      // Teachers see their own here; admins see everyone's.
-      .filter((row) => !isTeacher || isAdmin || row.created_by === user.id)
-      .map((row) => ({
+    items = ((data ?? []) as Row[]).map((row) => ({
         id: row.id,
         name: row.name,
         description: row.description,
         accessCode: row.access_code,
         level: row.level,
         groupCount: row.chatbot_groups?.length ?? 0,
-        canManage: isAdmin || row.created_by === user.id,
+        // Only admins make and change chatbots; teachers see the code to
+        // give their students.
+        canManage: isAdmin,
+        showCode: isAdmin || isTeacher,
       }))
   }
 
-  if (isTeacher) {
+  if (isAdmin) {
     return (
       <ListeningPageShell userEmail={email} isAdmin={isAdmin}>
         <PageHeader
           title="Snakkebot"
-          description="Lag en KI-samtalepartner som elevene snakker med. Del den med grupper, eller gi elevene koden."
+          description="Lag KI-samtalepartnere som elevene snakker med. Del dem med grupper, eller gi elevene og lærerne koden."
           actions={
             <Button asChild variant="outline">
               <Link href="/snakkebot/ny">Lag ny</Link>
@@ -78,7 +79,12 @@ export default async function SnakkebotPage() {
       {user && items.length > 0 && (
         <Card className="bg-white/95 backdrop-blur-sm border-white/20 shadow-xl">
           <CardContent className="pt-6">
-            <h2 className="mb-3 text-base font-semibold text-gray-900">Fra gruppene dine</h2>
+            <h2 className="mb-3 text-base font-semibold text-gray-900">
+              {isTeacher ? 'Snakkeboter du kan bruke' : 'Fra gruppene dine'}
+            </h2>
+            {isTeacher && (
+              <p className="mb-3 text-sm text-gray-600">Gi elevene koden, så kan de åpne snakkeboten uten å logge inn.</p>
+            )}
             <ChatbotList items={items} emptyText="" />
           </CardContent>
         </Card>
@@ -90,7 +96,7 @@ export default async function SnakkebotPage() {
             <Link href="/auth/login?next=/snakkebot" className="font-medium underline underline-offset-4">
               logge inn
             </Link>{' '}
-            for å lage snakkeboter.
+            for å se hvilke snakkeboter som finnes.
           </p>
         )}
       </JoinChatbotCard>

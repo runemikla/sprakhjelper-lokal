@@ -75,32 +75,78 @@ function encodeWav(samples: Float32Array): Blob {
   return new Blob([buffer], { type: 'audio/wav' })
 }
 
+/**
+ * The microphone and the audio context, kept open for a whole conversation.
+ * Open it from a tap (iOS only lets a page start audio inside a gesture);
+ * later recordings, also the automatic ones in «Automatisk» mode, reuse it.
+ */
+export class MicInput {
+  context: AudioContext | null = null
+  stream: MediaStream | null = null
+
+  get isOpen() {
+    return Boolean(this.context && this.stream?.active)
+  }
+
+  async open(): Promise<void> {
+    if (!this.context || this.context.state === 'closed') {
+      const Ctor =
+        window.AudioContext ?? (window as unknown as { webkitAudioContext: AudioContextCtor }).webkitAudioContext
+      this.context = new Ctor()
+    }
+    // iOS starts the context suspended until a user gesture resumes it.
+    if (this.context.state === 'suspended') await this.context.resume()
+    if (!this.stream?.active) {
+      this.stream = await navigator.mediaDevices.getUserMedia({
+        audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true, autoGainControl: true },
+      })
+    }
+  }
+
+  close() {
+    this.stream?.getTracks().forEach((t) => t.stop())
+    void this.context?.close().catch(() => undefined)
+    this.stream = null
+    this.context = null
+  }
+}
+
+// Loud enough to count as speech, and for long enough (about a quarter of a
+// second) that a click or a cough does not start the pause timer.
+const SPEECH_RMS = 0.02
+const SPEECH_MS = 250
+
+export interface WavRecorderOptions extends RecorderOptions {
+  // Give up when nothing has been said for this long (0 = never).
+  noSpeechMs?: number
+  // Called the first time speech is heard.
+  onSpeech?: () => void
+}
+
 export class WavRecorder {
-  private context: AudioContext | null = null
-  private stream: MediaStream | null = null
   private processor: ScriptProcessorNode | null = null
   private source: MediaStreamAudioSourceNode | null = null
   private chunks: Float32Array[] = []
   private startedAt = 0
   private lastSoundAt = 0
+  private loudMs = 0
   private heardSpeech = false
   private stopped = false
+  private rate = TARGET_RATE
   private timer: ReturnType<typeof setTimeout> | null = null
 
-  constructor(private options: RecorderOptions) {}
+  constructor(
+    private mic: MicInput,
+    private options: WavRecorderOptions
+  ) {}
 
-  /** Asks for the microphone and starts recording. Call from a tap. */
+  /** Starts recording. Opens the microphone first if it is not open. */
   async start(): Promise<void> {
-    const Ctor =
-      window.AudioContext ?? (window as unknown as { webkitAudioContext: AudioContextCtor }).webkitAudioContext
-    this.context = new Ctor()
-    // iOS starts the context suspended until a user gesture resumes it.
-    if (this.context.state === 'suspended') await this.context.resume()
-    this.stream = await navigator.mediaDevices.getUserMedia({
-      audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true, autoGainControl: true },
-    })
-    this.source = this.context.createMediaStreamSource(this.stream)
-    this.processor = this.context.createScriptProcessor(4096, 1, 1)
+    await this.mic.open()
+    const context = this.mic.context as AudioContext
+    this.rate = context.sampleRate
+    this.source = context.createMediaStreamSource(this.mic.stream as MediaStream)
+    this.processor = context.createScriptProcessor(4096, 1, 1)
     this.startedAt = performance.now()
     this.lastSoundAt = this.startedAt
 
@@ -115,26 +161,34 @@ export class WavRecorder {
       this.options.onLevel?.(Math.min(1, rms * 8))
 
       const now = performance.now()
-      if (rms > 0.02) {
+      const bufferMs = (data.length / this.rate) * 1000
+      if (rms > SPEECH_RMS) {
         this.lastSoundAt = now
-        this.heardSpeech = true
+        this.loudMs += bufferMs
+        if (!this.heardSpeech && this.loudMs >= SPEECH_MS) {
+          this.heardSpeech = true
+          this.options.onSpeech?.()
+        }
       }
       const silenceMs = this.options.silenceMs ?? 0
       if (silenceMs > 0 && this.heardSpeech && now - this.lastSoundAt > silenceMs) {
+        this.options.onAutoStop?.()
+      }
+      const noSpeechMs = this.options.noSpeechMs ?? 0
+      if (noSpeechMs > 0 && !this.heardSpeech && now - this.startedAt > noSpeechMs) {
         this.options.onAutoStop?.()
       }
     }
 
     this.source.connect(this.processor)
     // ScriptProcessor only runs when connected to the output; it writes silence.
-    this.processor.connect(this.context.destination)
+    this.processor.connect(context.destination)
     this.timer = setTimeout(() => this.options.onAutoStop?.(), this.options.maxSeconds * 1000)
   }
 
-  /** Stops recording and returns the WAV file. */
+  /** Stops recording and returns the WAV file. The microphone stays open. */
   async stop(): Promise<Recording> {
     this.stopped = true
-    const rate = this.context?.sampleRate ?? TARGET_RATE
     this.cleanup()
     const total = this.chunks.reduce((n, c) => n + c.length, 0)
     const all = new Float32Array(total)
@@ -144,7 +198,7 @@ export class WavRecorder {
       offset += chunk.length
     }
     this.chunks = []
-    const samples = downsample(all, rate)
+    const samples = downsample(all, this.rate)
     return { wav: encodeWav(samples), seconds: samples.length / TARGET_RATE, heardSpeech: this.heardSpeech }
   }
 
@@ -161,11 +215,7 @@ export class WavRecorder {
     if (this.processor) this.processor.onaudioprocess = null
     this.processor?.disconnect()
     this.source?.disconnect()
-    this.stream?.getTracks().forEach((t) => t.stop())
-    void this.context?.close().catch(() => undefined)
     this.processor = null
     this.source = null
-    this.stream = null
-    this.context = null
   }
 }

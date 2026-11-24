@@ -7,8 +7,8 @@ export const metadata = { title: 'Rediger snakkebot - Språkhjelp' }
 
 export default async function RedigerSnakkebotPage({ params }: { params: Promise<{ ref: string }> }) {
   const { ref } = await params
-  const { user, email, isAdmin, isTeacher } = await getPageUser()
+  const { user, email, isAdmin } = await getPageUser()
   if (!user) redirect(`/auth/login?next=/snakkebot/${ref}/rediger`)
-  if (!isTeacher || !isUuid(ref)) redirect('/snakkebot')
+  if (!isAdmin || !isUuid(ref)) redirect('/snakkebot')
   return <ChatbotEditor userEmail={email} isAdmin={isAdmin} chatbotId={ref.toLowerCase()} />
 }

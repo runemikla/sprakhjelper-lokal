@@ -79,13 +79,14 @@ const tools = [
     image: '/images/verktoy/snakkebot.webp',
     imageAlt: 'En elev snakker til et nettbrett med en mikrofon på skjermen.',
     icon: Mic,
-    who: 'Læreren lager snakkeboten (innlogget). Elevene åpner den fra gruppen sin eller med en kode.',
+    who: 'Administrator lager snakkebotene. Lærere og elever åpner dem fra gruppen sin eller med en kode.',
     description:
-      'Elevene snakker norsk med en KI i stedet for å skrive. Læreren skriver en instruks (for eksempel en kafé, en legetime eller et jobbintervju), velger nivå og stemme og deler snakkeboten med grupper eller med en kode. Det eleven sier, gjøres om til tekst, og svaret leses opp automatisk.',
+      'Elevene snakker norsk med en KI i stedet for å skrive. Administrator skriver en instruks (for eksempel en kafé, en legetime eller et jobbintervju), velger nivå og stemme og deler snakkeboten med grupper eller med en kode. Det eleven sier, gjøres om til tekst, og svaret leses opp automatisk.',
     points: [
       'Eleven snakker med mikrofonen, eller skriver',
       'Svarene leses opp med stemmen læreren har valgt',
-      'Teksten kan skjules for å øve på å lytte',
+      'Automatisk talemodus: svaret sendes når eleven tar en pause',
+      'Meldingene kan skjules for å øve på å lytte',
       'Samtalen og lydopptaket lagres ikke',
     ],
   },

@@ -13,11 +13,12 @@ export default async function SnakkebotSamtalePage({ params }: { params: Promise
   const ref = parseRef(raw)
   if (!ref) notFound()
 
-  const { user, email, isAdmin } = await getPageUser()
+  const { email, isAdmin, isTeacher } = await getPageUser()
   const bot = await loadChatbot(ref).catch(() => null)
   if (!bot) notFound()
 
-  const canEdit = Boolean(user && (isAdmin || bot.createdBy === user.id))
+  // Only admins change chatbots; teachers see the code to share it.
+  const canEdit = isAdmin
 
   return (
     <ChatbotChat
@@ -34,7 +35,7 @@ export default async function SnakkebotSamtalePage({ params }: { params: Promise
       // The browser talks to the server with the same reference it was opened with.
       chatRef={ref}
       editHref={canEdit ? `/snakkebot/${bot.id}/rediger` : null}
-      showCode={canEdit}
+      showCode={isAdmin || isTeacher}
     />
   )
 }

@@ -14,7 +14,18 @@ kode på fire tegn.
    (`lib/snakkebot/server.ts`, rammeinstruks i `lib/snakkebot/prompt.ts`).
 4. `POST /api/snakkebot/lyd` leser svaret opp med Google Cloud-stemmen (Chirp 3 HD) læreren valgte, samme oppsett som Lytteøving.
 
-Eleven kan også skrive svaret. Teksten kan skjules for å øve på å lytte.
+Eleven kan også skrive svaret.
+
+**Talemodus** (Innstillinger i samtalen, lagres i nettleseren og gjelder alle snakkeboter):
+- *Automatisk* (standard): mikrofonen åpner seg når snakkeboten er ferdig, og svaret
+  sendes når eleven har vært stille i valgt pause (0,3–3 s, standard 1,5 s). Ingen tale
+  på 20 s lukker mikrofonen.
+- *Manuell*: trykk på mikrofonen for å snakke og igjen for å sende.
+- Talehastighet (0,75–1,3×) og «Skjul meldingene» (bare lytt og snakk).
+
+**Hvem gjør hva:** bare administratorer lager og endrer snakkeboter. Lærere ser alle
+snakkebotene med kode (etter `20261124200000_chatbots_admin_only.sql`). Elever ser dem
+som er delt med gruppene deres, eller åpner med kode.
 
 Ingenting fra samtalen lagres: nettleseren holder samtalen og sender den med hver
 forespørsel. Bare lærerens innstillinger ligger i databasen (`chatbots`,
