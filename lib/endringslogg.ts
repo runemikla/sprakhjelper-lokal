@@ -24,6 +24,39 @@ export interface Endringsoppforing {
 
 export const ENDRINGSLOGG: Endringsoppforing[] = [
   {
+    dato: '2026-11-24',
+    endringer: [
+      { type: 'forbedret', tekst: 'Grammatikkøving: oppgavene i «Øv på feilene dine» ser nå ut som Skrivehjelp, med «Din setning» øverst, læreren til høyre, og fremdriftslinje og Forrige/Neste nederst. Boksen har fast høyde, så den hopper ikke mellom oppgavene eller når du får svar. Du kan også gå tilbake til forrige oppgave.' },
+      { type: 'forbedret', tekst: 'Skrivehjelp: den grafiske visningen av feiltypene i sammendraget er enklere. Den viser bare én fargestolpe med fordelingen av alle feilene (staving, substantiv, verb osv.). Den detaljerte visningen har fått de samme fargene ved hver feiltype, så det er lett å se hvilken gruppe feilen hører til.' },
+      { type: 'forbedret', tekst: 'Forsiden er enklere for dem som ikke er logget inn: nederst er det bare én stor «Logg inn»-knapp på midten.' },
+      { type: 'forbedret', tekst: 'Menyen øverst har ikke lenger «KI-verktøy». Verktøyene finner du på forsiden. Administratorer har fått en egen fane, Innstillinger, med instrukser og språkmodell.' },
+      { type: 'forbedret', tekst: 'På mobil vises ikke lærerbildene i verktøyene lenger, så det blir mer plass til oppgavene.' },
+      { type: 'forbedret', tekst: 'Ordrekkefølge er slått av i Grammatikkøving inntil videre.' },
+    ],
+  },
+  {
+    dato: '2026-11-23',
+    endringer: [
+      { type: 'nytt', tekst: 'Språkhjelp kan legges til på hjemskjermen på mobil og nettbrett, og åpnes da som en egen app med eget ikon. På iPhone: trykk Del og «Legg til på Hjem-skjerm». På Android: trykk menyen og «Installer app» eller «Legg til på startskjermen».' },
+      { type: 'forbedret', tekst: 'Bunnteksten er enklere: hvit bakgrunn med bare lenkene Personvern og GDPR og Kontakt oss.' },
+      { type: 'forbedret', tekst: 'På mobil har alle sidene nå samme smale marg rundt det hvite feltet, så det blir mer plass til innholdet.' },
+      { type: 'forbedret', tekst: 'Forsiden viser nå alle fire verktøyene som bildekort, med en kort forklaring under hvert bilde og en knapp for å logge inn. Tilgangssiden har fått logoen til Vestland fylkeskommune.' },
+      { type: 'forbedret', tekst: 'Fjordbildet i bakgrunnen følger nå den grafiske profilen til Vestland fylkeskommune: svart/kvitt med lyseblått, uten det blå laget oppå.' },
+      { type: 'forbedret', tekst: 'Språkhjelp bruker nå skriften og fargene i den grafiske profilen: Roboto og Roboto Slab, sort i stedet for blått på knapper og lenker, mindre runde hjørner og én profilfarge per verktøy.' },
+      { type: 'forbedret', tekst: '«Øv på feilene dine» er flyttet til Grammatikkøving. I sammendraget i Skrivehjelp er det nå en knapp som tar eleven dit med teksten sin. Eleven ser først hva hen skal øve på, og trykker Start for å gå gjennom oppgavene.' },
+      { type: 'forbedret', tekst: 'Grammatikkøving har fått samme fjordbakgrunn som de andre sidene.' },
+      { type: 'forbedret', tekst: 'Alle verktøyene har fått samme sidetopp: tittel og en kort forklaring over fjorden, og innholdet i et hvitt felt med samme bredde. Knappene ser like ut overalt.' },
+      { type: 'rettet', tekst: 'På mobil dekker ikke fotokreditten innholdet lenger, alle fanene under «Om Språkhjelp» får plass, og endringsloggen er lettere å lese.' },
+      { type: 'forbedret', tekst: 'Skrivehjelp: sammendraget viser nå en oversikt over feiltypene i teksten, med hvor mange ganger hver feil kommer og ett eksempel fra teksten (feil → riktig). «Hva kan bli bedre» er en kort oppsummering av hva eleven bør øve på, og så kommer feiltypene og stavefeilene. Feiltypene kan vises grafisk (stolper per feiltype og fordeling på verb, ordstilling, staving osv.) eller detaljert med eksempel.' },
+    ],
+  },
+  {
+    dato: '2026-11-20',
+    endringer: [
+      { type: 'nytt', tekst: 'Skrivehjelp: etter sammendraget kan eleven trykke på «Generer øvingsoppgaver». Eleven velger nivå (A1–B2), og Språkhjelp finner feilene i teksten, velger 1–3 feiltyper å øve på og lager øvinger til dem: bygg setningen med ord fra en ordbank, og fyll inn riktig ord. Den første øvingen bruker elevens egen setning.' },
+    ],
+  },
+  {
     dato: '2026-11-09',
     endringer: [
       { type: 'nytt', tekst: 'Ny startside for elever: når en elev logger inn, vises Skrivehjelp, Lytteøving, Lær ord og Grammatikkøving som kort med bilde, sammen med ordlistene fra gruppene eleven er med i. Menyen «KI-verktøy» er borte for elever.' },

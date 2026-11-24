@@ -7,7 +7,7 @@ export interface UserRoles {
   isAdmin: boolean
   isTeacher: boolean
   // A signed-in user without teacher or admin role. Students get their own
-  // start page with the tools as cards, and no «KI-verktøy» menu.
+  // start page with the tools as cards.
   isStudent: boolean
 }
 

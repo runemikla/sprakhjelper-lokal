@@ -72,7 +72,7 @@ function PieChart({
           cy="50"
           r={radius}
           fill="none"
-          stroke="#10b981"
+          stroke="#50A684"
           strokeWidth="8"
           strokeLinecap="round"
           strokeDasharray={circumference}
@@ -85,7 +85,7 @@ function PieChart({
             cy="50"
             r={radius}
             fill="none"
-            stroke="#ef4444"
+            stroke="#E06287"
             strokeWidth="8"
             strokeLinecap="round"
             strokeDasharray={`${(wrongPercentage / 100) * circumference} ${circumference}`}
@@ -207,20 +207,13 @@ export function ListeningSummary({
 
   return (
     <Card className="border-white/20 bg-white/95 shadow-xl backdrop-blur-sm">
-      <div className="flex items-start justify-between gap-4 border-b border-gray-200 px-6 pb-4 pt-6">
-        <div>
-          <h2 className="mb-1 text-2xl font-bold text-gray-900">Lytteøving</h2>
-          <p className="text-sm text-gray-600">
-            Kode: <span className="font-mono font-semibold tracking-[0.2em]">{code}</span>
-          </p>
-        </div>
-        <Button variant="outline" onClick={onBack}>
-          Tilbake til oppgaver
-        </Button>
-      </div>
-
       <CardHeader>
-        <h2 className="text-2xl font-semibold">Sammendrag</h2>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-2xl font-semibold">Sammendrag</h2>
+          <Button variant="outline" onClick={onBack}>
+            Tilbake til oppgaver
+          </Button>
+        </div>
       </CardHeader>
 
       <CardContent>
@@ -228,7 +221,7 @@ export function ListeningSummary({
           <div className="grid grid-cols-1 items-start gap-6 md:grid-cols-2">
             <div className="space-y-2">
               <h3 className="text-lg font-semibold">Statistikk</h3>
-              <div className="space-y-3 rounded-lg border border-blue-200 bg-blue-50 p-4">
+              <div className="space-y-3 rounded-lg border border-vlfk-lyseblaa bg-vlfk-lyseblaa/15 p-4">
                 <div className="flex justify-between">
                   <span className="text-sm font-semibold">Antall spørsmål:</span>
                   <span className="text-sm font-semibold">{totalCount}</span>
@@ -264,7 +257,7 @@ export function ListeningSummary({
                     alt={allCorrect ? 'Lærer med tommel opp' : 'Tankefull lærer'}
                     width={128}
                     height={128}
-                    className="object-contain"
+                    className="hidden object-contain sm:block"
                   />
                 </div>
                 <p className="mt-3 text-center text-sm text-gray-600">
@@ -316,7 +309,9 @@ export function ListeningSummary({
             <Button
               onClick={() => void downloadPDF()}
               disabled={isGeneratingPDF}
-              className="w-full border border-gray-300 bg-white py-6 text-lg text-gray-900 hover:bg-gray-50"
+              variant="outline"
+              size="lg"
+              className="w-full"
             >
               {isGeneratingPDF ? 'Genererer PDF...' : 'Last ned sammendrag (PDF)'}
             </Button>

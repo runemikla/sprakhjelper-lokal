@@ -45,8 +45,8 @@ export function WordChip({
       onClick={() => onClick?.(token, zone)}
       className={cn(
         'select-none rounded-lg border-2 px-4 py-2 text-lg font-medium shadow-sm transition-all',
-        'border-blue-200 bg-white text-gray-900',
-        !disabled && 'cursor-grab hover:border-blue-400 hover:shadow active:cursor-grabbing',
+        'border-vlfk-lyseblaa bg-white text-gray-900',
+        !disabled && 'cursor-grab hover:border-vlfk-ink hover:shadow active:cursor-grabbing',
         disabled && 'cursor-default opacity-70',
         isDragging && 'opacity-40'
       )}

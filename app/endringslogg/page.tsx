@@ -8,9 +8,9 @@ export const metadata: Metadata = {
 }
 
 const TYPE_LABEL: Record<Endringstype, { label: string; className: string }> = {
-  nytt: { label: 'Nytt', className: 'bg-green-100 text-green-800' },
-  forbedret: { label: 'Forbedret', className: 'bg-blue-100 text-blue-800' },
-  rettet: { label: 'Rettet', className: 'bg-amber-100 text-amber-800' },
+  nytt: { label: 'Nytt', className: 'bg-vlfk-lysegronn text-vlfk-ink' },
+  forbedret: { label: 'Forbedret', className: 'bg-vlfk-lyseblaa text-vlfk-ink' },
+  rettet: { label: 'Rettet', className: 'bg-vlfk-lys-rosa text-vlfk-ink' },
 }
 
 function formatDate(iso: string) {
@@ -34,7 +34,7 @@ export default function EndringsloggPage() {
         {ENDRINGSLOGG.map((entry) => (
           <li key={entry.dato} className="ml-6">
             <span
-              className="absolute -left-[7px] mt-1.5 h-3.5 w-3.5 rounded-full border-2 border-white bg-blue-500"
+              className="absolute -left-[7px] mt-1.5 h-3.5 w-3.5 rounded-full border-2 border-white bg-vlfk-ink"
               aria-hidden="true"
             />
             <h2 className="text-lg font-semibold text-gray-900">
@@ -45,10 +45,10 @@ export default function EndringsloggPage() {
               {entry.endringer.map((endring) => {
                 const type = TYPE_LABEL[endring.type]
                 return (
-                  <li key={endring.tekst} className="flex items-start gap-3 text-gray-700 leading-relaxed">
+                  <li key={endring.tekst} className="flex flex-col items-start gap-1 text-gray-700 leading-relaxed sm:flex-row sm:gap-3">
                     <span
                       className={cn(
-                        'mt-0.5 inline-flex w-20 shrink-0 justify-center rounded-full px-2 py-0.5 text-xs font-semibold',
+                        'mt-0.5 inline-flex w-20 shrink-0 justify-center rounded-sm px-2 py-0.5 text-xs font-semibold',
                         type.className
                       )}
                     >

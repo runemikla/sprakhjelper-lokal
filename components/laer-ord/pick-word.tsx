@@ -67,7 +67,7 @@ export function PickWord({ words }: { words: Word[] }) {
                   onClick={() => choose(option)}
                   disabled={solved || isWrong}
                   className={cn(
-                    'rounded-xl border-2 border-gray-200 bg-white px-3 py-3 text-lg font-semibold text-gray-900 transition-colors hover:border-blue-500 disabled:cursor-default',
+                    'rounded-xl border-2 border-gray-200 bg-white px-3 py-3 text-lg font-semibold text-gray-900 transition-colors hover:border-vlfk-ink disabled:cursor-default',
                     isRight && 'border-green-500 bg-green-50 text-green-700 hover:border-green-500',
                     isWrong && 'animate-shake border-red-400 bg-red-50 text-red-700 hover:border-red-400'
                   )}

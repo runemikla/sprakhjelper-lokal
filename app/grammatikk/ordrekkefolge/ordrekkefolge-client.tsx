@@ -1,9 +1,8 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import Link from 'next/link'
 import Image from 'next/image'
-import { ArrowLeft, BarChart3, Eye, Loader2 } from 'lucide-react'
+import { BarChart3, Eye, Loader2 } from 'lucide-react'
 import { Navbar } from '@/components/landing/navbar'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -24,6 +23,8 @@ import {
   type Zone,
 } from '@/components/grammatikk/word-order/types'
 import { fetchWithTimeout } from '@/lib/fetch-with-timeout'
+import { PageHeader } from '@/components/landing/page-header'
+import { FjordBackground } from '@/components/landing/fjord-background'
 
 type Status = 'idle' | 'correct' | 'wrong'
 
@@ -316,43 +317,20 @@ export default function OrdrekkefolgeClient({
     <div className="min-h-screen relative">
       <Confetti isVisible={showConfetti} onComplete={() => setShowConfetti(false)} />
 
-      {/* Background image with overlay (matches Språkhjelperen) */}
-      <div className="fixed inset-0 z-0">
-        <Image
-          src="/images/Aurlandsfjorden-blaa.jpg"
-          alt="Aurlandsfjorden - Norwegian fjord background"
-          fill
-          className="object-cover"
-          priority
-          quality={90}
-        />
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-900/70 via-blue-800/60 to-cyan-700/50" />
-        <div className="absolute bottom-4 right-4 text-white/70 text-xs bg-black/20 backdrop-blur-sm px-3 py-1.5 rounded z-10">
-          Foto: Silje Alvsaker / Vestland fylkeskommune
-        </div>
-      </div>
+      <FjordBackground />
 
       <Navbar userEmail={userEmail} isAdmin={isAdmin} />
 
       {/* Content */}
-      <div className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-12">
-        <div className="mx-auto max-w-3xl">
-          {/* Back link */}
-          <Link
-            href="/grammatikk"
-            className="mb-6 inline-flex items-center gap-2 text-sm font-medium text-white/90 hover:text-white"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Tilbake til temaene
-          </Link>
-
-          <h1 className="mb-2 text-3xl font-bold text-white drop-shadow">
-            Ordrekkefølge
-          </h1>
-          <p className="mb-8 text-white/90 drop-shadow">
-            Dra ordene fra ordbanken og slipp dem i riktig rekkefølge for å bygge
-            en korrekt norsk setning.
-          </p>
+      <div className="relative z-10 container mx-auto px-2 sm:px-6 lg:px-8 pt-24 pb-12">
+        <div className="mx-auto max-w-4xl">
+          <PageHeader
+            backHref="/grammatikk"
+            backLabel="Tilbake til temaene"
+            title="Ordrekkefølge"
+            description="Dra ordene fra ordbanken og slipp dem i riktig rekkefølge for å bygge en korrekt norsk setning."
+            className="mb-8"
+          />
 
           {/* Level selection */}
           {!started ? (
@@ -394,7 +372,7 @@ export default function OrdrekkefolgeClient({
                   {/* Compact level header with score */}
                   <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2 border-b border-gray-200 pb-4">
                     <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                      <span className="text-sm font-semibold text-blue-600">
+                      <span className="text-sm font-semibold text-vlfk-ink">
                         Nivå {level} av {MAX_LEVEL}
                       </span>
                       <span className="text-base font-semibold text-gray-900">
@@ -430,7 +408,8 @@ export default function OrdrekkefolgeClient({
                         />
                         <FeedbackBanner status={status} />
                       </div>
-                      <div className="flex shrink-0 justify-center sm:w-36">
+                      {/* Teacher image (not on phones, to save space) */}
+                      <div className="hidden shrink-0 justify-center sm:flex sm:w-36">
                         <Image
                           src={teacherImage}
                           alt="Lærer"
@@ -453,7 +432,7 @@ export default function OrdrekkefolgeClient({
                     />
 
                     {showAnswer && correctWords.length > 0 && (
-                      <div className="flex items-start gap-2 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800">
+                      <div className="flex items-start gap-2 rounded-xl border border-vlfk-lyseblaa bg-vlfk-lyseblaa/15 px-4 py-3 text-sm text-vlfk-ink">
                         <Eye className="mt-0.5 h-4 w-4 shrink-0" />
                         <span>
                           Fasit:{' '}

@@ -307,7 +307,7 @@ export function ModelSettingsPanel({
           {/* Form for a new model */}
           {canEdit &&
             (form ? (
-              <div className="space-y-3 rounded-md border border-blue-200 p-3">
+              <div className="space-y-3 rounded-md border border-vlfk-lyseblaa p-3">
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div className="space-y-1">
                     <Label htmlFor="model-deployment">Deployment-navn i Azure</Label>

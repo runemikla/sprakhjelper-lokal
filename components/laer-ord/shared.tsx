@@ -61,7 +61,7 @@ export function Feedback({
         'rounded-xl border px-4 py-3 text-sm',
         tone === 'right' && 'border-green-300 bg-green-50 text-green-900',
         tone === 'wrong' && 'border-red-300 bg-red-50 text-red-900',
-        tone === 'neutral' && 'border-blue-200 bg-blue-50 text-blue-900'
+        tone === 'neutral' && 'border-vlfk-lyseblaa bg-vlfk-lyseblaa/15 text-vlfk-ink'
       )}
     >
       {children}

@@ -1,6 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import type { TekstAnalyse as TextAnalysis } from '@/lib/sammendrag/analyse'
+import { FeiltypeOversikt } from '@/components/skrivehjelp/feiltype-oversikt'
 import Image from 'next/image'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
@@ -8,7 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
-import { ChevronLeft, ChevronRight, Languages, Copy, BarChart3, Check, Loader2 } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Languages, Copy, BarChart3, Check, Loader2, Dumbbell, ArrowRight } from 'lucide-react'
 import { toast } from 'sonner'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
@@ -17,6 +19,10 @@ import { Confetti } from '@/components/ui/confetti'
 import { Navbar } from '@/components/landing/navbar'
 import { sanitizeMarkdown } from '@/lib/sanitize'
 import { fetchWithTimeout } from '@/lib/fetch-with-timeout'
+import { useRouter } from 'next/navigation'
+import { lagreTekstForOvinger } from '@/lib/ovinger/fra-skrivehjelp'
+import { FjordBackground } from '@/components/landing/fjord-background'
+import { PageHeader } from '@/components/landing/page-header'
 
 interface SentenceResult {
   bruker_setning: string;
@@ -49,17 +55,6 @@ interface SplitSentencesResult {
   morsmaal: string;
   originalText: string;
   provider?: string;
-}
-
-interface TextAnalysis {
-  hva_var_bra: string;
-  hva_var_bra_morsmaal: string;
-  hva_kan_bli_bedre: string;
-  hva_kan_bli_bedre_morsmaal: string;
-  ordliste: Array<{
-    feil: string;
-    riktig: string;
-  }>;
 }
 
 interface AnalysisResult {
@@ -103,6 +98,7 @@ interface SpraakhjelpperClientProps {
 }
 
 export default function SpraakhjelpperClient({ user, isAdmin = false }: SpraakhjelpperClientProps) {
+  const router = useRouter()
   const [inputValue, setInputValue] = useState('')
   const [selectedLanguage, setSelectedLanguage] = useState<string>('')
 
@@ -279,6 +275,8 @@ export default function SpraakhjelpperClient({ user, isAdmin = false }: Spraakhj
   }
 
   const currentSentence = result?.results[currentSentenceIndex]
+  // The sentence-by-sentence step fills the screen, so the page header is compact there.
+  const isSentenceStep = Boolean(result && result.results && result.results.length > 0 && !showSummary && currentSentence)
 
   // Sync retryInput with currentSentence.bruker_setning when it changes
   useEffect(() => {
@@ -421,7 +419,7 @@ export default function SpraakhjelpperClient({ user, isAdmin = false }: Spraakhj
           description: getUserCorrectedText() !== result.originalText
             ? '💡 Denne teksten oppdateres når du korrigerer setninger'
             : 'Du har ikke gjort noen korrigeringer ennå',
-          bgColor: 'bg-blue-50 border-blue-200',
+          bgColor: 'bg-vlfk-lyseblaa/15 border-vlfk-lyseblaa',
           copyText: getUserCorrectedText()
         }
       default:
@@ -446,14 +444,14 @@ export default function SpraakhjelpperClient({ user, isAdmin = false }: Spraakhj
         <svg className="w-32 h-32 transform -rotate-90" viewBox="0 0 100 100">
           <circle cx="50" cy="50" r={radius} fill="none" stroke="#e5e7eb" strokeWidth="8" />
           <circle
-            cx="50" cy="50" r={radius} fill="none" stroke="#10b981" strokeWidth="8"
+            cx="50" cy="50" r={radius} fill="none" stroke="#50A684" strokeWidth="8"
             strokeLinecap="round" strokeDasharray={originalStrokeDasharray}
             strokeDashoffset={originalStrokeDashoffset}
             className="transition-all duration-500"
           />
           {correctedPercentage > 0 && (
             <circle
-              cx="50" cy="50" r={radius} fill="none" stroke="#3b82f6" strokeWidth="8"
+              cx="50" cy="50" r={radius} fill="none" stroke="#9ADBE8" strokeWidth="8"
               strokeLinecap="round"
               strokeDasharray={`${(correctedPercentage / 100) * circumference} ${circumference}`}
               className="transition-all duration-500"
@@ -590,17 +588,32 @@ export default function SpraakhjelpperClient({ user, isAdmin = false }: Spraakhj
         // What was good
         addText('Hva var bra', 14, true, [22, 163, 74])
         addSpace(5)
-        addText(textAnalysis.hva_var_bra, 10)
+        addText(textAnalysis.bra.bokmaal, 10)
         addSpace(10)
 
         // What can be improved
-        addText('Hva kan bli bedre', 14, true, [234, 88, 12])
-        addSpace(5)
-        addText(textAnalysis.hva_kan_bli_bedre, 10)
-        addSpace(10)
+        if (textAnalysis.kan_bli_bedre.bokmaal) {
+          addText('Hva kan bli bedre', 14, true, [234, 88, 12])
+          addSpace(5)
+          addText(textAnalysis.kan_bli_bedre.bokmaal, 10)
+          addSpace(10)
+        }
+
+        // Error types
+        if (textAnalysis.feiltyper.length > 0) {
+          addText(`Feiltyper i teksten (${textAnalysis.totalt_antall_feil} feil)`, 14, true, [31, 41, 55])
+          addSpace(5)
+          textAnalysis.feiltyper.forEach((f) => {
+            addText(`${f.kode} ${f.feiltype}: ${f.antall}`, 10, true)
+            if (f.eksempel.feil || f.eksempel.riktig) {
+              addText(`   ${f.eksempel.feil} → ${f.eksempel.riktig}`, 10)
+            }
+          })
+          addSpace(10)
+        }
 
         // Word list
-        if (textAnalysis.ordliste && textAnalysis.ordliste.length > 0) {
+        if (textAnalysis.ordliste.length > 0) {
           addText('Stavefeil', 14, true, [59, 130, 246])
           addSpace(5)
 
@@ -676,45 +689,48 @@ export default function SpraakhjelpperClient({ user, isAdmin = false }: Spraakhj
   const motherTongueName =
     (result?.morsmaal && languages.find((lang) => lang.code === result.morsmaal)?.name) || 'Morsmål'
 
+  // Tar teksten med til «Øv på feilene dine» under Grammatikkøving.
+  const goToExercises = () => {
+    if (!result) return
+    const saved = lagreTekstForOvinger({
+      originalText: result.originalText,
+      morsmaal: result.morsmaal,
+      morsmaalNavn: motherTongueName,
+      morsmaalFlagg: languages.find((lang) => lang.code === result.morsmaal)?.flag,
+      setninger: result.results.map((r) => ({ elev: r.bruker_setning, rettet: r.riktig_setning })),
+    })
+    if (!saved) {
+      toast.error('Kunne ikke ta med teksten. Prøv igjen.')
+      return
+    }
+    router.push('/grammatikk/ov-pa-feilene')
+  }
+
   return (
     <div className="min-h-screen relative">
-      {/* Background Image with Overlay */}
-      <div className="fixed inset-0 z-0">
-        <Image
-          src="/images/Aurlandsfjorden-blaa.jpg"
-          alt="Aurlandsfjorden - Norwegian fjord background"
-          fill
-          className="object-cover"
-          priority
-          quality={90}
-        />
-        {/* Gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-900/70 via-blue-800/60 to-cyan-700/50" />
-        {/* Photo credit */}
-        <div className="absolute bottom-4 right-4 text-white/70 text-xs bg-black/20 backdrop-blur-sm px-3 py-1.5 rounded z-10">
-          Foto: Silje Alvsaker / Vestland fylkeskommune
-        </div>
-      </div>
+      <FjordBackground />
 
       {/* Navbar */}
       <Navbar userEmail={user.email ?? null} isAdmin={isAdmin} />
 
       {/* Content */}
-      <div className="relative z-10 container mx-auto pt-24 pb-2 px-2 sm:pb-8 sm:px-4 max-w-4xl">
+      <div className="relative z-10 container mx-auto pt-24 pb-10 px-2 sm:px-4 max-w-4xl">
+        <PageHeader
+          title="Skrivehjelp"
+          description="Få tilbakemeldinger fra KI på teksten din."
+          compact={isSentenceStep}
+          className="px-2 sm:px-0"
+          actions={
+            !showForm && (
+              <Button variant="outline" size={isSentenceStep ? 'sm' : 'default'} onClick={showInputForm}>
+                Ny tekst
+              </Button>
+            )
+          }
+        />
         <div className="space-y-8">
           {showForm && (
             <Card className="bg-white/95 backdrop-blur-sm border-white/20 shadow-xl">
-              {/* Mini Header */}
-              <div className="px-6 pt-6 pb-4 border-b border-gray-200">
-                <div className="flex items-start justify-between">
-                  <div className="cursor-pointer hover:opacity-80 transition-opacity flex-1" onClick={showInputForm}>
-                    <h2 className="text-2xl font-bold text-gray-900 mb-1">Skrivehjelp</h2>
-                    <p className="text-sm text-gray-600">
-                      Få tilbakemeldinger fra KI på teksten din.
-                    </p>
-                  </div>
-                </div>
-              </div>
 
               <CardContent className="pt-6">
                 <form onSubmit={handleSubmit} className="space-y-4">
@@ -811,17 +827,6 @@ export default function SpraakhjelpperClient({ user, isAdmin = false }: Spraakhj
           {/* Step 1 Result: Overview of split sentences */}
           {showSplitOverview && splitResult && (
             <Card className="bg-white/95 backdrop-blur-sm border-white/20 shadow-xl">
-              {/* Mini Header */}
-              <div className="px-6 pt-6 pb-4 border-b border-gray-200">
-                <div className="flex items-start justify-between">
-                  <div className="cursor-pointer hover:opacity-80 transition-opacity flex-1" onClick={showInputForm}>
-                    <h2 className="text-2xl font-bold text-gray-900 mb-1">Skrivehjelp</h2>
-                    <p className="text-sm text-gray-600">
-                      Få tilbakemeldinger fra KI på teksten din.
-                    </p>
-                  </div>
-                </div>
-              </div>
 
               <CardHeader>
                 <div>
@@ -833,12 +838,12 @@ export default function SpraakhjelpperClient({ user, isAdmin = false }: Spraakhj
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                    <h3 className="font-semibold mb-3 text-blue-900">Setninger funnet:</h3>
+                  <div className="bg-vlfk-lyseblaa/15 border border-vlfk-lyseblaa rounded-lg p-4">
+                    <h3 className="font-semibold mb-3 text-vlfk-ink">Setninger funnet:</h3>
                     <div className="space-y-2">
                       {editableSentences.map((sentence, index) => (
-                        <div key={index} className="flex items-start gap-2 py-2 px-3 bg-white rounded-md border border-blue-100">
-                          <span className="font-semibold text-blue-700 flex-shrink-0">{index + 1}.</span>
+                        <div key={index} className="flex items-start gap-2 py-2 px-3 bg-white rounded-md border border-vlfk-lyseblaa/60">
+                          <span className="font-semibold text-vlfk-ink flex-shrink-0">{index + 1}.</span>
                           <span className="text-gray-800">{sentence}</span>
                         </div>
                       ))}
@@ -850,7 +855,6 @@ export default function SpraakhjelpperClient({ user, isAdmin = false }: Spraakhj
                       onClick={handleAnalyze}
                       disabled={isSubmitting}
                       size="lg"
-                      className="bg-white hover:bg-gray-50 text-gray-900 border border-gray-300"
                     >
                       {isSubmitting ? 'Analyserer...' : 'Analyser setninger'}
                     </Button>
@@ -862,17 +866,6 @@ export default function SpraakhjelpperClient({ user, isAdmin = false }: Spraakhj
 
           {error && (
             <Card className="border-red-300 bg-red-50/95 backdrop-blur-sm shadow-xl">
-              {/* Mini Header */}
-              <div className="px-6 pt-6 pb-4 border-b border-gray-200">
-                <div className="flex items-start justify-between">
-                  <div className="cursor-pointer hover:opacity-80 transition-opacity flex-1" onClick={showInputForm}>
-                    <h2 className="text-2xl font-bold text-gray-900 mb-1">Skrivehjelp</h2>
-                    <p className="text-sm text-gray-600">
-                      Få tilbakemeldinger fra KI på teksten din.
-                    </p>
-                  </div>
-                </div>
-              </div>
 
               <CardContent className="pt-6">
                 <h2 className="text-lg font-medium text-red-600 mb-2">Feil</h2>
@@ -882,18 +875,7 @@ export default function SpraakhjelpperClient({ user, isAdmin = false }: Spraakhj
           )}
 
           {result && result.results && result.results.length > 0 && !showSummary && currentSentence && (
-            <Card className="flex flex-col h-[calc(100vh-8rem)] bg-white/95 backdrop-blur-sm border-white/20 shadow-xl">
-              {/* Mini Header */}
-              <div className="px-3 py-2 sm:px-6 sm:pt-4 sm:pb-4 border-b border-gray-200 flex-shrink-0">
-                <div className="flex items-start justify-between">
-                  <div className="cursor-pointer hover:opacity-80 transition-opacity flex-1" onClick={showInputForm}>
-                    <h2 className="text-xl sm:text-2xl font-bold text-gray-900 sm:mb-1">Skrivehjelp</h2>
-                    <p className="hidden sm:block text-sm text-gray-600">
-                      Få tilbakemeldinger fra KI på teksten din.
-                    </p>
-                  </div>
-                </div>
-              </div>
+            <Card className="flex flex-col h-[calc(100dvh-11rem)] sm:h-[calc(100dvh-15rem)] bg-white/95 backdrop-blur-sm border-white/20 shadow-xl">
 
               <CardContent className="flex-1 flex flex-col overflow-hidden p-3 sm:p-6">
                 <div className="space-y-4 sm:space-y-6 flex-1 overflow-y-auto">
@@ -988,13 +970,13 @@ export default function SpraakhjelpperClient({ user, isAdmin = false }: Spraakhj
                       </div>
                     </div>
 
-                    <div className={`text-sm rounded-lg p-3 sm:p-4 ${showNorwegianExplanation ? 'bg-blue-50 border border-blue-200' : 'bg-purple-50 border border-purple-200'
+                    <div className={`text-sm rounded-lg p-3 sm:p-4 ${showNorwegianExplanation ? 'bg-vlfk-lyseblaa/15 border border-vlfk-lyseblaa' : 'bg-vlfk-lilla/20 border border-vlfk-lilla'
                       }`}>
                       <div className="space-y-2">
                         {formatExplanation(showNorwegianExplanation ? currentSentence.forklaring : currentSentence.forklaring_morsmaal)
                           .map((point, index) => (
                             <div key={index} className="flex gap-2">
-                              <span className={`font-medium flex-shrink-0 ${showNorwegianExplanation ? 'text-blue-700' : 'text-purple-700'
+                              <span className={`font-medium flex-shrink-0 ${showNorwegianExplanation ? 'text-vlfk-ink' : 'text-vlfk-ink'
                                 }`}>
                                 {point.number}
                               </span>
@@ -1027,7 +1009,7 @@ export default function SpraakhjelpperClient({ user, isAdmin = false }: Spraakhj
                                           href={sanitizedHref}
                                           target="_blank"
                                           rel="noopener noreferrer"
-                                          className="text-blue-600 hover:underline"
+                                          className="text-vlfk-ink hover:underline"
                                         >
                                           {children}
                                         </a>
@@ -1051,7 +1033,7 @@ export default function SpraakhjelpperClient({ user, isAdmin = false }: Spraakhj
                   <div className="w-full">
                     <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-blue-500 transition-all duration-300 ease-out"
+                        className="h-full bg-vlfk-ink transition-all duration-300 ease-out"
                         style={{ width: `${((currentSentenceIndex + 1) / result.results.length) * 100}%` }}
                       />
                     </div>
@@ -1107,17 +1089,6 @@ export default function SpraakhjelpperClient({ user, isAdmin = false }: Spraakhj
           {/* Summary View */}
           {showSummary && result && (
             <Card className="bg-white/95 backdrop-blur-sm border-white/20 shadow-xl">
-              {/* Mini Header */}
-              <div className="px-6 pt-6 pb-4 border-b border-gray-200">
-                <div className="flex items-start justify-between">
-                  <div className="cursor-pointer hover:opacity-80 transition-opacity flex-1" onClick={showInputForm}>
-                    <h2 className="text-2xl font-bold text-gray-900 mb-1">Skrivehjelp</h2>
-                    <p className="text-sm text-gray-600">
-                      Få tilbakemeldinger fra KI på teksten din.
-                    </p>
-                  </div>
-                </div>
-              </div>
 
               <CardHeader>
                 <div className="flex items-center justify-between">
@@ -1171,7 +1142,7 @@ export default function SpraakhjelpperClient({ user, isAdmin = false }: Spraakhj
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <h3 className="text-lg font-semibold">Statistikk</h3>
-                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-3">
+                      <div className="bg-vlfk-lyseblaa/15 border border-vlfk-lyseblaa rounded-lg p-4 space-y-3">
                         <div className="flex justify-between">
                           <span className="text-sm font-semibold">Antall setninger:</span>
                           <span className="text-sm font-semibold">{getStatistics().totalSentences}</span>
@@ -1184,7 +1155,7 @@ export default function SpraakhjelpperClient({ user, isAdmin = false }: Spraakhj
                         </div>
                         <div className="flex justify-between">
                           <span className="text-sm font-semibold">Korrigerte av deg:</span>
-                          <span className="text-sm font-semibold text-blue-600">
+                          <span className="text-sm font-semibold text-vlfk-ink">
                             {getStatistics().correctedSentences} av {getStatistics().totalSentences}
                           </span>
                         </div>
@@ -1223,7 +1194,7 @@ export default function SpraakhjelpperClient({ user, isAdmin = false }: Spraakhj
                         <p className="text-sm text-gray-600 mb-4">
                           Få en detaljert analyse av hva du gjorde bra og hva du kan forbedre.
                         </p>
-                        <Button onClick={generateTextAnalysis} className="bg-blue-600 hover:bg-blue-700">
+                        <Button onClick={generateTextAnalysis}>
                           Generer analyse
                         </Button>
                       </div>
@@ -1254,68 +1225,59 @@ export default function SpraakhjelpperClient({ user, isAdmin = false }: Spraakhj
                         {/* What was good */}
                         <div>
                           <h4 className="text-md font-semibold mb-2">Hva var bra med teksten</h4>
-                          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                          <div className="bg-vlfk-lyseblaa/15 border border-vlfk-lyseblaa rounded-lg p-4">
                             <div className="text-sm leading-relaxed whitespace-pre-wrap">
                               <ReactMarkdown
                                 remarkPlugins={[remarkGfm]}
                                 disallowedElements={['script', 'iframe', 'object', 'embed', 'form', 'input']}
                                 unwrapDisallowed={true}
                               >
-                                {sanitizeMarkdown(showAnalysisInNorwegian ? textAnalysis.hva_var_bra : textAnalysis.hva_var_bra_morsmaal)}
+                                {sanitizeMarkdown(showAnalysisInNorwegian ? textAnalysis.bra.bokmaal : textAnalysis.bra.morsmaal)}
                               </ReactMarkdown>
                             </div>
                           </div>
                         </div>
 
                         {/* What can be improved */}
-                        <div>
-                          <h4 className="text-md font-semibold mb-2">Hva kan bli bedre</h4>
-                          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                            <div className="text-sm leading-relaxed">
-                              <ReactMarkdown
-                                remarkPlugins={[remarkGfm]}
-                                components={{
-                                  a: ({ node, ...props }) => {
-                                    const href = props.href || '';
-                                    if (href.startsWith('http://') || href.startsWith('https://')) {
-                                      return <a {...props} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline" />;
-                                    }
-                                    return <span>{props.children}</span>;
-                                  },
-                                  ul: ({ node, ...props }) => <ul className="space-y-1 list-none" {...props} />,
-                                  li: ({ node, ...props }) => (
-                                    <li className="flex gap-2" {...props}>
-                                      <span className="font-bold text-blue-700 flex-shrink-0">•</span>
-                                      <span className="flex-1">{props.children}</span>
-                                    </li>
-                                  ),
-                                  p: ({ node, ...props }) => <span {...props} />,
-                                }}
-                                disallowedElements={['script', 'iframe', 'object', 'embed', 'form', 'input']}
-                                unwrapDisallowed={true}
-                              >
-                                {sanitizeMarkdown(showAnalysisInNorwegian ? textAnalysis.hva_kan_bli_bedre : textAnalysis.hva_kan_bli_bedre_morsmaal)}
-                              </ReactMarkdown>
+                        {textAnalysis.kan_bli_bedre.bokmaal && (
+                          <div>
+                            <h4 className="text-md font-semibold mb-2">Hva kan bli bedre</h4>
+                            <div className="bg-vlfk-lyseblaa/15 border border-vlfk-lyseblaa rounded-lg p-4">
+                              <div className="text-sm leading-relaxed whitespace-pre-wrap">
+                                <ReactMarkdown
+                                  remarkPlugins={[remarkGfm]}
+                                  disallowedElements={['script', 'iframe', 'object', 'embed', 'form', 'input']}
+                                  unwrapDisallowed={true}
+                                >
+                                  {sanitizeMarkdown(showAnalysisInNorwegian ? textAnalysis.kan_bli_bedre.bokmaal : textAnalysis.kan_bli_bedre.morsmaal)}
+                                </ReactMarkdown>
+                              </div>
                             </div>
                           </div>
-                        </div>
+                        )}
+
+                        {/* Error types overview */}
+                        <FeiltypeOversikt
+                          feiltyper={textAnalysis.feiltyper}
+                          totalt={textAnalysis.totalt_antall_feil}
+                        />
 
                         {/* Word list */}
                         {textAnalysis.ordliste && textAnalysis.ordliste.length > 0 && (
                           <div>
                             <h4 className="text-md font-semibold mb-2">Stavefeil</h4>
-                            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                            <div className="bg-vlfk-lyseblaa/15 border border-vlfk-lyseblaa rounded-lg p-4">
                               <div className="overflow-x-auto">
                                 <table className="w-full text-sm">
                                   <thead>
-                                    <tr className="border-b border-blue-300">
+                                    <tr className="border-b border-vlfk-lyseblaa">
                                       <th className="text-left py-2 px-3 font-semibold text-red-700">Feil</th>
                                       <th className="text-left py-2 px-3 font-semibold text-green-700">Riktig</th>
                                     </tr>
                                   </thead>
                                   <tbody>
                                     {textAnalysis.ordliste.map((ord, index) => (
-                                      <tr key={index} className="border-b border-blue-200 last:border-b-0">
+                                      <tr key={index} className="border-b border-vlfk-lyseblaa last:border-b-0">
                                         <td className="py-2 px-3 text-red-600 font-medium">{ord.feil}</td>
                                         <td className="py-2 px-3 text-green-600 font-medium">{ord.riktig}</td>
                                       </tr>
@@ -1328,7 +1290,7 @@ export default function SpraakhjelpperClient({ user, isAdmin = false }: Spraakhj
                         )}
 
                         {textAnalysis.ordliste && textAnalysis.ordliste.length === 0 && (
-                          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
+                          <div className="bg-vlfk-lyseblaa/15 border border-vlfk-lyseblaa rounded-lg p-4 text-center">
                             <p className="text-sm text-gray-700">🎉 Ingen stavefeil funnet!</p>
                           </div>
                         )}
@@ -1336,12 +1298,33 @@ export default function SpraakhjelpperClient({ user, isAdmin = false }: Spraakhj
                     )}
                   </div>
 
+                  {/* Tilpassede øvinger fra feilene i teksten */}
+                  <div className="border-t pt-8">
+                    <div className="flex flex-col gap-4 rounded-lg border border-vlfk-lyseblaa bg-vlfk-lyseblaa/15 p-5 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="flex items-start gap-3">
+                        <Dumbbell className="mt-0.5 h-5 w-5 flex-shrink-0 text-vlfk-ink" />
+                        <div>
+                          <p className="font-semibold text-gray-900">Øv på feilene dine</p>
+                          <p className="text-sm text-gray-600">
+                            Få øvinger i Grammatikkøving som passer til feilene i teksten din.
+                          </p>
+                        </div>
+                      </div>
+                      <Button onClick={goToExercises} className="sm:flex-shrink-0">
+                        Øv på feilene
+                        <ArrowRight className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+
                   {/* PDF Download Section */}
                   <div className="border-t pt-8 mt-8">
                     <Button
                       onClick={downloadPDF}
                       disabled={isGeneratingPDF}
-                      className="w-full bg-white hover:bg-gray-50 text-gray-900 border border-gray-300 py-6 text-lg"
+                      variant="outline"
+                      size="lg"
+                      className="w-full"
                     >
                       {isGeneratingPDF ? (
                         <>

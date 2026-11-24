@@ -1,9 +1,9 @@
 'use client'
 
 import { useState, type FormEvent } from 'react'
-import Link from 'next/link'
+import { PageHeader } from '@/components/landing/page-header'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Loader2, Plus } from 'lucide-react'
+import { Loader2, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -24,20 +24,16 @@ export function NewGroupClient({ isTeacher }: { isTeacher: boolean }) {
 
   return (
     <>
-      <div>
-        <Link
-          href="/grupper"
-          className="mb-3 inline-flex items-center gap-1 text-sm font-medium text-white/90 hover:text-white"
-        >
-          <ArrowLeft className="h-4 w-4" /> Alle grupper
-        </Link>
-        <h1 className="text-3xl font-bold text-white drop-shadow">Ny gruppe</h1>
-        <p className="mt-1 text-white/90 drop-shadow">
-          {isTeacher
+      <PageHeader
+        backHref="/grupper"
+        backLabel="Alle grupper"
+        title="Ny gruppe"
+        description={
+          isTeacher
             ? 'Lag en ny gruppe for klassen din, eller bli med i en gruppe med en kode.'
-            : 'Skriv inn koden du fikk av læreren for å bli med i gruppen.'}
-        </p>
-      </div>
+            : 'Skriv inn koden du fikk av læreren for å bli med i gruppen.'
+        }
+      />
 
       {isTeacher && <CreateGroupCard onCreated={back} />}
       <JoinGroupCard onJoined={back} />

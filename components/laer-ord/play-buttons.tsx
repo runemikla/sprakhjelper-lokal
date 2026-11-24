@@ -16,7 +16,7 @@ export function PlayButtons({ word, onPlay }: { word: Word; onPlay?: () => void 
           play(word, 'w')
           onPlay?.()
         }}
-        className="inline-flex items-center gap-2 rounded-full bg-blue-600 px-6 py-3 text-base font-semibold text-white shadow hover:bg-blue-700"
+        className="inline-flex items-center gap-2 rounded-full bg-vlfk-ink px-6 py-3 text-base font-semibold text-white shadow hover:bg-vlfk-ink/90"
       >
         <Play className="h-4 w-4 fill-current" aria-hidden="true" />
         Hør ordet
@@ -27,7 +27,7 @@ export function PlayButtons({ word, onPlay }: { word: Word; onPlay?: () => void 
           play(word, 'w', { slow: true })
           onPlay?.()
         }}
-        className="rounded-full border-2 border-blue-600 bg-white px-4 py-2 text-sm font-semibold text-blue-600 hover:bg-blue-50"
+        className="rounded-full border-2 border-vlfk-ink bg-white px-4 py-2 text-sm font-semibold text-vlfk-ink hover:bg-vlfk-lyseblaa/20"
       >
         Sakte
       </button>

@@ -62,7 +62,7 @@ export function ListenPick({ words }: { words: Word[] }) {
                 onClick={() => choose(option)}
                 disabled={solved || isWrong}
                 className={cn(
-                  'overflow-hidden rounded-xl border-[3px] border-gray-200 bg-white transition-colors hover:border-blue-500 disabled:cursor-default',
+                  'overflow-hidden rounded-xl border-[3px] border-gray-200 bg-white transition-colors hover:border-vlfk-ink disabled:cursor-default',
                   isRight && 'border-green-500 hover:border-green-500',
                   isWrong && 'animate-shake border-red-400 opacity-50 hover:border-red-400'
                 )}

@@ -23,7 +23,7 @@ export default async function LandingPage() {
   return (
     <main className="min-h-screen">
       <AppNavbar />
-      <Hero />
+      <Hero signedIn={Boolean(user)} />
       <Footer />
     </main>
   )

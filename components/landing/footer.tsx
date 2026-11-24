@@ -2,75 +2,27 @@ import Link from 'next/link'
 
 export function Footer() {
   return (
-    <footer className="bg-gray-900 text-gray-300 py-12">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          {/* Brand */}
-          <div className="col-span-1 md:col-span-2">
-            <div className="mb-4">
-              <span className="text-white text-2xl font-bold">Språkhjelp</span>
-            </div>
-            <p className="text-gray-400 max-w-md">
-              Et KI-verktøy som hjelper deg å skrive bedre norsk.
-            </p>
-          </div>
-
-          {/* Quick Links */}
-          <div>
-            <h3 className="text-white font-semibold mb-4">Lenker</h3>
-            <ul className="space-y-2">
-              <li>
-                <Link href="/spraakhjelper" className="hover:text-blue-400 transition-colors">
-                  Kom i gang
-                </Link>
-              </li>
-              <li>
-                <Link href="/laererveiledning" className="hover:text-blue-400 transition-colors">
-                  Lærerveiledning
-                </Link>
-              </li>
-              <li>
-                <Link href="/om" className="hover:text-blue-400 transition-colors">
-                  Om verktøyene
-                </Link>
-              </li>
-              <li>
-                <Link href="/personvern" className="hover:text-blue-400 transition-colors">
-                  Personvern og GDPR
-                </Link>
-              </li>
-              <li>
-                <Link href="/endringslogg" className="hover:text-blue-400 transition-colors">
-                  Endringslogg
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          {/* Support */}
-          <div>
-            <h3 className="text-white font-semibold mb-4">Støtte</h3>
-            <ul className="space-y-2">
-              <li>
-                <a href="#" className="hover:text-blue-400 transition-colors">
-                  Hjelp
-                </a>
-              </li>
-              <li>
-                <a href="mailto:rune.mikal.birkeland@vlfk.no" className="hover:text-blue-400 transition-colors">
-                  Kontakt oss
-                </a>
-              </li>
-            </ul>
-          </div>
-        </div>
-
-        {/* Bottom bar */}
-        <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400 text-sm">
-          <p>&copy; {new Date().getFullYear()} Språkhjelp. Alle rettigheter reservert.</p>
-        </div>
+    <footer className="relative z-10 border-t border-gray-200 bg-white py-6 text-vlfk-ink">
+      <div className="container mx-auto flex flex-col gap-3 px-4 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
+        <ul className="flex flex-wrap gap-x-6 gap-y-2">
+          <li>
+            <Link href="/personvern" className="underline-offset-4 hover:underline">
+              Personvern og GDPR
+            </Link>
+          </li>
+          <li>
+            <a
+              href="mailto:rune.mikal.birkeland@vlfk.no"
+              className="underline-offset-4 hover:underline"
+            >
+              Kontakt oss
+            </a>
+          </li>
+        </ul>
+        <p className="text-sm text-gray-500">
+          &copy; {new Date().getFullYear()} Språkhjelp. Alle rettigheter reservert.
+        </p>
       </div>
     </footer>
   )
 }
-

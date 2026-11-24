@@ -1,9 +1,8 @@
-import OrdrekkefolgeClient from './ordrekkefolge-client'
-import { getUser } from '@/lib/supabase/server'
-import { isAdmin } from '@/lib/auth/roles'
+import { redirect } from 'next/navigation'
 
-export default async function OrdrekkefolgePage() {
-  const user = await getUser()
-  const admin = await isAdmin(user)
-  return <OrdrekkefolgeClient userEmail={user?.email ?? null} isAdmin={admin} />
+// Ordrekkefølge is turned off for now. The exercise code is kept in
+// ordrekkefolge-client.tsx so it can be switched on again by restoring the
+// page below and the topic card in app/grammatikk/page.tsx.
+export default function OrdrekkefolgePage() {
+  redirect('/grammatikk')
 }

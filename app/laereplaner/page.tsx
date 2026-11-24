@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   title: 'Læreplaner - Språkhjelp',
 }
 
-const linkClass = 'text-blue-700 underline underline-offset-4 hover:text-blue-800'
+const linkClass = 'text-vlfk-ink underline underline-offset-4 hover:text-vlfk-ink'
 
 function Level({
   title,
@@ -51,7 +51,7 @@ export default function LaereplanerPage() {
       }
     >
       <section className="mb-12">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Moduler (NOR11-01)</h2>
+        <h2 className="text-2xl font-semibold text-gray-900 mb-2">Moduler (NOR11-01)</h2>
         <p className="text-gray-600 mb-5">
           {NOR11_01.tittel}. Fire moduler med egen progresjon.{' '}
           <a href={NOR11_01.kilde} target="_blank" rel="noopener noreferrer" className={linkClass}>
@@ -77,7 +77,7 @@ export default function LaereplanerPage() {
       </section>
 
       <section>
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Språknivå (A1–B2)</h2>
+        <h2 className="text-2xl font-semibold text-gray-900 mb-2">Språknivå (A1–B2)</h2>
         <p className="text-gray-600 mb-5">
           {NVI.tittel} (HK-dir). Målene er delt inn i lytte, lese, skrive og muntlig, og deltakeren
           kan være på ulike nivåer i ulike ferdigheter.{' '}

@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
 import Image from 'next/image';
+import { FjordBackground } from '@/components/landing/fjord-background';
 
 export default function TilgangPage() {
   const [code, setCode] = useState('');
@@ -43,27 +44,21 @@ export default function TilgangPage() {
   }
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center p-4">
-      {/* Background Image with Overlay — same as front page */}
-      <div className="absolute inset-0 z-0">
-        <Image
-          src="/images/Aurlandsfjorden-blaa.jpg"
-          alt="Aurlandsfjorden bakgrunn"
-          fill
-          className="object-cover"
-          priority
-          quality={90}
-        />
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-900/70 via-blue-800/60 to-cyan-700/50" />
-        <div className="absolute bottom-4 right-4 text-white/70 text-xs bg-black/20 backdrop-blur-sm px-3 py-1.5 rounded">
-          Foto: Silje Alvsaker / Vestland fylkeskommune
-        </div>
-      </div>
+    <div className="relative min-h-screen flex items-center justify-center px-2 py-4 sm:p-4">
+      <FjordBackground />
 
       <div className="relative z-10 w-full max-w-md">
-        <Card className="shadow-xl border-0 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm">
+        <Card className="shadow-xl border-0 bg-white">
           <CardHeader className="text-center space-y-3 pb-2">
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            <Image
+              src="/images/Logo_Vestland_fylkeskommune.png"
+              alt="Vestland fylkeskommune"
+              width={562}
+              height={149}
+              priority
+              className="mx-auto mb-4 h-10 w-auto"
+            />
+            <h1 className="text-2xl font-semibold text-vlfk-ink">
               Språkhjelp
             </h1>
             <CardDescription className="text-base">
@@ -93,7 +88,7 @@ export default function TilgangPage() {
               </div>
 
               {error && (
-                <div className="flex items-center gap-2 text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/30 rounded-md p-3">
+                <div className="flex items-center gap-2 text-sm text-red-700 bg-red-50 rounded-md p-3">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                   </svg>

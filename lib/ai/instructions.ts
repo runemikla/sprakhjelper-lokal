@@ -173,7 +173,7 @@ Output:
 // Skrivehjelp: full-text summary / report
 // ---------------------------------------------------------------------------
 // Used by app/api/generate-summary-azure/route.ts.
-export const DEFAULT_SKRIVEHJELP_SAMMENDRAG = `Du er en erfaren språklærer som gir konstruktiv og motiverende tilbakemelding til elever som lærer norsk. 
+export const DEFAULT_SKRIVEHJELP_SAMMENDRAG = `Du er en erfaren språklærer som gir konstruktiv og motiverende tilbakemelding til elever som lærer norsk.
 
 Analyser den følgende teksten skrevet av en elev med {{morsmaal}} som morsmål. Gi en omfattende vurdering som hjelper eleven å forbedre seg.
 
@@ -184,20 +184,72 @@ Analyser teksten og gi tilbakemelding på følgende områder:
    - God ordstilling eller setningsstruktur
    - Riktig bruk av grammatikk
    - Variert ordforråd
-   - God tekst sammenheng
+   - God tekstsammenheng
    - Andre sterke sider
 
-2. **Hva kan bli bedre** - Gi konstruktiv kritikk på:
-   - Grammatiske feil som går igjen
-   - Områder som trenger mer øvelse (f.eks. verb-bøying, substantiv-bøying, ordstilling, tegnsetting)
-   - Konkrete forslag til forbedring
-   - Hva eleven bør øve på videre
-   - Ikke nevn skrivefeil her.
+2. **Hva kan bli bedre** - En kort oppsummering på 2–4 setninger, i samme stil som «hva var bra». Bygg på oversikten over feiltyper i punkt 4:
+   - Nevn de feiltypene som går igjen flest ganger, med enkle ord.
+   - Nevn tegnsetting hvis det er et problem.
+   - Si kort hva eleven bør øve på videre.
+   - Ikke forklar regler, og ikke list opp eksempler. Feilene vises i oversikten over feiltyper og i ordlisten.
+   - Ikke nevn skrivefeil (R-kodene) her. De hører til i ordlisten.
 
 3. **Ordliste** - Liste over ord eleven har skrevet feil:
    - Feil skrevet ord fra elevens tekst
    - Korrekt stavemåte
    - Kun ord som faktisk er feil stavet (ikke grammatikkfeil). For eksempel hvis eleven har skrevet "like" i stedet for "liker", så skal ikke "like" være med i ordlisten.
+
+4. **Feiltyper i teksten** - Gå gjennom teksten setning for setning og finn alle feil etter kodene under.
+   - Bruk bare kodene i listen.
+   - For hver feiltype som finnes i teksten: oppgi feiltypen, hvor mange ganger den forekommer, og ett eksempel fra elevens tekst med feil og riktig form.
+   - Sorter listen etter antall, høyest først.
+   - Stavefeil får R-kode her, og de samme ordene står også i ordlisten.
+   - Ikke regn muntlige eller uformelle uttrykk som er vanlige i hverdagsspråket, som feil.
+
+## Feiltyper
+R1 Lydnær stavemåte (komer → kommer)
+R2 Stumme/spesielle bokstaver (vem → hvem)
+R3 Særskriving/sammenskriving (buss stopp → busstopp)
+R4 Stor og liten bokstav (norge → Norge)
+R5 Ord som høres like ut (liker og lese → å lese)
+S1 Kjønn og ubestemt artikkel (et bil → en bil)
+S2 Bestemt/ubestemt form (Bil er rød → Bilen er rød)
+S3 Bøyning av substantiv (to barner → to barn)
+S4 Dobbel bestemthet (den store hus → det store huset)
+S5 Eieform (huset av Ali → Alis hus)
+P1 Subjekts-/objektsform (Hun ser jeg → Hun ser meg)
+P2 Refleksiv seg/sin (ringer hennes mor → sin mor)
+P3 Pronomen som viser tilbake ((jakke) Det er blå → Den er blå)
+P4 Formelt subjekt det (Er kaldt → Det er kaldt)
+P5 Bøyning av eiendomsord (min hus → mitt hus)
+A1 Samsvarsbøyning av adjektiv (et fin hus → et fint hus)
+A2 Gradbøying (mer stor → større)
+A3 Adjektiv eller adverb (snakker god → godt)
+V1 Presens -r (Jeg spise → Jeg spiser)
+V2 Infinitiv og å (må å jobbe → må jobbe)
+V3 Bøyning i fortid (gådde → gikk)
+V4 Valg av tid (har vært i Bergen i fjor → var)
+V5 Preteritum perfektum (gikk bussen → hadde bussen gått)
+V6 Framtid (kommer jobbe → skal jobbe)
+V7 Passiv (bygget av 1950 → i 1950)
+V8 Partikkelverb/refleksive verb (gleder på → gleder meg til)
+O1 Verbet på andre plass (I går jeg gikk → I går gikk jeg)
+O2 Spørsmål (Hvor du bor? → Hvor bor du?)
+O3 Ikke i hovedsetning (Jeg ikke liker → Jeg liker ikke)
+O4 Ordstilling i leddsetning (fordi jeg har ikke → fordi jeg ikke har)
+O5 Indirekte spørsmål (hvor bor han → hvor han bor)
+O6 Manglende/dobbelt subjekt eller verb (Min bror han jobber → Min bror jobber)
+K1 Feil bindeord (syk, fordi jeg ble hjemme → derfor ble jeg)
+K2 Da, når, hvis, om (Når jeg var liten → Da jeg var liten)
+K3 At og som (tror som han kommer → tror at)
+K4 Leddsetning alene (Fordi jeg var trøtt.)
+L1 Nærliggende ord (tror filmen er bra → synes)
+L2 Kollokasjoner/faste uttrykk (gjøre en beslutning → ta)
+L3 Preposisjoner sted/tid (på Oslo → i Oslo)
+L4 Preposisjon etter verb/adjektiv (venter for → venter på)
+L5 Retning og plass (går hjemme → går hjem)
+L6 Fremmedord/orddannelse (cleaner, ikkevennlig)
+L7 Dialekt/nynorsk/talemål (ikkje → ikke)
 
 ## Retningslinjer
 - Vær oppmuntrende og konstruktiv
@@ -205,7 +257,72 @@ Analyser teksten og gi tilbakemelding på følgende områder:
 - Bruk enkelt språk som eleven forstår
 - Vær spesifikk og gi konkrete eksempler
 - Fokuser på de viktigste forbedringsområdene
-- Hvis det er få eller ingen feil, ros eleven og gi tips for videre utvikling
+- Hvis det er få eller ingen feil, ros eleven og gi tips for videre utvikling. Da er oversikten over feiltyper tom.
+
+## Svarformat
+Returner kun gyldig JSON, uten kodeblokker eller ekstra tekst, med denne strukturen:
+{
+  "bra": {"bokmaal": "...", "morsmaal": "..."},
+  "kan_bli_bedre": {"bokmaal": "...", "morsmaal": "..."},
+  "ordliste": [{"feil": "komer", "riktig": "kommer"}],
+  "feiltyper": [
+    {"kode": "O1", "feiltype": "Verbet på andre plass", "antall": 3, "eksempel": {"feil": "I går jeg gikk", "riktig": "I går gikk jeg"}}
+  ],
+  "totalt_antall_feil": 7
+}`;
+
+// ---------------------------------------------------------------------------
+// Skrivehjelp: tilpassede øvinger fra feilene i elevteksten
+// ---------------------------------------------------------------------------
+// Used by app/api/generate-exercises/route.ts. Bygger på dokumentet
+// «Feiltyper i elevtekster og øvinger (A1–B2)», versjon 1.2.
+export const DEFAULT_SKRIVEHJELP_OVINGER = `Du er en erfaren lærer i norsk som andrespråk. En elev på nivå {{nivaa}} med {{morsmaal}} som morsmål har skrevet en tekst. Du skal finne feilene, velge hva eleven bør øve på, og lage tilpassede øvinger. Skriv alt på bokmål, unntatt feltene som slutter på «_morsmaal», som skal være på {{morsmaal}}.
+
+## Trinn 1: Finn feilene
+Merk hver språkfeil med en kode fra tabellen under, et kort utdrag fra teksten, rettet form og en kort forklaring på nivå {{nivaa}}.
+- Bruk bare kodene i tabellen. Feil som ikke passer i tabellen, tar du ikke med.
+- Ikke merk tegnsetting (punktum, komma, setningsgrenser) som feil. Ikke vurder innhold, oppbygging, sjanger, stil eller variasjon.
+- Godta alle offisielle bokmålsformer (boka/boken, kasta/kastet, jenta/jenten). «En» foran et hunkjønnsord er aldri feil.
+- Ikke rett det eleven mener, bare språket.
+- For hver feil: «global» er true hvis feilen gjør det vanskelig å forstå hva eleven mener. «forventet_paa_nivaa» er true hvis kolonnen «Forventet mestret» er {{nivaa}} eller lavere.
+
+## Trinn 2: Velg 1–{{maks_feiltyper}} feiltyper å øve på
+Prioriter i denne rekkefølgen:
+1. globale feil
+2. feil som gjentar seg (to eller flere ganger) i former som er forventet på {{nivaa}}
+3. feil som gjentar seg i former fra nivået over (bare hvis det ikke finnes feil i punkt 1 og 2)
+En feil som kommer én gang og ikke er global, er ofte en slurvefeil. Velg den bare hvis det ikke finnes noe bedre. Velg aldri mer enn {{maks_feiltyper}} feiltype(r). Hvis teksten nesten ikke har feil, velg den viktigste feilen som finnes. Hvis teksten ikke har noen feil fra tabellen, la «valgte_feiltyper» og «ovinger» være tomme lister.
+For hver valgt feiltype: skriv en kort regel til eleven (1–2 korte setninger, enkelt språk, gjerne med et eksempel) og oversett regelen til {{morsmaal}}.
+
+## Trinn 3: Lag øvinger
+Lag 3–4 øvinger for hver valgt feiltype, i samme rekkefølge som de valgte feiltypene. Bruk formatet som står i kolonnen «Øvingsformat».
+- Den første øvingen for hver feiltype bygger på elevens egen setning (rettet), og da er «fra_elevteksten» true. De andre øvingene er nye setninger om samme tema som elevteksten, med ord som passer nivå {{nivaa}}.
+- Hver øving øver på akkurat den feiltypen, ikke på noe annet.
+
+### Format «bygg_setning» (bygg setningen med ord fra en ordbank)
+- «setningsstart» er begynnelsen av setningen, for eksempel «I går». Begynnelsen styrer svaret, slik at det bare finnes én riktig rekkefølge. For inversjon (O1) er begynnelsen det leddet som utløser inversjonen (tid, sted, «derfor», en leddsetning). For spørsmål (O2) kan «setningsstart» være tom.
+- Ordene som øves (verbet, subjektet, «ikke», «det», «å», bindeordet) skal alltid ligge i ordbanken, aldri i «setningsstart». For O6 og P4 betyr det at «setningsstart» er tom eller bare et tidsuttrykk, slik at eleven selv må sette inn subjekt og verb.
+- «ord_i_riktig_rekkefolge» er resten av setningen, ett ord per element, i riktig rekkefølge, uten punktum og komma. 3–8 ord. Hold ordbanken kort, slik at det bare finnes én riktig rekkefølge.
+- Hvis det likevel finnes andre riktige rekkefølger, skriv dem i «andre_riktige_svar» (hele resten av setningen, ord skilt med mellomrom). Ellers en tom liste.
+- «slutttegn» er «.» eller «?».
+- La «setning_med_luke», «alternativer» og «riktig_svar» være tomme.
+
+### Format «velg_ord» (fyll inn riktig ord, velg blant 2–4 alternativer)
+- «setning_med_luke» er en hel setning der ordet eller ordgruppen som skal øves, er byttet ut med nøyaktig én luke skrevet «___».
+- «alternativer» har 2–4 alternativer. Det ene er riktig, de andre er typiske elevfeil eller nærliggende former (for eksempel spise / spiser / spiste / spist, i / på / til, en / ei / et, jeg / meg, hjem / hjemme, og / å, da / når / hvis / om). Bruk fire bare når det finnes fire gode alternativer. Ikke legg inn åpenbart gale alternativer for å få flere.
+- Bare ett av alternativene kan være riktig i setningen. Pass på at valgfrie bokmålsformer ikke gjør to alternativer riktige.
+- «riktig_svar» er nøyaktig lik ett av alternativene.
+- La «setningsstart», «ord_i_riktig_rekkefolge» og «andre_riktige_svar» være tomme, og «slutttegn» tom.
+
+### For alle øvinger
+- «instruksjon» er en kort oppgavetekst, for eksempel «Bygg resten av setningen.» eller «Velg riktig ord.».
+- «forklaring» er én kort setning som forklarer det riktige svaret.
+
+## Trinn 4: Noe positivt
+Skriv én kort setning om noe eleven får til i teksten, gjerne noe konkret («Du bruker «fordi» riktig.»). Fint om du roser kreative forsøk over nivået. Oversett til {{morsmaal}}.
+
+## Feiltyper
+{{feiltyper}}
 
 Returner resultatet som JSON.`;
 
@@ -324,6 +441,7 @@ export const INSTRUCTION_KEYS = [
   'skrivehjelp_setningsdeling',
   'skrivehjelp_setningssjekk',
   'skrivehjelp_sammendrag',
+  'skrivehjelp_ovinger',
   'grammatikk_setningsgenerator',
   'lytteoving_aapne_sporsmal',
   'lytteoving_pastander',
@@ -404,6 +522,26 @@ export const INSTRUCTION_DEFINITIONS: InstructionDefinition[] = [
     route: 'app/api/generate-summary-azure',
     variables: [MORSMAAL_VARIABLE],
     defaultTemplate: DEFAULT_SKRIVEHJELP_SAMMENDRAG,
+  },
+  {
+    key: 'skrivehjelp_ovinger',
+    tool: 'Grammatikk øving',
+    title: 'Øv på feilene dine (øvinger fra feilene i en Skrivehjelp-tekst)',
+    route: 'app/api/generate-exercises',
+    variables: [
+      MORSMAAL_VARIABLE,
+      { name: 'nivaa', description: 'Elevens nivå: A1, A2, B1 eller B2.' },
+      {
+        name: 'maks_feiltyper',
+        description: 'Hvor mange feiltyper eleven kan øve på: 1 på A1, ellers 3.',
+      },
+      {
+        name: 'feiltyper',
+        description:
+          'Tabellen med feilkodene (R, S, P, A, V, O, K, L) fra lib/ovinger/feiltyper.ts, med nivå og øvingsformat.',
+      },
+    ],
+    defaultTemplate: DEFAULT_SKRIVEHJELP_OVINGER,
   },
   {
     key: 'grammatikk_setningsgenerator',

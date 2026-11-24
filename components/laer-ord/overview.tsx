@@ -10,6 +10,7 @@ import { wordListStore } from '@/lib/ordlister/db-store'
 import { importTheme } from '@/lib/ordlister/import-themes'
 import { mediaUrl } from '@/lib/ordlister/media'
 import type { WordList } from '@/lib/ordlister/types'
+import { PageHeader } from '@/components/landing/page-header'
 
 const card = 'bg-white/95 backdrop-blur-sm border-white/20 shadow-xl'
 
@@ -78,20 +79,19 @@ export function WordListOverview({ isTeacher, isAdmin, userId }: WordListOvervie
 
   return (
     <>
-      <div>
-        <h1 className="text-3xl font-bold text-white drop-shadow">Lær ord</h1>
-        <p className="mt-1 text-white/90 drop-shadow">
-          Lær nye ord med bilde, lyd og setninger.
-          {isTeacher
-            ? ' Lag egne ordlister og del dem med gruppene dine.'
-            : ' Her ser du ordlistene læreren har delt med gruppen din.'}
-        </p>
-      </div>
+      <PageHeader
+        title="Lær ord"
+        description={
+          isTeacher
+            ? 'Lær nye ord med bilde, lyd og setninger. Lag egne ordlister og del dem med gruppene dine.'
+            : 'Lær nye ord med bilde, lyd og setninger. Her ser du ordlistene læreren har delt med gruppen din.'
+        }
+      />
 
       <Card className={card}>
         <div className="flex items-start justify-between gap-4 border-b border-gray-200 px-6 pt-6 pb-4">
           <div>
-            <h2 className="mb-1 text-2xl font-bold text-gray-900">
+            <h2 className="mb-1 text-2xl font-semibold text-gray-900">
               {isTeacher ? 'Mine ordlister' : 'Ordlister fra læreren'}
             </h2>
             <p className="text-sm text-gray-600">
@@ -114,7 +114,7 @@ export function WordListOverview({ isTeacher, isAdmin, userId }: WordListOvervie
             <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">{error}</p>
           )}
           {pendingThemes.length > 0 && (
-            <div className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900">
+            <div className="rounded-xl border border-vlfk-lyseblaa bg-vlfk-lyseblaa/15 px-4 py-3 text-sm text-vlfk-ink">
               <p className="mb-2">
                 De faste temaene fra Ordbank er ikke ordlister ennå. Hent dem inn som dine ordlister, så kan du dele
                 dem med grupper. Bilder og lyd blir med.
@@ -207,15 +207,15 @@ function ListGroup({
         return (
           <li
             key={list.id}
-            className="group relative flex items-center gap-4 rounded-xl border border-gray-200 bg-white px-4 py-3 transition-colors hover:border-blue-300 hover:bg-blue-50/50"
+            className="group relative flex items-center gap-4 rounded-xl border border-gray-200 bg-white px-4 py-3 transition-colors hover:border-vlfk-lyseblaa hover:bg-vlfk-lyseblaa/10"
           >
             <div className="h-16 w-16 shrink-0 overflow-hidden rounded-lg border border-gray-100 bg-white sm:h-20 sm:w-20">
               {picture ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={picture} alt="" loading="lazy" className="h-full w-full object-contain" />
               ) : (
-                <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-blue-50 to-cyan-50">
-                  <BookOpen className="h-1/3 w-1/3 text-blue-900/40" aria-hidden="true" />
+                <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-vlfk-lyseblaa/15 to-vlfk-lyseblaa/25">
+                  <BookOpen className="h-1/3 w-1/3 text-vlfk-ink/40" aria-hidden="true" />
                 </div>
               )}
             </div>
@@ -223,7 +223,7 @@ function ListGroup({
               {/* The link covers the whole box, so a tap anywhere opens the list. */}
               <Link
                 href={`/laer-ord/${list.id}`}
-                className="text-lg font-semibold text-gray-900 after:absolute after:inset-0 after:rounded-xl after:content-[''] group-hover:text-blue-700"
+                className="text-lg font-semibold text-gray-900 after:absolute after:inset-0 after:rounded-xl after:content-[''] group-hover:text-vlfk-ink"
               >
                 {list.title}
               </Link>
@@ -232,7 +232,7 @@ function ListGroup({
               </p>
               <div className="mt-1.5 flex flex-wrap gap-1">
                 {list.languages.map((l) => (
-                  <span key={l} className="rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-800">
+                  <span key={l} className="rounded-full bg-vlfk-lyseblaa/15 px-2 py-0.5 text-xs font-medium text-vlfk-ink">
                     {l}
                   </span>
                 ))}

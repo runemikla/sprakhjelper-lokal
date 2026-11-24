@@ -22,6 +22,7 @@ import {
   type AnswerCheckResult,
   type ListeningQuestion,
 } from '@/lib/lytteoving'
+import { PageHeader } from '@/components/landing/page-header'
 
 interface LytteovingPlayClientProps {
   code: string
@@ -272,6 +273,16 @@ export function LytteovingPlayClient({
 
   return (
     <ListeningPageShell userEmail={userEmail} isAdmin={isAdmin}>
+      <PageHeader
+        backHref="/lytteoving"
+        backLabel="Lytteøving"
+        title="Lytteøving"
+        description={
+          <>
+            Kode: <span className="font-mono font-semibold tracking-[0.2em]">{code}</span>
+          </>
+        }
+      />
       {showSummary && !isOwner ? (
         <ListeningSummary
           code={code}
@@ -281,29 +292,18 @@ export function LytteovingPlayClient({
         />
       ) : (
       <Card className="bg-white/95 backdrop-blur-sm border-white/20 shadow-xl">
-        <div className="flex items-start justify-between gap-4 px-6 pt-6 pb-4 border-b border-gray-200">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-1">Lytteøving</h2>
-            <p className="text-sm text-gray-600">
-              Kode: <span className="font-mono font-semibold tracking-[0.2em]">{code}</span>
-            </p>
-            {!isLoading && !isOwner && currentTask && (
-              <p className="mt-2 text-sm text-gray-600">
-                {currentIsStatementTask
-                  ? 'Lytt til teksten og velg om hver påstand er sant eller usant.'
-                  : 'Lytt til teksten og skriv svaret ditt under hvert spørsmål.'}
-                {hasMultipleTasks
-                  ? ' Svar på alle før du går til neste oppgave.'
-                  : ''}{' '}
-                Trykk «Sjekk svar» når du er ferdig.
-              </p>
-            )}
-          </div>
-          <Button asChild variant="outline">
-            <Link href="/lytteoving">Tilbake</Link>
-          </Button>
-        </div>
         <CardContent className="space-y-6 pt-6">
+          {!isLoading && !isOwner && currentTask && (
+            <p className="text-sm text-gray-600">
+              {currentIsStatementTask
+                ? 'Lytt til teksten og velg om hver påstand er sant eller usant.'
+                : 'Lytt til teksten og skriv svaret ditt under hvert spørsmål.'}
+              {hasMultipleTasks
+                ? ' Svar på alle før du går til neste oppgave.'
+                : ''}{' '}
+              Trykk «Sjekk svar» når du er ferdig.
+            </p>
+          )}
           {isLoading && (
             <div className="flex items-center gap-2 text-gray-600">
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -426,7 +426,7 @@ export function LytteovingPlayClient({
                   <div className="w-full">
                     <div className="h-2 overflow-hidden rounded-full bg-gray-200">
                       <div
-                        className="h-full bg-blue-500 transition-all duration-300 ease-out"
+                        className="h-full bg-vlfk-ink transition-all duration-300 ease-out"
                         style={{
                           width: `${((currentIndex + 1) / tasks.length) * 100}%`,
                         }}
