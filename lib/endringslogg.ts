@@ -26,6 +26,7 @@ export const ENDRINGSLOGG: Endringsoppforing[] = [
   {
     dato: '2026-11-24',
     endringer: [
+      { type: 'forbedret', tekst: 'Personvern: all opplesing (lytteøvinger og ordlister i Lær ord) lages nå hos Google i EU. Teksten som skal leses opp, sendes ikke lenger ut av Europa.' },
       { type: 'forbedret', tekst: 'Grammatikkøving: oppgavene i «Øv på feilene dine» ser nå ut som Skrivehjelp, med «Din setning» øverst, læreren til høyre, og fremdriftslinje og Forrige/Neste nederst. Boksen har fast høyde, så den hopper ikke mellom oppgavene eller når du får svar. Du kan også gå tilbake til forrige oppgave.' },
       { type: 'forbedret', tekst: 'Skrivehjelp: den grafiske visningen av feiltypene i sammendraget er enklere. Den viser bare én fargestolpe med fordelingen av alle feilene (staving, substantiv, verb osv.). Den detaljerte visningen har fått de samme fargene ved hver feiltype, så det er lett å se hvilken gruppe feilen hører til.' },
       { type: 'forbedret', tekst: 'Forsiden er enklere for dem som ikke er logget inn: nederst er det bare én stor «Logg inn»-knapp på midten.' },

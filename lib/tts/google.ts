@@ -1,7 +1,14 @@
 import { TextToSpeechError } from './errors'
 import { getServiceAccountToken } from './google-auth'
 
-const DEFAULT_ENDPOINT = 'https://texttospeech.googleapis.com'
+// The EU endpoint keeps the text and the audio inside Europe. Set
+// GOOGLE_TTS_ENDPOINT to use another endpoint.
+const DEFAULT_ENDPOINT = 'https://eu-texttospeech.googleapis.com'
+
+/** The Cloud Text-to-Speech endpoint, without a trailing slash. */
+export function googleTtsEndpoint(): string {
+  return (process.env.GOOGLE_TTS_ENDPOINT?.trim() || DEFAULT_ENDPOINT).replace(/\/+$/, '')
+}
 const DEFAULT_VOICE = 'nb-NO-Chirp3-HD-Leda'
 
 /**
@@ -24,10 +31,7 @@ export async function googleTextToSpeech(
     )
   }
 
-  const endpoint = (process.env.GOOGLE_TTS_ENDPOINT || DEFAULT_ENDPOINT).replace(
-    /\/+$/,
-    ''
-  )
+  const endpoint = googleTtsEndpoint()
   const voiceName = voice
     ? `nb-NO-Chirp3-HD-${voice}`
     : process.env.GOOGLE_TTS_VOICE || DEFAULT_VOICE

@@ -13,7 +13,7 @@ Settes i både testappen (dev) og produksjonsappen (main).
 | `GOOGLE_TTS_CREDENTIALS` | Ja (anbefalt) | Hele JSON-nøkkelfilen til en tjenestekonto, limt inn som den er (eller som base64) | `{"type":"service_account",...}` |
 | `GOOGLE_TTS_API_KEY` | Alternativ | API-nøkkel. Brukes bare hvis `GOOGLE_TTS_CREDENTIALS` mangler. Noen Google-prosjekter avviser API-nøkler for Text-to-Speech («API keys are not supported by this API»); bruk da tjenestekonto. | (hemmelig) |
 | `GOOGLE_TTS_VOICE` | Nei | Stemmen som brukes. Standard er `nb-NO-Chirp3-HD-Leda`. | `nb-NO-Chirp3-HD-Charon`, `nb-NO-Wavenet-A` |
-| `GOOGLE_TTS_ENDPOINT` | Nei | Annen API-adresse, for eksempel EU-endepunktet. Standard er `https://texttospeech.googleapis.com`. | `https://eu-texttospeech.googleapis.com` |
+| `GOOGLE_TTS_ENDPOINT` | Nei | Annen API-adresse. Standard er EU-endepunktet `https://eu-texttospeech.googleapis.com`, slik at tekst og lyd blir i Europa. La være å sette den, med mindre du vil bruke det globale endepunktet. | `https://texttospeech.googleapis.com` |
 | `TTS_PROVIDER` | Nei | Sett til `elevenlabs` for å bruke ElevenLabs i stedet for Google. | `elevenlabs` |
 | `ELEVENLABS_API_KEY` | Bare med `TTS_PROVIDER=elevenlabs` | Nøkkelen til ElevenLabs | (hemmelig) |
 
@@ -37,14 +37,21 @@ Norske stemmer finner du i [Googles stemmeliste](https://cloud.google.com/text-t
 
 ## Ordlister i Lær ord: Gemini-stemmer
 
-Lyden i ordlistene (`/api/ordlister/lyd`) lages med Gemini sin tekst-til-tale når
-`GEMINI_API_KEY` er satt (samme nøkkel som bildene), slik som de faste Lær ord-temaene.
-Uten nøkkelen brukes Google Cloud TTS som over.
+Lyden i ordlistene (`/api/ordlister/lyd`) lages med Gemini-stemmene, slik som de faste
+Lær ord-temaene. Det går på to måter:
+
+1. **Google Cloud TTS på EU-endepunktet** (standard når `GOOGLE_TTS_CREDENTIALS` er satt).
+   Tekst og lyd blir i Europa. Modell: `GEMINI_TTS_EU_MODEL`, standard `gemini-2.5-flash-tts`
+   (den nyeste Gemini-stemmemodellen på EU-endepunktet). Tjenestekontoen må ha rollen
+   **Vertex AI User** (`roles/aiplatform.user`) i Google Cloud i tillegg til Cloud TTS.
+2. **Gemini API** (`GEMINI_API_KEY`), bare hvis tjenestekontoen mangler. Den har ingen
+   EU-garanti. Modell: `GEMINI_TTS_MODEL`, standard `gemini-3.1-flash-tts-preview`.
+
+Uten noen av dem brukes Google Cloud TTS (Chirp 3 HD) som over.
 
 - Læreren velger stemme i ordliste-editoren (feltet «Stemme») og kan høre hver av de 30
   stemmene med en prøvesetning før hen velger. Listen husker stemmen.
 - Bytter læreren stemme, lages lyden på nytt med «Lag det som mangler» eller ved lagring.
-- Modell: `GEMINI_TTS_MODEL`, standard `gemini-3.1-flash-tts-preview` (faller tilbake til
-  `gemini-2.5-flash-preview-tts` hvis modellen ikke finnes). Lyden lagres som WAV.
+- Lyden lagres som WAV.
 - Pris: ca. 20 $ per million lydtokens (25 tokens per sekund), altså rundt 0,002 $ per ord
   med setning.
