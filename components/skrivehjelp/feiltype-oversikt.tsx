@@ -85,8 +85,6 @@ export function FeiltypeOversikt({ feiltyper, totalt }: Props) {
 }
 
 function GrafiskVisning({ feiltyper, totalt }: Props) {
-  const maks = Math.max(...feiltyper.map((f) => f.antall), 1)
-
   // Summer per hovedgruppe, i den rekkefølgen gruppene først dukker opp
   // (feiltypene er allerede sortert etter antall).
   const grupper = new Map<string, number>()
@@ -97,7 +95,7 @@ function GrafiskVisning({ feiltyper, totalt }: Props) {
   const grupperSortert = [...grupper.entries()].sort((a, b) => b[1] - a[1])
 
   return (
-    <div className="bg-vlfk-lyseblaa/15 border border-vlfk-lyseblaa rounded-lg p-4 space-y-5">
+    <div className="bg-vlfk-lyseblaa/15 border border-vlfk-lyseblaa rounded-lg p-4">
       {/* Fordeling på hovedgrupper */}
       <div>
         <div
@@ -124,26 +122,6 @@ function GrafiskVisning({ feiltyper, totalt }: Props) {
           ))}
         </ul>
       </div>
-
-      {/* Stolpe per feiltype */}
-      <ul className="space-y-2.5">
-        {feiltyper.map((f) => (
-          <li key={f.kode}>
-            <div className="flex items-baseline justify-between gap-3 text-sm">
-              <span className="min-w-0 text-gray-900">
-                <span className="font-semibold">{f.kode}</span> {f.feiltype}
-              </span>
-              <span className="flex-shrink-0 font-semibold text-gray-900">{f.antall}</span>
-            </div>
-            <div className="mt-1 h-2.5 w-full rounded-full bg-white" aria-hidden="true">
-              <div
-                className={`h-full rounded-full ${kategori(f.kode).farge}`}
-                style={{ width: `${Math.max((f.antall / maks) * 100, 4)}%` }}
-              />
-            </div>
-          </li>
-        ))}
-      </ul>
     </div>
   )
 }
@@ -155,6 +133,11 @@ function DetaljertVisning({ feiltyper }: { feiltyper: Feiltype[] }) {
         <div key={f.kode} className="p-3 sm:p-4">
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-start gap-2 min-w-0">
+              <span
+                className={`mt-1 inline-block h-3 w-3 flex-shrink-0 rounded-full ${kategori(f.kode).farge}`}
+                title={kategori(f.kode).navn}
+                aria-hidden="true"
+              />
               <span className="flex-shrink-0 rounded bg-vlfk-ink px-1.5 py-0.5 text-xs font-bold text-white">
                 {f.kode}
               </span>

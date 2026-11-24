@@ -24,6 +24,12 @@ export interface Endringsoppforing {
 
 export const ENDRINGSLOGG: Endringsoppforing[] = [
   {
+    dato: '2026-11-24',
+    endringer: [
+      { type: 'forbedret', tekst: 'Skrivehjelp: den grafiske visningen av feiltypene i sammendraget er enklere. Den viser bare én fargestolpe med fordelingen av alle feilene (staving, substantiv, verb osv.). Den detaljerte visningen har fått de samme fargene ved hver feiltype, så det er lett å se hvilken gruppe feilen hører til.' },
+    ],
+  },
+  {
     dato: '2026-11-23',
     endringer: [
       { type: 'nytt', tekst: 'Språkhjelp kan legges til på hjemskjermen på mobil og nettbrett, og åpnes da som en egen app med eget ikon. På iPhone: trykk Del og «Legg til på Hjem-skjerm». På Android: trykk menyen og «Installer app» eller «Legg til på startskjermen».' },
