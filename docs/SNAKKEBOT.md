@@ -9,7 +9,7 @@ kode på fire tegn.
 1. Eleven trykker på mikrofonen. Nettleseren tar opp lyd som 16 kHz mono WAV
    (`lib/snakkebot/recorder.ts`) og stopper selv etter to sekunder stillhet.
 2. `POST /api/snakkebot/transkriber` sender lyden til Google Cloud Speech-to-Text
-   (`lib/stt/google.ts`, v2, modell `chirp_3`, språk `no-NO`, region `eu`).
+   (`lib/stt/google.ts`, v1 via EU-endepunktet, språk `no-NO`; v2 med `chirp_3` kan slås på).
 3. `POST /api/snakkebot/svar` sender samtalen og lærerens instruks til språkmodellen
    (`lib/snakkebot/server.ts`, rammeinstruks i `lib/snakkebot/prompt.ts`).
 4. `POST /api/snakkebot/lyd` leser svaret opp med Google Cloud-stemmen (Chirp 3 HD) læreren valgte, samme oppsett som Lytteøving.
@@ -42,13 +42,19 @@ Endepunkt og nøkkel kommer fra `AZURE_OPENAI_ENDPOINT` og `AZURE_OPENAI_API_KEY
 ### Google Cloud (tale til tekst)
 Bruker samme tjenestekonto som tekst til tale (`GOOGLE_TTS_CREDENTIALS`).
 
-1. Slå på **Cloud Speech-to-Text API** i Google Cloud-prosjektet til tjenestekontoen
-   (APIs & Services → Library → «Cloud Speech-to-Text API» → Enable).
-2. Gi tjenestekontoen rollen **Cloud Speech Client** (IAM → rediger kontoen → Add role).
+Slå på **Cloud Speech-to-Text API** i Google Cloud-prosjektet til tjenestekontoen
+(APIs & Services → Library → «Cloud Speech-to-Text API» → Enable). Standard er v1-API-et
+(`eu-speech.googleapis.com`), som ikke trenger noen ekstra IAM-rolle.
 
-Valgfrie variabler: `GOOGLE_STT_MODEL` (standard `chirp_3`), `GOOGLE_STT_LOCATION`
-(`eu`), `GOOGLE_STT_LANGUAGE` (`no-NO`), `GOOGLE_STT_VERSION` (`v2`, eller `v1` for det
-eldre API-et), `GOOGLE_STT_PROJECT` (standard: prosjektet i nøkkelen).
+Bedre gjenkjenning: `GOOGLE_STT_VERSION=v2` bruker modellen `chirp_3` i EU. Da må
+tjenestekontoen ha rollen **Cloud Speech Client** (krever IAM-tilgang i prosjektet).
+
+Valgfrie variabler: `GOOGLE_STT_VERSION` (`v1` eller `v2`), `GOOGLE_STT_MODEL` (v2:
+`chirp_3`), `GOOGLE_STT_LOCATION` (v2: `eu`), `GOOGLE_STT_LANGUAGE` (`no-NO`),
+`GOOGLE_STT_PROJECT` (standard: prosjektet i nøkkelen).
+
+Mangler tilgang, viser appen en forklaring (API ikke slått på, mangler rolle osv.), og
+den fulle feilen logges på serveren.
 
 ### Opplesing
 Bruker Google Cloud tekst til tale som Lytteøving (`GOOGLE_TTS_CREDENTIALS`, valgfritt

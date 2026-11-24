@@ -16,7 +16,7 @@ export async function POST(req: Request) {
 
   try {
     if (!isSpeechToTextConfigured()) {
-      return NextResponse.json({ error: 'Tale til tekst er ikke satt opp.' }, { status: 503 })
+      return NextResponse.json({ error: 'Tale til tekst er ikke satt opp. Du kan skrive svaret i stedet.' }, { status: 503 })
     }
     const bot = await loadChatbot(ref)
     if (!bot) return NextResponse.json({ error: 'Fant ikke snakkeboten.' }, { status: 404 })
@@ -34,7 +34,9 @@ export async function POST(req: Request) {
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error)
     console.error('snakkebot/transkriber:', detail)
-    const status = error instanceof SpeechToTextError && error.status === 503 ? 503 : 502
-    return NextResponse.json({ error: 'Kunne ikke gjøre talen om til tekst. Prøv igjen.' }, { status })
+    if (error instanceof SpeechToTextError) {
+      return NextResponse.json({ error: error.userMessage }, { status: error.status === 503 ? 503 : 502 })
+    }
+    return NextResponse.json({ error: 'Kunne ikke gjøre talen om til tekst. Prøv igjen.' }, { status: 502 })
   }
 }
