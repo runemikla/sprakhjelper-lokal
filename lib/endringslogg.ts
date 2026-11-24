@@ -24,6 +24,15 @@ export interface Endringsoppforing {
 
 export const ENDRINGSLOGG: Endringsoppforing[] = [
   {
+    dato: '2026-11-24',
+    endringer: [
+      { type: 'forbedret', tekst: 'Forsiden er enklere for dem som ikke er logget inn: nederst er det bare én stor «Logg inn»-knapp på midten.' },
+      { type: 'forbedret', tekst: 'Menyen øverst har ikke lenger «KI-verktøy». Verktøyene finner du på forsiden. Administratorer har fått en egen fane, Innstillinger, med instrukser og språkmodell.' },
+      { type: 'forbedret', tekst: 'På mobil vises ikke lærerbildene i verktøyene lenger, så det blir mer plass til oppgavene.' },
+      { type: 'forbedret', tekst: 'Ordrekkefølge er slått av i Grammatikkøving inntil videre.' },
+    ],
+  },
+  {
     dato: '2026-11-23',
     endringer: [
       { type: 'nytt', tekst: 'Språkhjelp kan legges til på hjemskjermen på mobil og nettbrett, og åpnes da som en egen app med eget ikon. På iPhone: trykk Del og «Legg til på Hjem-skjerm». På Android: trykk menyen og «Installer app» eller «Legg til på startskjermen».' },

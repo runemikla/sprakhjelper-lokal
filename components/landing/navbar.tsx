@@ -6,19 +6,21 @@ import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Menu, X } from 'lucide-react'
 import { LogoutButton } from '@/components/logout-button'
-import { KiToolsMenu, KiToolsMobileLinks } from '@/components/landing/ki-tools-menu'
 import { useUserRoles } from '@/components/auth/user-roles-provider'
 
 interface NavbarProps {
   userEmail?: string | null
-  // When true, the admin-only "Instrukser" entry is shown in the KI-verktøy menu.
+  // When true, the admin-only «Innstillinger» link is shown.
   isAdmin?: boolean
 }
 
-export function Navbar({ userEmail = null, isAdmin = false }: NavbarProps) {
+export function Navbar({ userEmail = null, isAdmin: isAdminProp = false }: NavbarProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  // Students find the tools as cards on the start page instead of in a menu.
-  const { isStudent } = useUserRoles()
+  // Everyone finds the tools as cards on the start page; there is no tools menu.
+  // The role also comes from the root layout, so pages that do not pass
+  // isAdmin still show «Innstillinger» to admins.
+  const roles = useUserRoles()
+  const isAdmin = isAdminProp || roles.isAdmin
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-200">
@@ -38,7 +40,6 @@ export function Navbar({ userEmail = null, isAdmin = false }: NavbarProps) {
 
           {/* Desktop Navigation Links */}
           <div className="hidden md:flex items-center gap-8">
-            {!isStudent && <KiToolsMenu isAdmin={isAdmin} loggedIn={Boolean(userEmail)} />}
             {userEmail && (
               <Link
                 href="/grupper"
@@ -53,6 +54,14 @@ export function Navbar({ userEmail = null, isAdmin = false }: NavbarProps) {
             >
               Om Språkhjelp
             </Link>
+            {isAdmin && (
+              <Link
+                href="/innstillinger"
+                className="text-gray-700 hover:text-vlfk-ink transition-colors font-medium"
+              >
+                Innstillinger
+              </Link>
+            )}
             {userEmail ? (
               <div className="flex items-center gap-3">
                 <span className="hidden lg:inline text-sm text-gray-500 max-w-[180px] truncate">
@@ -88,13 +97,6 @@ export function Navbar({ userEmail = null, isAdmin = false }: NavbarProps) {
         {mobileMenuOpen && (
           <div className="md:hidden py-4 border-t border-gray-200">
             <div className="flex flex-col space-y-4">
-              {!isStudent && (
-                <KiToolsMobileLinks
-                  isAdmin={isAdmin}
-                  loggedIn={Boolean(userEmail)}
-                  onNavigate={() => setMobileMenuOpen(false)}
-                />
-              )}
               {userEmail && (
                 <Link
                   href="/grupper"
@@ -111,6 +113,15 @@ export function Navbar({ userEmail = null, isAdmin = false }: NavbarProps) {
               >
                 Om Språkhjelp
               </Link>
+              {isAdmin && (
+                <Link
+                  href="/innstillinger"
+                  className="text-gray-700 hover:text-vlfk-ink transition-colors font-medium px-2"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Innstillinger
+                </Link>
+              )}
               {userEmail ? (
                 <div className="px-2">
                   <p className="text-sm text-gray-500 mb-2 truncate">{userEmail}</p>

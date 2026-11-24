@@ -67,9 +67,9 @@ export default function LaererveiledningPage() {
 
         <Step title="3. Grammatikkøving">
           <p>
-            I Ordrekkefølge drar eleven ordene i riktig rekkefølge. Oppgavene har flere nivåer, og
-            eleven går videre når de mestrer et nivå. Eleven kan se en oversikt over det de har
-            øvd på. Oversikten lagres bare i elevens nettleser.
+            I «Øv på feilene dine» får eleven øvinger som passer til feilene i en tekst hen har
+            skrevet i Skrivehjelp. Eleven kommer dit fra sammendraget i Skrivehjelp, velger nivå og
+            går gjennom oppgavene én og én.
           </p>
         </Step>
 
