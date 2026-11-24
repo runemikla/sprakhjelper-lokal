@@ -13,7 +13,7 @@ Settes i både testappen (dev) og produksjonsappen (main).
 | `GOOGLE_TTS_CREDENTIALS` | Ja (anbefalt) | Hele JSON-nøkkelfilen til en tjenestekonto, limt inn som den er (eller som base64) | `{"type":"service_account",...}` |
 | `GOOGLE_TTS_API_KEY` | Alternativ | API-nøkkel. Brukes bare hvis `GOOGLE_TTS_CREDENTIALS` mangler. Noen Google-prosjekter avviser API-nøkler for Text-to-Speech («API keys are not supported by this API»); bruk da tjenestekonto. | (hemmelig) |
 | `GOOGLE_TTS_VOICE` | Nei | Stemmen som brukes. Standard er `nb-NO-Chirp3-HD-Leda`. | `nb-NO-Chirp3-HD-Charon`, `nb-NO-Wavenet-A` |
-| `GOOGLE_TTS_ENDPOINT` | Nei | Annen API-adresse, for eksempel EU-endepunktet. Standard er `https://texttospeech.googleapis.com`. | `https://eu-texttospeech.googleapis.com` |
+| `GOOGLE_TTS_ENDPOINT` | Nei | Annen API-adresse. Standard er EU-endepunktet `https://eu-texttospeech.googleapis.com`, slik at tekst og lyd blir i Europa. La være å sette den, med mindre du vil bruke det globale endepunktet. | `https://texttospeech.googleapis.com` |
 | `TTS_PROVIDER` | Nei | Sett til `elevenlabs` for å bruke ElevenLabs i stedet for Google. | `elevenlabs` |
 | `ELEVENLABS_API_KEY` | Bare med `TTS_PROVIDER=elevenlabs` | Nøkkelen til ElevenLabs | (hemmelig) |
 
@@ -35,16 +35,15 @@ Norske stemmer finner du i [Googles stemmeliste](https://cloud.google.com/text-t
 - **Læreren** velger lesehastighet (Normal, Litt saktere, Sakte) før oppgaven genereres. Det sendes som `speakingRate` til Google (1.0, 0.85 og 0.7), så selve lydfilen blir saktere.
 - **Eleven** kan i tillegg sette ned avspillingsfarten i lydspilleren. Det virker også på lytteøvinger som ble laget med ElevenLabs.
 
-## Ordlister i Lær ord: Gemini-stemmer
+## Ordlister i Lær ord
 
-Lyden i ordlistene (`/api/ordlister/lyd`) lages med Gemini sin tekst-til-tale når
-`GEMINI_API_KEY` er satt (samme nøkkel som bildene), slik som de faste Lær ord-temaene.
-Uten nøkkelen brukes Google Cloud TTS som over.
+Lyden i ordlistene (`/api/ordlister/lyd`) lages med Google Cloud TTS (Chirp 3 HD) på
+EU-endepunktet, akkurat som lytteøvingene. Chirp 3 HD-stemmene har samme navn som
+Gemini-stemmene (`nb-NO-Chirp3-HD-<navn>`), så stemmevalget i ordlistene er uendret.
+Gemini API brukes ikke lenger til lyd, fordi det ikke har noen EU-garanti.
 
-- Læreren velger stemme i ordliste-editoren (feltet «Stemme») og kan høre hver av de 30
-  stemmene med en prøvesetning før hen velger. Listen husker stemmen.
+- Læreren velger stemme i ordliste-editoren (feltet «Stemme») og kan høre stemmene med en
+  prøvesetning før hen velger. Listen husker stemmen.
 - Bytter læreren stemme, lages lyden på nytt med «Lag det som mangler» eller ved lagring.
-- Modell: `GEMINI_TTS_MODEL`, standard `gemini-3.1-flash-tts-preview` (faller tilbake til
-  `gemini-2.5-flash-preview-tts` hvis modellen ikke finnes). Lyden lagres som WAV.
-- Pris: ca. 20 $ per million lydtokens (25 tokens per sekund), altså rundt 0,002 $ per ord
-  med setning.
+- Lyden lagres som MP3. Eldre lister kan ha WAV-filer fra Gemini; de spilles av som før.
+- Pris: Chirp 3 HD koster ca. 30 $ per million tegn, altså langt under 0,01 $ per ord med setning.
