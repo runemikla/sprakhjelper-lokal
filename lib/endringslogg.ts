@@ -26,6 +26,7 @@ export const ENDRINGSLOGG: Endringsoppforing[] = [
   {
     dato: '2026-11-24',
     endringer: [
+      { type: 'forbedret', tekst: 'Skrivehjelp: den grafiske visningen av feiltypene i sammendraget er enklere. Den viser bare én fargestolpe med fordelingen av alle feilene (staving, substantiv, verb osv.). Den detaljerte visningen har fått de samme fargene ved hver feiltype, så det er lett å se hvilken gruppe feilen hører til.' },
       { type: 'forbedret', tekst: 'Forsiden er enklere for dem som ikke er logget inn: nederst er det bare én stor «Logg inn»-knapp på midten.' },
       { type: 'forbedret', tekst: 'Menyen øverst har ikke lenger «KI-verktøy». Verktøyene finner du på forsiden. Administratorer har fått en egen fane, Innstillinger, med instrukser og språkmodell.' },
       { type: 'forbedret', tekst: 'På mobil vises ikke lærerbildene i verktøyene lenger, så det blir mer plass til oppgavene.' },
