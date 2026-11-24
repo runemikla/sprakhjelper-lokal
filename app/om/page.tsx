@@ -36,11 +36,11 @@ const tools = [
     icon: ArrowDownUp,
     who: 'For elever. Krever ikke innlogging.',
     description:
-      'Korte, interaktive oppgaver i norsk grammatikk. Ordrekkefølge er tilgjengelig nå: eleven drar ordene i riktig rekkefølge, og KI-en lager nye setninger på flere nivåer. Flere temaer kommer.',
+      'Korte, interaktive oppgaver i norsk grammatikk. I «Øv på feilene dine» får eleven øvinger som passer til feilene i en tekst hen har skrevet i Skrivehjelp. Flere temaer kommer.',
     points: [
-      'Dra og slipp ord til riktig rekkefølge',
-      'Flere nivåer å øve på',
-      'Oversikt over det eleven har øvd på (lagres bare i nettleseren)',
+      'Øvinger laget ut fra feilene i elevens egen tekst',
+      'Velg nivå fra A1 til B2',
+      'Bygg setningen og velg riktig ord',
     ],
   },
   {

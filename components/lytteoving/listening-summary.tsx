@@ -257,7 +257,7 @@ export function ListeningSummary({
                     alt={allCorrect ? 'Lærer med tommel opp' : 'Tankefull lærer'}
                     width={128}
                     height={128}
-                    className="object-contain"
+                    className="hidden object-contain sm:block"
                   />
                 </div>
                 <p className="mt-3 text-center text-sm text-gray-600">

@@ -408,7 +408,8 @@ export default function OrdrekkefolgeClient({
                         />
                         <FeedbackBanner status={status} />
                       </div>
-                      <div className="flex shrink-0 justify-center sm:w-36">
+                      {/* Teacher image (not on phones, to save space) */}
+                      <div className="hidden shrink-0 justify-center sm:flex sm:w-36">
                         <Image
                           src={teacherImage}
                           alt="Lærer"
