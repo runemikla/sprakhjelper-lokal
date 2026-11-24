@@ -2,18 +2,12 @@ import { FjordPageShell } from '@/components/landing/fjord-page-shell'
 import { PageHeader } from '@/components/landing/page-header'
 import { TopicCard } from '@/components/grammatikk/topic-card'
 import { getPageUser } from '@/lib/auth/page-user'
-import { ArrowDownUp, BookA, Dumbbell, Verified } from 'lucide-react'
+import { BookA, Dumbbell, Verified } from 'lucide-react'
 
 // Grammar practice topics. Topics with comingSoon are placeholders that will
-// be enabled as exercises are built.
+// be enabled as exercises are built. Ordrekkefølge is turned off for now; its
+// code stays in app/grammatikk/ordrekkefolge and the route redirects here.
 const topics = [
-  {
-    title: 'Ordrekkefølge',
-    description:
-      'Dra og slipp ord for å bygge riktige norske setninger. Velg nivå og øv på ordstilling.',
-    href: '/grammatikk/ordrekkefolge',
-    icon: ArrowDownUp,
-  },
   {
     title: 'Øv på feilene dine',
     description:

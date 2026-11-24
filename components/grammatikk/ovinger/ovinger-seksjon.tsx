@@ -283,7 +283,8 @@ export function OvingerSeksjon({
                         />
                       )}
                     </div>
-                    <div className="flex shrink-0 justify-center sm:w-36">
+                    {/* Teacher image (not on phones, to save space) */}
+                    <div className="hidden shrink-0 justify-center sm:flex sm:w-36">
                       <Image
                         src={`/images/${laerer}_${svarstatus === 'riktig' ? 'riktig' : 'feil'}.png`}
                         alt="Lærer"
@@ -317,7 +318,7 @@ export function OvingerSeksjon({
                     alt="Lærer"
                     width={144}
                     height={144}
-                    className="mx-auto h-32 w-32 object-contain"
+                    className="mx-auto hidden h-32 w-32 object-contain sm:block"
                   />
                   <p className="text-lg font-semibold text-green-900">Ferdig!</p>
                   <p className="text-sm text-green-900">
