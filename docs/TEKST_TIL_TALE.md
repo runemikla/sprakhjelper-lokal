@@ -35,23 +35,15 @@ Norske stemmer finner du i [Googles stemmeliste](https://cloud.google.com/text-t
 - **Læreren** velger lesehastighet (Normal, Litt saktere, Sakte) før oppgaven genereres. Det sendes som `speakingRate` til Google (1.0, 0.85 og 0.7), så selve lydfilen blir saktere.
 - **Eleven** kan i tillegg sette ned avspillingsfarten i lydspilleren. Det virker også på lytteøvinger som ble laget med ElevenLabs.
 
-## Ordlister i Lær ord: Gemini-stemmer
+## Ordlister i Lær ord
 
-Lyden i ordlistene (`/api/ordlister/lyd`) lages med Gemini-stemmene, slik som de faste
-Lær ord-temaene. Det går på to måter:
+Lyden i ordlistene (`/api/ordlister/lyd`) lages med Google Cloud TTS (Chirp 3 HD) på
+EU-endepunktet, akkurat som lytteøvingene. Chirp 3 HD-stemmene har samme navn som
+Gemini-stemmene (`nb-NO-Chirp3-HD-<navn>`), så stemmevalget i ordlistene er uendret.
+Gemini API brukes ikke lenger til lyd, fordi det ikke har noen EU-garanti.
 
-1. **Google Cloud TTS på EU-endepunktet** (standard når `GOOGLE_TTS_CREDENTIALS` er satt).
-   Tekst og lyd blir i Europa. Modell: `GEMINI_TTS_EU_MODEL`, standard `gemini-2.5-flash-tts`
-   (den nyeste Gemini-stemmemodellen på EU-endepunktet). Tjenestekontoen må ha rollen
-   **Vertex AI User** (`roles/aiplatform.user`) i Google Cloud i tillegg til Cloud TTS.
-2. **Gemini API** (`GEMINI_API_KEY`), bare hvis tjenestekontoen mangler. Den har ingen
-   EU-garanti. Modell: `GEMINI_TTS_MODEL`, standard `gemini-3.1-flash-tts-preview`.
-
-Uten noen av dem brukes Google Cloud TTS (Chirp 3 HD) som over.
-
-- Læreren velger stemme i ordliste-editoren (feltet «Stemme») og kan høre hver av de 30
-  stemmene med en prøvesetning før hen velger. Listen husker stemmen.
+- Læreren velger stemme i ordliste-editoren (feltet «Stemme») og kan høre stemmene med en
+  prøvesetning før hen velger. Listen husker stemmen.
 - Bytter læreren stemme, lages lyden på nytt med «Lag det som mangler» eller ved lagring.
-- Lyden lagres som WAV.
-- Pris: ca. 20 $ per million lydtokens (25 tokens per sekund), altså rundt 0,002 $ per ord
-  med setning.
+- Lyden lagres som MP3. Eldre lister kan ha WAV-filer fra Gemini; de spilles av som før.
+- Pris: Chirp 3 HD koster ca. 30 $ per million tegn, altså langt under 0,01 $ per ord med setning.
