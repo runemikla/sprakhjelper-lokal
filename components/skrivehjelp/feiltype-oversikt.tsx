@@ -99,7 +99,7 @@ function GrafiskVisning({ feiltyper, totalt }: Props) {
       {/* Fordeling på hovedgrupper */}
       <div>
         <div
-          className="flex h-4 w-full overflow-hidden rounded-full bg-white"
+          className="flex h-8 sm:h-10 w-full overflow-hidden rounded-full bg-white"
           role="img"
           aria-label={grupperSortert
             .map(([b, n]) => `${kategori(b).navn}: ${n}`)
@@ -108,15 +108,15 @@ function GrafiskVisning({ feiltyper, totalt }: Props) {
           {grupperSortert.map(([bokstav, antall]) => (
             <div
               key={bokstav}
-              className={`${kategori(bokstav).farge} h-full border-r-2 border-white last:border-r-0`}
+              className={`${kategori(bokstav).farge} h-full border-r-[3px] border-white last:border-r-0`}
               style={{ width: `${(antall / Math.max(totalt, 1)) * 100}%` }}
             />
           ))}
         </div>
-        <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
+        <ul className="mt-3 flex flex-wrap gap-x-5 gap-y-1.5">
           {grupperSortert.map(([bokstav, antall]) => (
-            <li key={bokstav} className="flex items-center gap-1.5 text-xs text-gray-700">
-              <span className={`inline-block h-2.5 w-2.5 rounded-full ${kategori(bokstav).farge}`} />
+            <li key={bokstav} className="flex items-center gap-2 text-sm sm:text-base text-gray-700">
+              <span className={`inline-block h-3.5 w-3.5 rounded-full ${kategori(bokstav).farge}`} />
               {kategori(bokstav).navn} <span className="font-semibold">{antall}</span>
             </li>
           ))}
