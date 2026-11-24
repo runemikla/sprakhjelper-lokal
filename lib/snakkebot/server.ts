@@ -115,18 +115,89 @@ function cleanReply(text: string): string {
     .trim()
 }
 
+/** A failed answer from the language model, with a hint an admin can act on. */
+export class ChatModelError extends Error {
+  readonly hint: string
+  constructor(message: string, hint: string) {
+    super(message)
+    this.name = 'ChatModelError'
+    this.hint = hint
+  }
+}
+
+/**
+ * The model's content filter stopped the turn (Azure «content_filter» /
+ * ResponsibleAIPolicyViolation, Gemini SAFETY). Often a speech-to-text slip,
+ * like «spise deg her» for «spise det her», so the student just tries again.
+ */
+export class ContentFilterError extends Error {
+  constructor(detail: string) {
+    super(`Innholdsfilteret stoppet svaret: ${detail}`)
+    this.name = 'ContentFilterError'
+  }
+}
+
+function isContentFilter(code: string, message: string): boolean {
+  return /content_filter|ResponsibleAIPolicyViolation|content management policy/i.test(`${code} ${message}`)
+}
+
+function azureHint(status: number, code: string, message: string, deployment: string): string {
+  const text = `${code} ${message}`
+  if (status === 404 || /DeploymentNotFound|does not exist|not found/i.test(text)) {
+    return `Fant ikke deploymenten «${deployment}» i Azure. Sjekk navnet i Azure AI Foundry, og sett CHATBOT_DEPLOYMENT i Coolify hvis det er et annet.`
+  }
+  if (status === 401 || status === 403) return 'Azure godtok ikke nøkkelen. Sjekk AZURE_OPENAI_API_KEY og AZURE_OPENAI_ENDPOINT.'
+  if (status === 429) return 'Azure-kvoten for deploymenten er brukt opp for nå. Vent litt, eller øk kvoten i Azure.'
+  if (/api-version|api version/i.test(text)) return 'Azure godtok ikke API-versjonen. Prøv CHATBOT_API_VERSION=2025-04-01-preview i Coolify.'
+  if (/reasoning_effort|temperature|max_completion_tokens|unsupported/i.test(text)) {
+    return 'Modellen godtok ikke en av innstillingene. Prøv CHATBOT_REASONING_EFFORT=medium, eller se feilen under.'
+  }
+  return 'Azure svarte med en feil. Se detaljene under.'
+}
+
 async function azureReply(system: string, messages: ChatMessage[]): Promise<string> {
-  const response = await sendChatCompletion(chatbotModel(), {
-    messages: [{ role: 'system', content: system }, ...messages],
-    temperature: 0.7,
-    max_completion_tokens: 400,
-  })
+  const config = chatbotModel()
+  let response: Response
+  try {
+    response = await sendChatCompletion(config, {
+      messages: [{ role: 'system', content: system }, ...messages],
+      temperature: 0.7,
+      max_completion_tokens: 400,
+    })
+  } catch (error) {
+    const cause = error instanceof Error && error.cause instanceof Error ? ` (${error.cause.message})` : ''
+    throw new ChatModelError(
+      `Kunne ikke nå Azure: ${error instanceof Error ? error.message : error}${cause}`,
+      'Kunne ikke nå Azure. Sjekk AZURE_OPENAI_ENDPOINT.'
+    )
+  }
   if (!response.ok) {
-    const detail = await response.text().catch(() => '')
-    throw new Error(`Språkmodellen svarte ${response.status}: ${detail.slice(0, 300)}`)
+    const raw = await response.text().catch(() => '')
+    let code = ''
+    let message = raw
+    try {
+      const parsed = JSON.parse(raw) as { error?: { code?: string; message?: string } }
+      code = parsed.error?.code ?? ''
+      message = parsed.error?.message ?? raw
+    } catch {
+      // not JSON
+    }
+    if (isContentFilter(code, raw)) throw new ContentFilterError(message.slice(0, 300))
+    throw new ChatModelError(
+      `Azure (${config.deployment}, api ${config.apiVersion}) svarte ${response.status}${code ? ` ${code}` : ''}: ${message.slice(0, 300)}`,
+      azureHint(response.status, code, message, config.deployment)
+    )
   }
   const data = await response.json()
-  return data.choices?.[0]?.message?.content ?? ''
+  const content: string = data.choices?.[0]?.message?.content ?? ''
+  if (data.choices?.[0]?.finish_reason === 'content_filter') throw new ContentFilterError('finish_reason content_filter')
+  if (!content.trim()) {
+    throw new ChatModelError(
+      `Tomt svar fra ${config.deployment} (finish_reason: ${data.choices?.[0]?.finish_reason ?? 'ukjent'})`,
+      'Modellen sendte et tomt svar. For reasoning-modeller betyr det ofte at tokengrensen ble brukt opp; prøv CHATBOT_REASONING_EFFORT=minimal.'
+    )
+  }
+  return content
 }
 
 async function geminiReply(system: string, messages: ChatMessage[]): Promise<string> {
@@ -152,6 +223,8 @@ async function geminiReply(system: string, messages: ChatMessage[]): Promise<str
     throw new Error(`Gemini svarte ${response.status}: ${detail.slice(0, 300)}`)
   }
   const data = await response.json()
+  const blocked = data.promptFeedback?.blockReason || (data.candidates?.[0]?.finishReason === 'SAFETY' ? 'SAFETY' : '')
+  if (blocked) throw new ContentFilterError(String(blocked))
   const parts = (data.candidates?.[0]?.content?.parts ?? []) as { text?: string }[]
   return parts.map((p) => p.text ?? '').join('')
 }

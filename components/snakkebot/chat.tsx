@@ -170,6 +170,18 @@ export function ChatbotChat({ userEmail, isAdmin, chatbot, chatRef, editHref, sh
           messages: history.slice(-LIMITS.history).map((m) => ({ role: m.role, content: m.content.slice(0, LIMITS.message) })),
         }),
       })
+      if (response.status === 422) {
+        // The content filter stopped this turn (often a mishearing). Drop the
+        // student's last message so the conversation can go on, and listen again.
+        const body = (await response.json().catch(() => null)) as { error?: string } | null
+        if (!active.current) return
+        updateMessages(history.slice(0, -1))
+        setPhase('idle')
+        afterSpeaking()
+        // After afterSpeaking(), which clears old errors when the mic opens.
+        setError(body?.error || 'Kan du si det på nytt, med litt andre ord?')
+        return
+      }
       if (!response.ok) throw new Error(await errorText(response, 'Snakkeboten kunne ikke svare. Prøv igjen.'))
       const { reply } = (await response.json()) as { reply: string }
       if (!active.current) return

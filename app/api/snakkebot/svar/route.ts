@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { checkRateLimit } from '@/lib/api-helpers'
-import { chatbotReply, isChatModelConfigured, loadChatbot, readRef } from '@/lib/snakkebot/server'
+import { getUser } from '@/lib/supabase/server'
+import { isAdmin } from '@/lib/auth/roles'
+import { ChatModelError, ContentFilterError, chatbotReply, isChatModelConfigured, loadChatbot, readRef } from '@/lib/snakkebot/server'
 import { LIMITS } from '@/lib/snakkebot/types'
 
 // The chatbot's next answer. The browser keeps the conversation and sends it
@@ -37,7 +39,20 @@ export async function POST(req: Request) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: 'Ugyldig forespørsel' }, { status: 400 })
     }
-    console.error('snakkebot/svar:', error instanceof Error ? error.message : error)
+    if (error instanceof ContentFilterError) {
+      console.warn('snakkebot/svar:', error.message)
+      return NextResponse.json(
+        { error: 'Det ble litt feil. Kan du si det på nytt, kanskje med litt andre ord?', filtered: true },
+        { status: 422 }
+      )
+    }
+    const detail = error instanceof Error ? error.message : String(error)
+    console.error('snakkebot/svar:', detail)
+    // Admins see what went wrong, so they can fix the setup.
+    if (await isAdmin(await getUser().catch(() => null)).catch(() => false)) {
+      const hint = error instanceof ChatModelError ? error.hint : 'Ukjent feil.'
+      return NextResponse.json({ error: `Snakkeboten kunne ikke svare. ${hint} Detaljer: ${detail}` }, { status: 502 })
+    }
     return NextResponse.json({ error: 'Snakkeboten kunne ikke svare. Prøv igjen.' }, { status: 502 })
   }
 }

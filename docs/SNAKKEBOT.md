@@ -50,6 +50,14 @@ Endepunkt og nøkkel kommer fra `AZURE_OPENAI_ENDPOINT` og `AZURE_OPENAI_API_KEY
 | `CHATBOT_REASONING_EFFORT` | `low` | For reasoning-modeller: `minimal`, `low`, `medium`, `high` |
 | `CHATBOT_PROVIDER` | `azure` | `gemini` for å teste uten Azure (`GEMINI_CHAT_MODEL`) |
 
+**Feilsøking:** åpne `/api/snakkebot/sjekk` som administrator. Den viser hvilken deployment,
+API-versjon og hvilket endepunkt som brukes, og sender en testmelding. Administratorer ser
+også Azure-feilkoden direkte i samtalen; elever ser en generell melding.
+
+**Innholdsfilter:** stopper Azure (eller Gemini) en tur, ofte fordi tale til tekst hørte feil,
+får eleven beskjed om å si det på nytt. Den siste replikken fjernes, så samtalen kan fortsette.
+Er filteret for strengt, kan det justeres for deploymenten i Azure AI Foundry (Guardrails).
+
 ### Google Cloud (tale til tekst)
 Bruker samme tjenestekonto som tekst til tale (`GOOGLE_TTS_CREDENTIALS`).
 
