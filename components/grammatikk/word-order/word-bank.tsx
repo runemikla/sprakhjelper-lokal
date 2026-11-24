@@ -13,6 +13,8 @@ interface WordBankProps {
   // Drop anywhere in the bank (returns a token to the bank).
   onDropToBank: () => void
   onChipClick: (token: WordToken, fromZone: Zone) => void
+  // Hide the small label above the box (when the page shows its own heading).
+  hideLabel?: boolean
 }
 
 export function WordBank({
@@ -23,10 +25,11 @@ export function WordBank({
   onDragEnd,
   onDropToBank,
   onChipClick,
+  hideLabel = false,
 }: WordBankProps) {
   return (
     <div>
-      <p className="mb-2 text-sm font-medium text-gray-500">Ordbank</p>
+      {!hideLabel && <p className="mb-2 text-sm font-medium text-gray-500">Ordbank</p>}
       <div
         onDragOver={(e) => {
           if (disabled) return
@@ -38,7 +41,7 @@ export function WordBank({
           onDropToBank()
         }}
         className={cn(
-          'flex min-h-[72px] flex-wrap content-start gap-3 rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 p-4',
+          'flex min-h-[72px] flex-wrap content-start gap-3 rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 p-2 sm:p-4',
           tokens.length === 0 && 'items-center justify-center'
         )}
       >

@@ -18,6 +18,8 @@ interface SentenceBuilderProps {
   // Drop before a specific token (insert/reorder).
   onDropBefore: (token: WordToken) => void
   onChipClick: (token: WordToken, fromZone: Zone) => void
+  // Hide the small label above the box (when the page shows its own heading).
+  hideLabel?: boolean
   // Fixed start of the sentence shown before the chips (not draggable).
   prefix?: string
   // Fixed ending (for example "." or "?") shown after the chips.
@@ -34,12 +36,13 @@ export function SentenceBuilder({
   onDropToEnd,
   onDropBefore,
   onChipClick,
+  hideLabel = false,
   prefix,
   suffix,
 }: SentenceBuilderProps) {
   return (
     <div>
-      <p className="mb-2 text-sm font-medium text-gray-500">Din setning</p>
+      {!hideLabel && <p className="mb-2 text-sm font-medium text-gray-500">Din setning</p>}
       <div
         onDragOver={(e) => {
           if (disabled) return
@@ -51,9 +54,9 @@ export function SentenceBuilder({
           onDropToEnd()
         }}
         className={cn(
-          'flex min-h-[80px] flex-wrap content-start items-center gap-3 rounded-xl border-2 p-4 transition-colors',
-          status === 'correct' && 'border-green-400 bg-green-50',
-          status === 'wrong' && 'border-red-400 bg-red-50',
+          'flex min-h-[80px] flex-wrap content-start items-center gap-3 rounded-lg border-2 p-2 sm:p-4 transition-colors',
+          status === 'correct' && 'border-green-300 bg-green-50',
+          status === 'wrong' && 'border-red-300 bg-red-50',
           status === 'idle' && 'border-vlfk-lyseblaa bg-vlfk-lyseblaa/10',
           tokens.length === 0 && !prefix && 'justify-center'
         )}
