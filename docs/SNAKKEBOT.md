@@ -34,7 +34,7 @@ Endepunkt og nøkkel kommer fra `AZURE_OPENAI_ENDPOINT` og `AZURE_OPENAI_API_KEY
 
 | Variabel | Standard | Forklaring |
 |---|---|---|
-| `CHATBOT_DEPLOYMENT` | `gpt-6.1-luna` | Navnet på deploymenten i Azure AI Foundry |
+| `CHATBOT_DEPLOYMENT` | `gpt-6-luna` | Navnet på deploymenten i Azure AI Foundry |
 | `CHATBOT_API_VERSION` | `v1` | API-versjon |
 | `CHATBOT_REASONING_EFFORT` | `low` | For reasoning-modeller: `minimal`, `low`, `medium`, `high` |
 | `CHATBOT_PROVIDER` | `azure` | `gemini` for å teste uten Azure (`GEMINI_CHAT_MODEL`) |

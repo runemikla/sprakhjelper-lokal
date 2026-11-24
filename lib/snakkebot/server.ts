@@ -10,7 +10,7 @@ import { isLevel, LIMITS, type Chatbot, type ChatbotRef, type ChatMessage } from
 // and reading the answer aloud. Nothing from the conversation is stored.
 //
 // Environment variables (all optional):
-//   CHATBOT_DEPLOYMENT        Azure AI Foundry deployment, default gpt-6.1-luna.
+//   CHATBOT_DEPLOYMENT        Azure AI Foundry deployment, default gpt-6-luna.
 //                             Endpoint and key come from AZURE_OPENAI_*.
 //   CHATBOT_API_VERSION       default v1
 //   CHATBOT_REASONING_EFFORT  minimal | low | medium | high, default low
@@ -85,7 +85,7 @@ export function readRef(url: URL): ChatbotRef | null {
 // ---------------------------------------------------------------------------
 
 export function chatbotModel(): AzureModelConfig {
-  const deployment = process.env.CHATBOT_DEPLOYMENT?.trim() || 'gpt-6.1-luna'
+  const deployment = process.env.CHATBOT_DEPLOYMENT?.trim() || 'gpt-6-luna'
   return {
     ...getEnvModelConfig(),
     deployment,
