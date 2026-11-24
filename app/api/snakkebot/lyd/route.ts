@@ -7,7 +7,7 @@ import { chatbotSpeech, loadChatbot, readRef } from '@/lib/snakkebot/server'
 const schema = z.object({ text: z.string().trim().min(1).max(2000) })
 
 export async function POST(req: Request) {
-  const limited = checkRateLimit(req, 40, 60000)
+  const limited = checkRateLimit(req, 120, 60000)
   if (limited) return limited
 
   const ref = readRef(new URL(req.url))

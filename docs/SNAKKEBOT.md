@@ -11,8 +11,17 @@ kode på fire tegn.
 2. `POST /api/snakkebot/transkriber` sender lyden til Google Cloud Speech-to-Text
    (`lib/stt/google.ts`, v1 via EU-endepunktet, språk `no-NO`; v2 med `chirp_3` kan slås på).
 3. `POST /api/snakkebot/svar` sender samtalen og lærerens instruks til språkmodellen
-   (`lib/snakkebot/server.ts`, rammeinstruks i `lib/snakkebot/prompt.ts`).
-4. `POST /api/snakkebot/lyd` leser svaret opp med Google Cloud-stemmen (Chirp 3 HD) læreren valgte, samme oppsett som Lytteøving.
+   (`lib/snakkebot/server.ts`, rammeinstruks i `lib/snakkebot/prompt.ts`). Svaret
+   strømmes tilbake (NDJSON) mens modellen skriver.
+4. Så snart en setning er ferdig, sender nettleseren den til `POST /api/snakkebot/lyd`,
+   som leser den opp med Google Cloud-stemmen (Chirp 3 HD) læreren valgte. Første
+   setning spilles mens resten skrives, og setningene spilles i rekkefølge.
+
+Under mikrofonen står bare ett ord: Lytter, Tenker, Snakker eller Din tur.
+
+**Tidsmåling:** administratorer ser under samtalen hvor lang tid hvert steg tok (tale
+til tekst, første ord fra modellen, hele svaret, når lyden starter og totalt fra eleven
+sluttet å snakke). I automatisk modus kommer pausen før sending i tillegg.
 
 Eleven kan også skrive svaret.
 
@@ -47,7 +56,7 @@ Endepunkt og nøkkel kommer fra `AZURE_OPENAI_ENDPOINT` og `AZURE_OPENAI_API_KEY
 |---|---|---|
 | `CHATBOT_DEPLOYMENT` | `gpt-6-luna` | Navnet på deploymenten i Azure AI Foundry |
 | `CHATBOT_API_VERSION` | `v1` | API-versjon |
-| `CHATBOT_REASONING_EFFORT` | `low` | For reasoning-modeller: `minimal`, `low`, `medium`, `high` |
+| `CHATBOT_REASONING_EFFORT` | laveste modellen godtar | For reasoning-modeller. Uten verdi prøves `none`, så `minimal`, så `low` (raskest svar) |
 | `CHATBOT_PROVIDER` | `azure` | `gemini` for å teste uten Azure (`GEMINI_CHAT_MODEL`) |
 
 **Feilsøking:** åpne `/api/snakkebot/sjekk` som administrator. Den viser hvilken deployment,

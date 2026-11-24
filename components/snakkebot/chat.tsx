@@ -11,6 +11,7 @@ import { ListeningPageShell } from '@/components/lytteoving/page-shell'
 import { SettingsPanel } from '@/components/snakkebot/settings-panel'
 import { isRecordingSupported, MicInput, WavRecorder } from '@/lib/snakkebot/recorder'
 import { useTalkSettings } from '@/lib/snakkebot/settings'
+import { cleanReply, sentenceEnd } from '@/lib/snakkebot/text'
 import { LIMITS, refQuery, type ChatbotRef, type PublicChatbot } from '@/lib/snakkebot/types'
 import { cn } from '@/lib/utils'
 
@@ -22,6 +23,34 @@ interface Message {
 }
 
 type Phase = 'start' | 'idle' | 'recording' | 'transcribing' | 'thinking' | 'speaking'
+
+// The answer being read aloud, sentence by sentence while it streams in.
+interface SpeechQueue {
+  turn: number
+  // message the sentences belong to
+  index: number
+  // audio for each sentence (object URLs), fetched in parallel, played in order
+  items: Promise<string>[]
+  next: number
+  playing: boolean
+  // the whole answer has arrived
+  ended: boolean
+}
+
+// Points in time (performance.now()) for the admin timing line.
+interface Marks {
+  stop?: number
+  sttDone?: number
+  sent?: number
+  first?: number
+  done?: number
+  audio?: number
+  serverFirst?: number
+}
+
+function seconds(ms: number | undefined): string {
+  return ms === undefined ? '–' : `${(ms / 1000).toFixed(1).replace('.', ',')} s`
+}
 
 // In «Automatisk» the microphone closes again if nothing is said for this long.
 const AUTO_NO_SPEECH_MS = 20_000
@@ -63,6 +92,7 @@ export function ChatbotChat({ userEmail, isAdmin, chatbot, chatRef, editHref, sh
   const [micSupported, setMicSupported] = useState(true)
   const [playingIndex, setPlayingIndex] = useState<number | null>(null)
   const [showSettings, setShowSettings] = useState(false)
+  const [timing, setTiming] = useState<string | null>(null)
   const [settings, updateSettings] = useTalkSettings()
 
   const audio = useRef<HTMLAudioElement | null>(null)
@@ -75,6 +105,10 @@ export function ChatbotChat({ userEmail, isAdmin, chatbot, chatRef, editHref, sh
   const settingsRef = useRef(settings)
   const messagesRef = useRef<Message[]>([])
   const listEnd = useRef<HTMLDivElement>(null)
+  // Goes up when a new answer starts or the student interrupts, so old
+  // sentences are not read aloud any more.
+  const turn = useRef(0)
+  const marks = useRef<Marks>({})
   const query = refQuery(chatRef)
   const auto = settings.mode === 'auto'
 
@@ -138,6 +172,8 @@ export function ChatbotChat({ userEmail, isAdmin, chatbot, chatRef, editHref, sh
   async function speak(index: number, continueAfter: boolean) {
     const message = messagesRef.current[index]
     if (!message || message.role !== 'assistant') return
+    // Stops sentences still queued from a streamed answer.
+    turn.current++
     if (message.audioUrl) return playUrl(message.audioUrl, index, continueAfter)
 
     setPhase('speaking')
@@ -160,8 +196,101 @@ export function ChatbotChat({ userEmail, isAdmin, chatbot, chatRef, editHref, sh
     }
   }
 
+  // Admins see how long each step took, to find where the waiting is.
+  function showTiming() {
+    if (!isAdmin) return
+    const m = marks.current
+    const from = (t?: number) => (t !== undefined && m.sent !== undefined ? t - m.sent : undefined)
+    const parts = [
+      m.stop !== undefined && m.sttDone !== undefined ? `Tale til tekst ${seconds(m.sttDone - m.stop)}` : null,
+      `Første ord ${seconds(from(m.first))}${m.serverFirst !== undefined ? ` (modellen ${seconds(m.serverFirst)})` : ''}`,
+      `Hele svaret ${seconds(from(m.done))}`,
+      `Lyd starter ${seconds(from(m.audio))}`,
+      m.stop !== undefined && m.audio !== undefined ? `Totalt fra du stoppet ${seconds(m.audio - m.stop)}` : null,
+    ]
+    setTiming(parts.filter(Boolean).join(' · '))
+  }
+
+  function fetchSpeech(text: string): Promise<string> {
+    return fetch(`/api/snakkebot/lyd?${query}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text }),
+    }).then(async (response) => {
+      if (!response.ok) throw new Error(await errorText(response, 'Kunne ikke lese opp svaret.'))
+      return URL.createObjectURL(await response.blob())
+    })
+  }
+
+  function enqueueSpeech(q: SpeechQueue, text: string) {
+    if (q.turn !== turn.current || !text) return
+    const item = fetchSpeech(text)
+    item.catch(() => undefined)
+    q.items.push(item)
+    if (!q.playing) void playNextSentence(q)
+  }
+
+  function endSpeech(q: SpeechQueue) {
+    q.ended = true
+    if (!q.playing) void playNextSentence(q)
+  }
+
+  async function playNextSentence(q: SpeechQueue) {
+    if (q.turn !== turn.current || !active.current) return
+    if (q.next >= q.items.length) {
+      q.playing = false
+      if (q.ended) {
+        setPlayingIndex(null)
+        setPhase((p) => (p === 'speaking' || p === 'thinking' ? 'idle' : p))
+        afterSpeaking()
+      }
+      return
+    }
+    q.playing = true
+    let url: string
+    try {
+      url = await q.items[q.next++]
+    } catch (e) {
+      q.playing = false
+      if (q.turn !== turn.current) return
+      setError(e instanceof Error ? e.message : 'Kunne ikke lese opp svaret.')
+      setPlayingIndex(null)
+      setPhase('idle')
+      return
+    }
+    if (q.turn !== turn.current || !active.current) {
+      URL.revokeObjectURL(url)
+      return
+    }
+    if (marks.current.audio === undefined) {
+      marks.current.audio = performance.now()
+      showTiming()
+    }
+    const el = audio.current ?? new Audio()
+    audio.current = el
+    const done = () => {
+      URL.revokeObjectURL(url)
+      void playNextSentence(q)
+    }
+    el.onended = done
+    el.onerror = done
+    el.src = url
+    el.playbackRate = settingsRef.current.rate
+    setPlayingIndex(q.index)
+    setPhase('speaking')
+    el.play().catch(() => {
+      // Autoplay was blocked: the student can tap «Hør» on the message.
+      q.turn = -1
+      q.playing = false
+      setPlayingIndex(null)
+      setPhase('idle')
+    })
+  }
+
   async function askChatbot(history: Message[]) {
+    const myTurn = ++turn.current
     setPhase('thinking')
+    marks.current.sent = performance.now()
     try {
       const response = await fetch(`/api/snakkebot/svar?${query}`, {
         method: 'POST',
@@ -174,7 +303,7 @@ export function ChatbotChat({ userEmail, isAdmin, chatbot, chatRef, editHref, sh
         // The content filter stopped this turn (often a mishearing). Drop the
         // student's last message so the conversation can go on, and listen again.
         const body = (await response.json().catch(() => null)) as { error?: string } | null
-        if (!active.current) return
+        if (!active.current || myTurn !== turn.current) return
         updateMessages(history.slice(0, -1))
         setPhase('idle')
         afterSpeaking()
@@ -182,13 +311,67 @@ export function ChatbotChat({ userEmail, isAdmin, chatbot, chatRef, editHref, sh
         setError(body?.error || 'Kan du si det på nytt, med litt andre ord?')
         return
       }
-      if (!response.ok) throw new Error(await errorText(response, 'Snakkeboten kunne ikke svare. Prøv igjen.'))
-      const { reply } = (await response.json()) as { reply: string }
-      if (!active.current) return
-      const next = [...history, { role: 'assistant' as const, content: reply }]
-      updateMessages(next)
-      await speak(next.length - 1, true)
+      if (!response.ok || !response.body) {
+        throw new Error(await errorText(response, 'Snakkeboten kunne ikke svare. Prøv igjen.'))
+      }
+
+      // The answer streams in. Each finished sentence is sent to be read
+      // aloud at once, so the student hears the start before the end is written.
+      const index = history.length
+      const q: SpeechQueue = { turn: myTurn, index, items: [], next: 0, playing: false, ended: false }
+      const reader = response.body.getReader()
+      const decoder = new TextDecoder()
+      let buffer = ''
+      let raw = ''
+      let text = ''
+      let spoken = 0
+      let failed: string | null = null
+
+      const addPiece = (piece: string) => {
+        raw += piece
+        text = cleanReply(raw).slice(0, 2000)
+        if (marks.current.first === undefined) {
+          marks.current.first = performance.now()
+          updateMessages([...history, { role: 'assistant', content: text }])
+          setPhase('speaking')
+        } else {
+          updateMessages(messagesRef.current.map((m, i) => (i === index ? { ...m, content: text } : m)))
+        }
+        let end: number
+        while ((end = sentenceEnd(text, spoken)) >= 0) {
+          enqueueSpeech(q, text.slice(spoken, end).trim())
+          spoken = end
+        }
+      }
+
+      for (;;) {
+        const { done, value } = await reader.read()
+        if (myTurn !== turn.current || !active.current) {
+          void reader.cancel()
+          return
+        }
+        if (value) buffer += decoder.decode(value, { stream: true })
+        let newline: number
+        while ((newline = buffer.indexOf('\n')) >= 0) {
+          const line = buffer.slice(0, newline).trim()
+          buffer = buffer.slice(newline + 1)
+          if (!line) continue
+          const event = JSON.parse(line) as { d?: string; done?: boolean; ms?: { first?: number }; error?: string }
+          if (event.d) addPiece(event.d)
+          if (event.ms?.first !== undefined) marks.current.serverFirst = event.ms.first
+          if (event.error) failed = event.error
+        }
+        if (done) break
+      }
+      marks.current.done = performance.now()
+      showTiming()
+
+      if (!text) throw new Error(failed ?? 'Snakkeboten kunne ikke svare. Prøv igjen.')
+      if (failed) setError(failed)
+      enqueueSpeech(q, text.slice(spoken).trim())
+      endSpeech(q)
     } catch (e) {
+      if (myTurn !== turn.current) return
       setError(e instanceof Error ? e.message : 'Snakkeboten kunne ikke svare. Prøv igjen.')
       setPhase('idle')
     }
@@ -198,6 +381,7 @@ export function ChatbotChat({ userEmail, isAdmin, chatbot, chatRef, editHref, sh
     setError(null)
     setShowSettings(false)
     active.current = true
+    marks.current = {}
     // Unlock audio playback while we are inside the tap.
     const el = new Audio(SILENT_WAV)
     audio.current = el
@@ -222,6 +406,7 @@ export function ChatbotChat({ userEmail, isAdmin, chatbot, chatRef, editHref, sh
   }
 
   function restart() {
+    turn.current++
     active.current = false
     recorder.current?.cancel()
     recorder.current = null
@@ -232,6 +417,7 @@ export function ChatbotChat({ userEmail, isAdmin, chatbot, chatRef, editHref, sh
     setPlayingIndex(null)
     setLevel(0)
     setError(null)
+    setTiming(null)
     setPhase('start')
   }
 
@@ -250,6 +436,7 @@ export function ChatbotChat({ userEmail, isAdmin, chatbot, chatRef, editHref, sh
     finishing.current = true
     recorder.current = null
     setLevel(0)
+    marks.current = { stop: performance.now() }
     try {
       const recording = await rec.stop()
       if (!recording.heardSpeech || recording.seconds < 0.4) {
@@ -269,6 +456,7 @@ export function ChatbotChat({ userEmail, isAdmin, chatbot, chatRef, editHref, sh
       })
       if (!response.ok) throw new Error(await errorText(response, 'Kunne ikke gjøre talen om til tekst.'))
       const { text } = (await response.json()) as { text: string }
+      marks.current.sttDone = performance.now()
       if (!active.current) return
       if (!text.trim()) {
         setError('Jeg forstod ikke hva du sa. Prøv igjen, eller skriv svaret.')
@@ -286,6 +474,8 @@ export function ChatbotChat({ userEmail, isAdmin, chatbot, chatRef, editHref, sh
 
   async function startRecording() {
     if (recorder.current || !active.current) return
+    // Stops an answer that is still being read aloud.
+    turn.current++
     setError(null)
     audio.current?.pause()
     setPlayingIndex(null)
@@ -322,6 +512,8 @@ export function ChatbotChat({ userEmail, isAdmin, chatbot, chatRef, editHref, sh
     recorder.current = null
     setLevel(0)
     audio.current?.pause()
+    turn.current++
+    marks.current = {}
     const text = typed
     setTyped('')
     void sendStudentText(text)
@@ -329,20 +521,15 @@ export function ChatbotChat({ userEmail, isAdmin, chatbot, chatRef, editHref, sh
 
   const busy = phase === 'transcribing' || phase === 'thinking'
   const lastAssistant = messages.map((m) => m.role).lastIndexOf('assistant')
+  // One short word: the button itself shows the rest.
   const status =
     phase === 'recording'
-      ? auto
-        ? 'Jeg hører på deg … Svaret sendes når du tar en pause.'
-        : 'Jeg hører på deg … Trykk når du er ferdig.'
-      : phase === 'transcribing'
-        ? 'Skriver ned det du sa …'
-        : phase === 'thinking'
-          ? `${chatbot.name} tenker …`
-          : phase === 'speaking'
-            ? auto
-              ? `${chatbot.name} snakker. Etterpå er det din tur.`
-              : `${chatbot.name} snakker. Trykk på mikrofonen for å svare.`
-            : 'Trykk på mikrofonen og snakk.'
+      ? 'Lytter'
+      : phase === 'transcribing' || phase === 'thinking'
+        ? 'Tenker'
+        : phase === 'speaking'
+          ? 'Snakker'
+          : 'Din tur'
 
   const card = 'bg-white/95 backdrop-blur-sm border-white/20 shadow-xl'
 
@@ -494,7 +681,7 @@ export function ChatbotChat({ userEmail, isAdmin, chatbot, chatRef, editHref, sh
                     <div className="flex justify-start">
                       <span className="inline-flex items-center gap-2 rounded-xl bg-vlfk-surface-muted px-4 py-3 text-sm text-gray-500">
                         <Loader2 className="h-4 w-4 animate-spin" />
-                        {phase === 'transcribing' ? 'Skriver ned det du sa …' : 'Tenker …'}
+                        Tenker …
                       </span>
                     </div>
                   )}
@@ -549,6 +736,7 @@ export function ChatbotChat({ userEmail, isAdmin, chatbot, chatRef, editHref, sh
                     <Send className="h-4 w-4" />
                   </Button>
                 </form>
+                {isAdmin && timing && <p className="text-center text-xs text-gray-500">{timing}</p>}
               </div>
             </>
           )}

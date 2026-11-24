@@ -4,6 +4,7 @@ import { geminiTextToSpeech, isGeminiTtsConfigured } from '@/lib/tts/gemini'
 import { googleTextToSpeech } from '@/lib/tts/google'
 import { DEFAULT_CHOSEN_VOICE, isGeminiVoice } from '@/lib/tts/gemini-voices'
 import { buildSystemPrompt, START_MESSAGE } from './prompt'
+import { cleanReply } from './text'
 import { isLevel, LIMITS, type Chatbot, type ChatbotRef, type ChatMessage } from './types'
 
 // Server side of Snakkebot: finding the chatbot, asking the language model
@@ -13,7 +14,9 @@ import { isLevel, LIMITS, type Chatbot, type ChatbotRef, type ChatMessage } from
 //   CHATBOT_DEPLOYMENT        Azure AI Foundry deployment, default gpt-6-luna.
 //                             Endpoint and key come from AZURE_OPENAI_*.
 //   CHATBOT_API_VERSION       default v1
-//   CHATBOT_REASONING_EFFORT  minimal | low | medium | high, default low
+//   CHATBOT_REASONING_EFFORT  none | minimal | low | medium | high. Not set:
+//                             the lowest the model accepts (none, then
+//                             minimal, then low), for quick answers.
 //   CHATBOT_PROVIDER          azure (default) or gemini, for testing without
 //                             Azure (uses GEMINI_API_KEY and GEMINI_CHAT_MODEL)
 //   SNAKKEBOT_TTS             google (default: Google Cloud TTS, Chirp 3 HD
@@ -91,9 +94,15 @@ export function chatbotModel(): AzureModelConfig {
     deployment,
     apiVersion: process.env.CHATBOT_API_VERSION?.trim() || 'v1',
     modelType: guessModelType(deployment),
-    reasoningEffort: process.env.CHATBOT_REASONING_EFFORT?.trim() || 'low',
+    reasoningEffort: process.env.CHATBOT_REASONING_EFFORT?.trim() || EFFORTS[effortIndex],
   }
 }
+
+// Lowest reasoning effort first: thinking makes the student wait. Models
+// accept different values, so on «unsupported value» the next one is tried
+// and remembered for the rest of the server's life.
+const EFFORTS = ['none', 'minimal', 'low'] as const
+let effortIndex = 0
 
 function useGemini(): boolean {
   return process.env.CHATBOT_PROVIDER?.trim().toLowerCase() === 'gemini'
@@ -103,16 +112,6 @@ export function isChatModelConfigured(): boolean {
   if (useGemini()) return isGeminiTtsConfigured()
   const { endpoint, apiKey } = getEnvModelConfig()
   return Boolean(endpoint && apiKey)
-}
-
-// Plain spoken text: strip markdown that would be read aloud.
-function cleanReply(text: string): string {
-  return text
-    .replace(/\*\*|__|`/g, '')
-    .replace(/^\s*[-*•]\s+/gm, '')
-    .replace(/^#+\s*/gm, '')
-    .replace(/\s+\n/g, '\n')
-    .trim()
 }
 
 /** A failed answer from the language model, with a hint an admin can act on. */
@@ -155,23 +154,26 @@ function azureHint(status: number, code: string, message: string, deployment: st
   return 'Azure svarte med en feil. Se detaljene under.'
 }
 
-async function azureReply(system: string, messages: ChatMessage[]): Promise<string> {
-  const config = chatbotModel()
-  let response: Response
-  try {
-    response = await sendChatCompletion(config, {
-      messages: [{ role: 'system', content: system }, ...messages],
-      temperature: 0.7,
-      max_completion_tokens: 400,
-    })
-  } catch (error) {
-    const cause = error instanceof Error && error.cause instanceof Error ? ` (${error.cause.message})` : ''
-    throw new ChatModelError(
-      `Kunne ikke nå Azure: ${error instanceof Error ? error.message : error}${cause}`,
-      'Kunne ikke nå Azure. Sjekk AZURE_OPENAI_ENDPOINT.'
-    )
-  }
-  if (!response.ok) {
+async function openAzureStream(system: string, messages: ChatMessage[]): Promise<Response> {
+  for (;;) {
+    const config = chatbotModel()
+    let response: Response
+    try {
+      response = await sendChatCompletion(config, {
+        messages: [{ role: 'system', content: system }, ...messages],
+        temperature: 0.7,
+        max_completion_tokens: 400,
+        stream: true,
+      })
+    } catch (error) {
+      const cause = error instanceof Error && error.cause instanceof Error ? ` (${error.cause.message})` : ''
+      throw new ChatModelError(
+        `Kunne ikke nå Azure: ${error instanceof Error ? error.message : error}${cause}`,
+        'Kunne ikke nå Azure. Sjekk AZURE_OPENAI_ENDPOINT.'
+      )
+    }
+    if (response.ok) return response
+
     const raw = await response.text().catch(() => '')
     let code = ''
     let message = raw
@@ -183,21 +185,65 @@ async function azureReply(system: string, messages: ChatMessage[]): Promise<stri
       // not JSON
     }
     if (isContentFilter(code, raw)) throw new ContentFilterError(message.slice(0, 300))
+    // The model does not take this reasoning effort: try the next one.
+    if (
+      response.status === 400 &&
+      /reasoning_effort|reasoning effort/i.test(message) &&
+      !process.env.CHATBOT_REASONING_EFFORT?.trim() &&
+      effortIndex < EFFORTS.length - 1
+    ) {
+      console.warn(`snakkebot: reasoning_effort ${EFFORTS[effortIndex]} avvist, prøver ${EFFORTS[effortIndex + 1]}`)
+      effortIndex++
+      continue
+    }
     throw new ChatModelError(
       `Azure (${config.deployment}, api ${config.apiVersion}) svarte ${response.status}${code ? ` ${code}` : ''}: ${message.slice(0, 300)}`,
       azureHint(response.status, code, message, config.deployment)
     )
   }
-  const data = await response.json()
-  const content: string = data.choices?.[0]?.message?.content ?? ''
-  if (data.choices?.[0]?.finish_reason === 'content_filter') throw new ContentFilterError('finish_reason content_filter')
-  if (!content.trim()) {
+}
+
+/** The answer from Azure, piece by piece as it is written (server-sent events). */
+async function* azureStream(system: string, messages: ChatMessage[]): AsyncGenerator<string> {
+  const response = await openAzureStream(system, messages)
+  const reader = response.body!.getReader()
+  const decoder = new TextDecoder()
+  let buffer = ''
+  let sent = false
+  let finish = ''
+  for (;;) {
+    const { done, value } = await reader.read()
+    if (done) break
+    buffer += decoder.decode(value, { stream: true })
+    let newline: number
+    while ((newline = buffer.indexOf('\n')) >= 0) {
+      const line = buffer.slice(0, newline).trim()
+      buffer = buffer.slice(newline + 1)
+      if (!line.startsWith('data:')) continue
+      const data = line.slice(5).trim()
+      if (data === '[DONE]') continue
+      let chunk: { choices?: { delta?: { content?: string }; finish_reason?: string | null }[] }
+      try {
+        chunk = JSON.parse(data)
+      } catch {
+        continue
+      }
+      const choice = chunk.choices?.[0]
+      if (choice?.finish_reason) finish = choice.finish_reason
+      const text = choice?.delta?.content
+      if (text) {
+        sent = true
+        yield text
+      }
+    }
+  }
+  if (finish === 'content_filter' && !sent) throw new ContentFilterError('finish_reason content_filter')
+  if (!sent) {
     throw new ChatModelError(
-      `Tomt svar fra ${config.deployment} (finish_reason: ${data.choices?.[0]?.finish_reason ?? 'ukjent'})`,
+      `Tomt svar fra ${chatbotModel().deployment} (finish_reason: ${finish || 'ukjent'})`,
       'Modellen sendte et tomt svar. For reasoning-modeller betyr det ofte at tokengrensen ble brukt opp; prøv CHATBOT_REASONING_EFFORT=minimal.'
     )
   }
-  return content
 }
 
 async function geminiReply(system: string, messages: ChatMessage[]): Promise<string> {
@@ -229,15 +275,37 @@ async function geminiReply(system: string, messages: ChatMessage[]): Promise<str
   return parts.map((p) => p.text ?? '').join('')
 }
 
-/** The chatbot's next answer. An empty conversation gets a greeting. */
-export async function chatbotReply(bot: Chatbot, history: ChatMessage[]): Promise<string> {
+/**
+ * The chatbot's next answer, piece by piece as the model writes it, so the
+ * browser can start reading the first sentence aloud early. An empty
+ * conversation gets a greeting. Pieces are raw model text (the browser
+ * cleans markdown away).
+ */
+export async function* chatbotReplyStream(bot: Chatbot, history: ChatMessage[]): AsyncGenerator<string> {
   const system = buildSystemPrompt({ name: bot.name, instructions: bot.instructions, level: bot.level })
   let messages = history.slice(-LIMITS.history)
   // The model needs the conversation to start with the student.
   if (messages.length === 0 || messages[0].role === 'assistant') {
     messages = [{ role: 'user', content: START_MESSAGE }, ...messages]
   }
-  const raw = useGemini() ? await geminiReply(system, messages) : await azureReply(system, messages)
+  if (useGemini()) {
+    const reply = await geminiReply(system, messages)
+    if (!reply.trim()) throw new Error('Tomt svar fra språkmodellen')
+    yield reply
+    return
+  }
+  let length = 0
+  for await (const piece of azureStream(system, messages)) {
+    yield piece
+    length += piece.length
+    if (length > 2000) return
+  }
+}
+
+/** The whole answer at once (used by the admin check). */
+export async function chatbotReply(bot: Chatbot, history: ChatMessage[]): Promise<string> {
+  let raw = ''
+  for await (const piece of chatbotReplyStream(bot, history)) raw += piece
   const reply = cleanReply(raw)
   if (!reply) throw new Error('Tomt svar fra språkmodellen')
   return reply.slice(0, 2000)
