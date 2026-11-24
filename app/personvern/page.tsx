@@ -138,7 +138,7 @@ export default function PersonvernPage() {
             <li>
               <strong>Google Cloud tekst til tale og Google Gemini</strong>: lyd i lytteøvinger og
               ordlister, og bilder i Lær ord. Dette gjelder bare tekst og ord som læreren har lagt
-              inn. I Snakkebot leses svarene fra snakkeboten opp.
+              inn. I Snakkebot leser Google Cloud tekst til tale opp svarene fra snakkeboten.
             </li>
             <li>
               <strong>Google Cloud tale til tekst</strong>: gjør om det eleven sier i Snakkebot til

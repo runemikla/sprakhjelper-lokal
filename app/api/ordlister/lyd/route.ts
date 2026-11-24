@@ -11,6 +11,8 @@ import { requireTeacher } from '@/lib/ordlister/require-teacher'
 const schema = z.object({
   text: z.string().trim().min(1).max(200),
   voice: z.string().trim().max(40).optional(),
+  // 'google' previews the Google Cloud voice (Snakkebot) even when Gemini is set up.
+  provider: z.enum(['gemini', 'google']).optional(),
 })
 
 export async function POST(req: Request) {
@@ -20,9 +22,11 @@ export async function POST(req: Request) {
   if (limited) return limited
 
   try {
-    const { text, voice } = schema.parse(await req.json())
-    const gemini = isGeminiTtsConfigured()
-    const audio = gemini ? await geminiTextToSpeech(text, voice) : await textToSpeech(text, 0.9)
+    const { text, voice, provider } = schema.parse(await req.json())
+    const gemini = provider !== 'google' && isGeminiTtsConfigured()
+    const audio = gemini
+      ? await geminiTextToSpeech(text, voice)
+      : await textToSpeech(text, 0.9, provider === 'google' ? voice : undefined)
     return new NextResponse(new Uint8Array(audio), {
       headers: {
         'Content-Type': gemini ? 'audio/wav' : 'audio/mpeg',

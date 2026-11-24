@@ -13,12 +13,15 @@ interface VoicePickerProps {
   onChange: (voice: string) => void
   // Sentence to read in the preview. Falls back to a short sample.
   sample?: string
+  // Which voices to preview: Gemini (word lists) or Google Cloud Chirp 3 HD
+  // (Snakkebot). The four chosen voices have the same names in both.
+  provider?: 'gemini' | 'google'
 }
 
 // Drop-down with the four chosen Gemini voices, and a button to hear the
 // selected one. A list made earlier with another voice keeps it as an
 // extra option, so its recordings are not made again by accident.
-export function VoicePicker({ value, onChange, sample }: VoicePickerProps) {
+export function VoicePicker({ value, onChange, sample, provider }: VoicePickerProps) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const cache = useRef(new Map<string, string>())
@@ -31,7 +34,7 @@ export function VoicePicker({ value, onChange, sample }: VoicePickerProps) {
   async function play() {
     setError(null)
     audio.current?.pause()
-    const key = `${value}:${text}`
+    const key = `${provider ?? 'standard'}:${value}:${text}`
     let url = cache.current.get(key)
     if (!url) {
       setLoading(true)
@@ -39,7 +42,7 @@ export function VoicePicker({ value, onChange, sample }: VoicePickerProps) {
         const response = await fetch('/api/ordlister/lyd', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ text, voice: value }),
+          body: JSON.stringify({ text, voice: value, provider }),
         })
         if (!response.ok) {
           const body = (await response.json().catch(() => null)) as { error?: string } | null

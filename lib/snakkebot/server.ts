@@ -16,9 +16,9 @@ import { isLevel, LIMITS, type Chatbot, type ChatbotRef, type ChatMessage } from
 //   CHATBOT_REASONING_EFFORT  minimal | low | medium | high, default low
 //   CHATBOT_PROVIDER          azure (default) or gemini, for testing without
 //                             Azure (uses GEMINI_API_KEY and GEMINI_CHAT_MODEL)
-//   SNAKKEBOT_TTS             gemini (default) or google (Cloud TTS, Chirp 3 HD
-//                             voices with the same names). Gemini falls back
-//                             to Google Cloud TTS if it fails.
+//   SNAKKEBOT_TTS             google (default: Google Cloud TTS, Chirp 3 HD
+//                             voices, same setup as Lytteøving) or gemini
+//                             (Gemini TTS voices with the same names).
 
 interface ChatbotRow {
   id: string
@@ -185,14 +185,11 @@ export async function chatbotSpeech(bot: Chatbot, text: string): Promise<{ audio
   const voice = isGeminiVoice(bot.voice) ? bot.voice : DEFAULT_CHOSEN_VOICE
   const provider = process.env.SNAKKEBOT_TTS?.trim().toLowerCase()
 
-  if (provider !== 'google' && isGeminiTtsConfigured()) {
-    try {
-      const style = SPEAKING_STYLE[bot.level ?? 'A2'] ?? SPEAKING_STYLE.A2
-      return { audio: await geminiTextToSpeech(text, voice, style), mimeType: 'audio/wav' }
-    } catch (error) {
-      if (!process.env.GOOGLE_TTS_CREDENTIALS?.trim()) throw error
-      console.error('snakkebot/lyd: Gemini feilet, bruker Google Cloud TTS:', error instanceof Error ? error.message : error)
-    }
+  // Gemini only when asked for (or when Google Cloud is not set up at all).
+  const googleReady = Boolean(process.env.GOOGLE_TTS_CREDENTIALS?.trim() || process.env.GOOGLE_TTS_API_KEY?.trim())
+  if ((provider === 'gemini' || !googleReady) && isGeminiTtsConfigured()) {
+    const style = SPEAKING_STYLE[bot.level ?? 'A2'] ?? SPEAKING_STYLE.A2
+    return { audio: await geminiTextToSpeech(text, voice, style), mimeType: 'audio/wav' }
   }
   const rate = bot.level === 'A1' ? 0.85 : bot.level === 'A2' ? 0.92 : 1
   return { audio: await googleTextToSpeech(text, rate, voice), mimeType: 'audio/mpeg' }

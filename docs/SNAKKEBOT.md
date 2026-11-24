@@ -12,7 +12,7 @@ kode på fire tegn.
    (`lib/stt/google.ts`, v2, modell `chirp_3`, språk `no-NO`, region `eu`).
 3. `POST /api/snakkebot/svar` sender samtalen og lærerens instruks til språkmodellen
    (`lib/snakkebot/server.ts`, rammeinstruks i `lib/snakkebot/prompt.ts`).
-4. `POST /api/snakkebot/lyd` leser svaret opp med Gemini-stemmen læreren valgte.
+4. `POST /api/snakkebot/lyd` leser svaret opp med Google Cloud-stemmen (Chirp 3 HD) læreren valgte, samme oppsett som Lytteøving.
 
 Eleven kan også skrive svaret. Teksten kan skjules for å øve på å lytte.
 
@@ -50,10 +50,10 @@ Valgfrie variabler: `GOOGLE_STT_MODEL` (standard `chirp_3`), `GOOGLE_STT_LOCATIO
 (`eu`), `GOOGLE_STT_LANGUAGE` (`no-NO`), `GOOGLE_STT_VERSION` (`v2`, eller `v1` for det
 eldre API-et), `GOOGLE_STT_PROJECT` (standard: prosjektet i nøkkelen).
 
-### Gemini (opplesing)
-Bruker `GEMINI_API_KEY` som ordlistene. `SNAKKEBOT_TTS=google` bruker Google Cloud TTS
-(Chirp 3 HD-stemmene med samme navn) i stedet. Feiler Gemini, brukes Google Cloud TTS
-automatisk hvis `GOOGLE_TTS_CREDENTIALS` er satt.
+### Opplesing
+Bruker Google Cloud tekst til tale som Lytteøving (`GOOGLE_TTS_CREDENTIALS`, valgfritt
+`GOOGLE_TTS_ENDPOINT`), stemmene `nb-NO-Chirp3-HD-<navn>`. Ingen ekstra oppsett.
+`SNAKKEBOT_TTS=gemini` bruker Gemini-stemmene med samme navn i stedet (`GEMINI_API_KEY`).
 
 ## Mikrofon
 `next.config.ts` tillater mikrofonen for Språkhjelp selv (`Permissions-Policy:
