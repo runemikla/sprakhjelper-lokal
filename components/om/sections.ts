@@ -1,5 +1,6 @@
 // The pages under the «Om Språkhjelp» menu, in menu order.
 export const OM_SECTIONS = [
+  { href: '/kom-i-gang', label: 'Kom i gang' },
   { href: '/om', label: 'Om verktøyene' },
   { href: '/laereplaner', label: 'Læreplaner' },
   { href: '/personvern', label: 'Personvern og GDPR' },

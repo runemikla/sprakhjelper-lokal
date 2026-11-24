@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 
-// The teacher guide has been removed; old links go to «Om verktøyene».
+// The page is now called «Kom i gang».
 export default function LaererveiledningPage() {
-  redirect('/om')
+  redirect('/kom-i-gang')
 }
