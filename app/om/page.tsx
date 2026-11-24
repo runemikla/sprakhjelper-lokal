@@ -3,7 +3,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { OmPage } from '@/components/om/om-page'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { ArrowDownUp, BookOpen, Headphones, PenLine, Settings, Users } from 'lucide-react'
+import { ArrowDownUp, BookOpen, Headphones, Mic, PenLine, Settings, Users } from 'lucide-react'
 import { VERKTOY_FARGE } from '@/components/landing/verktoy-farger'
 
 export const metadata: Metadata = {
@@ -71,6 +71,22 @@ const tools = [
       'Øvelser: ordliste, velg riktig ord, lytt og velg, hør og skriv, match ord og setning, flashcards',
       'Lyd og bilde til hvert ord',
       'Ordlister deles med grupper',
+    ],
+  },
+  {
+    href: '/snakkebot',
+    title: 'Snakkebot',
+    image: '/images/verktoy/snakkebot.webp',
+    imageAlt: 'En elev snakker til et nettbrett med en mikrofon på skjermen.',
+    icon: Mic,
+    who: 'Læreren lager snakkeboten (innlogget). Elevene åpner den fra gruppen sin eller med en kode.',
+    description:
+      'Elevene snakker norsk med en KI i stedet for å skrive. Læreren skriver en instruks (for eksempel en kafé, en legetime eller et jobbintervju), velger nivå og stemme og deler snakkeboten med grupper eller med en kode. Det eleven sier, gjøres om til tekst, og svaret leses opp automatisk.',
+    points: [
+      'Eleven snakker med mikrofonen, eller skriver',
+      'Svarene leses opp med stemmen læreren har valgt',
+      'Teksten kan skjules for å øve på å lytte',
+      'Samtalen og lydopptaket lagres ikke',
     ],
   },
   {

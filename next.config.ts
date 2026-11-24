@@ -28,7 +28,8 @@ const securityHeaders = [
   },
   {
     key: 'Permissions-Policy',
-    value: 'camera=(), microphone=(), geolocation=(), interest-cohort=()'
+    // The microphone is allowed for Språkhjelp itself (Snakkebot), not for embedded pages.
+    value: 'camera=(), microphone=(self), geolocation=(), interest-cohort=()'
   },
   // CSP - Content Security Policy for XSS protection
   {

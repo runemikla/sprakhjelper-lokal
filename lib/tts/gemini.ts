@@ -46,13 +46,15 @@ function pcmToWav(pcm: Buffer, sampleRate = SAMPLE_RATE): Buffer {
 
 const FALLBACK_MODEL = 'gemini-2.5-flash-preview-tts'
 
-async function request(model: string, apiKey: string, text: string, voiceName: string) {
+const DEFAULT_STYLE = 'Say slowly and clearly, in Norwegian Bokmål'
+
+async function request(model: string, apiKey: string, text: string, voiceName: string, style: string) {
   return fetch(`${API_BASE}/${encodeURIComponent(model)}:generateContent`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
     body: JSON.stringify({
       // The older TTS models take a short style instruction before the text.
-      contents: [{ parts: [{ text: `Say slowly and clearly, in Norwegian Bokmål: ${text}` }] }],
+      contents: [{ parts: [{ text: `${style}: ${text}` }] }],
       generationConfig: {
         responseModalities: ['AUDIO'],
         speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName } } },
@@ -62,16 +64,21 @@ async function request(model: string, apiKey: string, text: string, voiceName: s
 }
 
 /** Reads Norwegian text aloud and returns a WAV file. */
-export async function geminiTextToSpeech(text: string, voice: string = DEFAULT_GEMINI_VOICE): Promise<Buffer> {
+export async function geminiTextToSpeech(
+  text: string,
+  voice: string = DEFAULT_GEMINI_VOICE,
+  // Short English style instruction read before the text, without a colon.
+  style: string = DEFAULT_STYLE
+): Promise<Buffer> {
   const { apiKey, model } = config()
   if (!apiKey) {
     throw new TextToSpeechError('Gemini-lyd er ikke satt opp (GEMINI_API_KEY mangler).', 503)
   }
   const voiceName = isGeminiVoice(voice) ? voice : DEFAULT_GEMINI_VOICE
 
-  let response = await request(model, apiKey, text, voiceName)
+  let response = await request(model, apiKey, text, voiceName, style)
   if (response.status === 404 && model !== FALLBACK_MODEL) {
-    response = await request(FALLBACK_MODEL, apiKey, text, voiceName)
+    response = await request(FALLBACK_MODEL, apiKey, text, voiceName, style)
   }
 
   if (!response.ok) {
