@@ -39,7 +39,7 @@ export const VERKTOY = [
   {
     href: '/snakkebot',
     title: 'Snakkebot',
-    description: 'Snakk norsk med en KI som svarer med stemme.',
+    description: 'Øv på å snakke norsk med KI.',
     image: '/images/verktoy/snakkebot.webp',
     clearsSession: false,
   },
