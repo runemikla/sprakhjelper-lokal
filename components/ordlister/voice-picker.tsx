@@ -1,10 +1,11 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Loader2, Volume2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { CHOSEN_VOICES, GEMINI_VOICES, voiceLabel } from '@/lib/tts/gemini-voices'
+import { describeVoice, googleNameOf, isValidVoiceId, ttsVoiceLabel, type TtsVoice } from '@/lib/tts/voices'
+import { useAvailableVoices } from '@/lib/tts/use-available-voices'
 
 const SAMPLE = 'Hei! Jeg heter Sara. I dag spiser jeg lunsj i kantinen.'
 
@@ -16,20 +17,39 @@ interface VoicePickerProps {
   // Which voices to preview: Gemini (word lists) or Google Cloud Chirp 3 HD
   // (Snakkebot). The four chosen voices have the same names in both.
   provider?: 'gemini' | 'google'
+  // New content: switch to the default voice if the current one is not
+  // available any more.
+  isNew?: boolean
 }
 
-// Drop-down with the four chosen Gemini voices, and a button to hear the
-// selected one. A list made earlier with another voice keeps it as an
-// extra option, so its recordings are not made again by accident.
-export function VoicePicker({ value, onChange, sample, provider }: VoicePickerProps) {
+/**
+ * The voices the admin has made available (page /stemmer). Content made
+ * earlier with another voice keeps it as an extra option, so its recordings
+ * are not made again by accident. New content with a voice that is not
+ * available is moved to the default voice.
+ */
+export function useVoiceOptions(value: string, onChange: (voice: string) => void, isNew = false): TtsVoice[] {
+  const { voices, defaultVoice, loaded } = useAvailableVoices()
+  const available = voices.some((v) => v.id === value)
+
+  useEffect(() => {
+    if (loaded && isNew && !available && value !== defaultVoice) onChange(defaultVoice)
+  }, [loaded, isNew, available, value, defaultVoice, onChange])
+
+  if (available || !isValidVoiceId(value)) return voices
+  return [...voices, describeVoice(googleNameOf(value))]
+}
+
+// Drop-down with the voices the admin has made available, and a button to
+// hear the selected one.
+export function VoicePicker({ value, onChange, sample, provider, isNew }: VoicePickerProps) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const cache = useRef(new Map<string, string>())
   const audio = useRef<HTMLAudioElement | null>(null)
   const text = sample?.trim() || SAMPLE
 
-  const current = GEMINI_VOICES.find((v) => v.name === value)
-  const options = CHOSEN_VOICES.some((v) => v.name === value) || !current ? CHOSEN_VOICES : [...CHOSEN_VOICES, current]
+  const options = useVoiceOptions(value, onChange, isNew)
 
   async function play() {
     setError(null)
@@ -70,8 +90,8 @@ export function VoicePicker({ value, onChange, sample, provider }: VoicePickerPr
           </SelectTrigger>
           <SelectContent>
             {options.map((v) => (
-              <SelectItem key={v.name} value={v.name}>
-                {voiceLabel(v)}
+              <SelectItem key={v.id} value={v.id}>
+                {ttsVoiceLabel(v)}
               </SelectItem>
             ))}
           </SelectContent>

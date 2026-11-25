@@ -277,6 +277,7 @@ export function ChatbotEditor({ userEmail, isAdmin, chatbotId }: ChatbotEditorPr
               <VoicePicker
                 value={voice}
                 onChange={setVoice}
+                isNew={!chatbotId}
                 provider="google"
                 sample={greeting.trim() || 'Hei! Så hyggelig å snakke med deg. Hva har du gjort i dag?'}
               />

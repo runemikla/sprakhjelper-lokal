@@ -2,12 +2,13 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { checkRateLimit } from '@/lib/api-helpers'
 import { textToSpeech, TextToSpeechError } from '@/lib/tts'
-import { DEFAULT_CHOSEN_VOICE, isGeminiVoice } from '@/lib/tts/gemini-voices'
+import { DEFAULT_CHOSEN_VOICE } from '@/lib/tts/gemini-voices'
+import { isValidVoiceId } from '@/lib/tts/voices'
 import { requireTeacher } from '@/lib/ordlister/require-teacher'
 
 // Reads a word or an example sentence aloud for a teacher's list with Google
 // Cloud Text-to-Speech (Chirp 3 HD) on the EU endpoint, so text and audio stay
-// in Europe. The Chirp 3 HD voices have the same names as the Gemini voices.
+// in Europe. Any voice id from lib/tts/voices.ts works.
 const schema = z.object({
   text: z.string().trim().min(1).max(200),
   voice: z.string().trim().max(40).optional(),
@@ -23,7 +24,7 @@ export async function POST(req: Request) {
 
   try {
     const { text, voice } = schema.parse(await req.json())
-    const audio = await textToSpeech(text, 0.9, voice && isGeminiVoice(voice) ? voice : DEFAULT_CHOSEN_VOICE)
+    const audio = await textToSpeech(text, 0.9, isValidVoiceId(voice) ? voice : DEFAULT_CHOSEN_VOICE)
     return new NextResponse(new Uint8Array(audio), {
       headers: {
         'Content-Type': 'audio/mpeg',

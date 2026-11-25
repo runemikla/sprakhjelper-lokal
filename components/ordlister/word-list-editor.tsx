@@ -14,7 +14,8 @@ import { LanguagePicker } from '@/components/ordlister/language-picker'
 import { groupStore, wordListStore } from '@/lib/ordlister/db-store'
 import { isItemReady, listVoice, type Group, type WordList, type WordListItem } from '@/lib/ordlister/types'
 import { VoicePicker } from '@/components/ordlister/voice-picker'
-import { DEFAULT_CHOSEN_VOICE, isChosenVoice, isGeminiVoice } from '@/lib/tts/gemini-voices'
+import { DEFAULT_CHOSEN_VOICE } from '@/lib/tts/gemini-voices'
+import { isValidVoiceId } from '@/lib/tts/voices'
 import { generateList, imagesAvailable, type ItemStatus } from '@/lib/ordlister/generate'
 import { GenerationPanel } from '@/components/ordlister/generation-panel'
 import { ItemThumb } from '@/components/ordlister/item-thumb'
@@ -35,7 +36,7 @@ interface WordListEditorProps {
 function rememberedVoice(): string | null {
   try {
     const remembered = localStorage.getItem('ordlister:stemme')
-    return remembered && isChosenVoice(remembered) ? remembered : null
+    return isValidVoiceId(remembered) ? remembered : null
   } catch {
     return null
   }
@@ -69,7 +70,7 @@ export function WordListEditor({ listId, userEmail = null, isAdmin = false }: Wo
   const newWordRef = useRef<HTMLInputElement>(null)
 
   const [imagesOn, setImagesOn] = useState(true)
-  // Gemini voice for the recordings. A list keeps the voice it was made with;
+  // Voice for the recordings (see lib/tts/voices.ts). A list keeps the voice it was made with;
   // a new list starts with the teacher's last choice.
   const [voice, setVoice] = useState<string>(DEFAULT_CHOSEN_VOICE)
 
@@ -153,7 +154,7 @@ export function WordListEditor({ listId, userEmail = null, isAdmin = false }: Wo
           // The voice the recordings were made with; a new list (nothing
           // recorded yet) uses the voice the teacher picked before saving.
           const used = listVoice(list)
-          const next = used && isGeminiVoice(used) ? used : rememberedVoice()
+          const next = isValidVoiceId(used) ? used : rememberedVoice()
           if (next) setVoice(next)
           setOpenDescriptions(new Set(list.words.filter((w) => w.imageDescription).map((w) => w.id)))
           setJustSaved(new URLSearchParams(globalThis.location.search).has('generer'))
@@ -363,6 +364,7 @@ export function WordListEditor({ listId, userEmail = null, isAdmin = false }: Wo
             <VoicePicker
               value={voice}
               onChange={chooseVoice}
+              isNew={!listId}
               sample={words.find((w) => w.content?.s)?.content?.s.replace(/[[\]]/g, '')}
             />
           </div>

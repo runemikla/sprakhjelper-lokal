@@ -24,6 +24,12 @@ export interface Endringsoppforing {
 
 export const ENDRINGSLOGG: Endringsoppforing[] = [
   {
+    dato: '2026-11-25',
+    endringer: [
+      { type: 'nytt', tekst: 'Stemmer: administrator har fått en ny side under Innstillinger med alle de norske stemmene fra Google (Chirp 3 HD og de andre typene). Du kan filtrere på type og kjønn, høre lydprøven «Hei! Velkommen til Språkhjelp!» og velge hvilke stemmer lærerne kan bruke i Lytteøving, ordlistene i Lær ord og Snakkebot. Innhold som allerede er laget, beholder stemmen sin.' },
+    ],
+  },
+  {
     dato: '2026-11-24',
     endringer: [
       { type: 'nytt', tekst: 'Snakkebot: elevene kan snakke norsk med en KI i stedet for å skrive. Administrator lager snakkeboter med en instruks (for eksempel kafé, legetime eller jobbintervju), velger nivå og stemme, og deler dem med grupper eller med en kode. Lærere ser alle snakkebotene og koden de kan gi elevene. Svaret leses opp automatisk med samme stemmer som i Lytteøving. I automatisk talemodus åpner mikrofonen seg selv, og svaret sendes når eleven tar en pause. I manuell modus trykker eleven for å snakke og for å sende. Under Innstillinger kan eleven velge pause før sending, talehastighet og å skjule meldingene. Samtalen og lydopptaket lagres ikke.' },

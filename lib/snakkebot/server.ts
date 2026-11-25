@@ -3,6 +3,7 @@ import { getEnvModelConfig, guessModelType, sendChatCompletion, type AzureModelC
 import { geminiTextToSpeech, isGeminiTtsConfigured } from '@/lib/tts/gemini'
 import { googleTextToSpeech } from '@/lib/tts/google'
 import { DEFAULT_CHOSEN_VOICE, isGeminiVoice } from '@/lib/tts/gemini-voices'
+import { isValidVoiceId } from '@/lib/tts/voices'
 import { buildSystemPrompt, START_MESSAGE } from './prompt'
 import { cleanReply } from './text'
 import { isLevel, LIMITS, type Chatbot, type ChatbotRef, type ChatMessage } from './types'
@@ -323,14 +324,16 @@ const SPEAKING_STYLE: Record<string, string> = {
 }
 
 export async function chatbotSpeech(bot: Chatbot, text: string): Promise<{ audio: Buffer; mimeType: string }> {
-  const voice = isGeminiVoice(bot.voice) ? bot.voice : DEFAULT_CHOSEN_VOICE
+  const voice = isValidVoiceId(bot.voice) ? bot.voice : DEFAULT_CHOSEN_VOICE
   const provider = process.env.SNAKKEBOT_TTS?.trim().toLowerCase()
 
   // Gemini only when asked for (or when Google Cloud is not set up at all).
   const googleReady = Boolean(process.env.GOOGLE_TTS_CREDENTIALS?.trim() || process.env.GOOGLE_TTS_API_KEY?.trim())
   if ((provider === 'gemini' || !googleReady) && isGeminiTtsConfigured()) {
     const style = SPEAKING_STYLE[bot.level ?? 'A2'] ?? SPEAKING_STYLE.A2
-    return { audio: await geminiTextToSpeech(text, voice, style), mimeType: 'audio/wav' }
+    // Gemini has only the Chirp 3 HD names; other voices fall back to the default.
+    const geminiVoice = isGeminiVoice(voice) ? voice : DEFAULT_CHOSEN_VOICE
+    return { audio: await geminiTextToSpeech(text, geminiVoice, style), mimeType: 'audio/wav' }
   }
   const rate = bot.level === 'A1' ? 0.85 : bot.level === 'A2' ? 0.92 : 1
   return { audio: await googleTextToSpeech(text, rate, voice), mimeType: 'audio/mpeg' }

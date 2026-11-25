@@ -1,5 +1,6 @@
 import { TextToSpeechError } from './errors'
 import { getServiceAccountToken } from './google-auth'
+import { googleNameOf } from './voices'
 
 // The EU endpoint keeps the text and the audio inside Europe. Set
 // GOOGLE_TTS_ENDPOINT to use another endpoint.
@@ -19,8 +20,9 @@ const DEFAULT_VOICE = 'nb-NO-Chirp3-HD-Leda'
 export async function googleTextToSpeech(
   text: string,
   speakingRate: number,
-  // Chirp 3 HD voice name such as «Erinome». Without it, GOOGLE_TTS_VOICE
-  // or the default voice is used.
+  // Voice id (see lib/tts/voices.ts): a Chirp 3 HD name such as «Erinome»,
+  // or a full Google name such as «nb-NO-Wavenet-A». Without it,
+  // GOOGLE_TTS_VOICE or the default voice is used.
   voice?: string
 ): Promise<Buffer> {
   const accessToken = await getServiceAccountToken()
@@ -33,7 +35,7 @@ export async function googleTextToSpeech(
 
   const endpoint = googleTtsEndpoint()
   const voiceName = voice
-    ? `nb-NO-Chirp3-HD-${voice}`
+    ? googleNameOf(voice)
     : process.env.GOOGLE_TTS_VOICE || DEFAULT_VOICE
   // Voice names look like "nb-NO-Chirp3-HD-Leda"; the first two parts are the language.
   const languageCode = voiceName.split('-').slice(0, 2).join('-')

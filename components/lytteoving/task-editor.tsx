@@ -20,7 +20,8 @@ import {
   type ListeningQuestion,
   type QuestionType,
 } from '@/lib/lytteoving'
-import { CHOSEN_VOICES, voiceLabel } from '@/lib/tts/gemini-voices'
+import { ttsVoiceLabel } from '@/lib/tts/voices'
+import { useVoiceOptions } from '@/components/ordlister/voice-picker'
 
 const MAX_CHARS = 1000
 const QUESTION_COUNTS = [1, 2, 3, 4, 5]
@@ -74,6 +75,9 @@ export function TaskEditor({
   const canGenerate = task.text.trim().length > 0 && !task.isGenerating && !isLocked
   const taskNumber = index + 1
   const generatedAsStatements = isStatementTask(task.questions)
+  // A task without audio yet moves to the default voice if its voice is not
+  // available any more.
+  const voiceOptions = useVoiceOptions(task.voice, onVoiceChange, task.questions.length === 0)
 
   return (
     <div className="space-y-4 rounded-xl border border-gray-200 bg-white p-4">
@@ -230,9 +234,9 @@ export function TaskEditor({
               <SelectValue placeholder="Velg stemme" />
             </SelectTrigger>
             <SelectContent>
-              {CHOSEN_VOICES.map((v) => (
-                <SelectItem key={v.name} value={v.name}>
-                  {voiceLabel(v)}
+              {voiceOptions.map((v) => (
+                <SelectItem key={v.id} value={v.id}>
+                  {ttsVoiceLabel(v)}
                 </SelectItem>
               ))}
             </SelectContent>

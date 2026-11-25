@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { ArrowRight, Cpu, FileText, type LucideIcon } from 'lucide-react'
+import { ArrowRight, AudioLines, Cpu, FileText, type LucideIcon } from 'lucide-react'
 import { FjordPageShell } from '@/components/landing/fjord-page-shell'
 import { PageHeader } from '@/components/landing/page-header'
 import { getPageUser } from '@/lib/auth/page-user'
@@ -18,6 +18,12 @@ const INNSTILLINGER: { href: string; title: string; description: string; icon: L
     title: 'Språkmodell',
     description: 'Velg hvilken modell i Azure AI Foundry alle KI-verktøyene skal bruke.',
     icon: Cpu,
+  },
+  {
+    href: '/stemmer',
+    title: 'Stemmer',
+    description: 'Hør alle de norske stemmene og velg hvilke lærerne kan bruke i Lytteøving, ordlister og Snakkebot.',
+    icon: AudioLines,
   },
 ]
 
