@@ -16,6 +16,10 @@ export const LIMITS = {
   description: 300,
   instructions: 4000,
   greeting: 300,
+  // a collection's text to the students (how to, learning goals)
+  goals: 2000,
+  // chatbots (cases) in one collection
+  collectionBots: 20,
   // per message in a conversation
   message: 1500,
   // messages sent to the model per request (older ones are dropped)
@@ -42,6 +46,30 @@ export interface Chatbot {
   createdAt?: string
   updatedAt?: string
   groupIds: string[]
+  // set when the chatbot is opened from a collection: the teacher's goals
+  // for the collection, given to the model as context
+  collectionGoals?: string
+}
+
+// A collection («Samling»): several chatbots (cases) the student picks from.
+export interface ChatbotCollection {
+  id: string
+  name: string
+  description: string
+  goals: string
+  accessCode: string
+  chatbotIds: string[]
+  groupIds: string[]
+}
+
+// What the student sees of a collection: the cases, without instructions.
+export interface PublicCollection {
+  id: string
+  name: string
+  description: string
+  goals: string
+  accessCode: string
+  bots: { id: string; name: string; description: string; level: string | null }[]
 }
 
 // What the student's browser gets: no instructions.
@@ -60,8 +88,9 @@ export interface ChatMessage {
 }
 
 // How the browser points the server at a chatbot: by id (logged-in users
-// with access through a group, or the teacher) or by its share code.
-export type ChatbotRef = { id: string } | { code: string }
+// with access through a group, or the teacher), by its share code, or as a
+// case in a collection (the collection's id or code, and the chatbot's id).
+export type ChatbotRef = { id: string } | { code: string } | { collection: string; id: string }
 
 export const CODE_PATTERN = /^[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{4}$/
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
@@ -86,7 +115,15 @@ export function parseRef(value: string): ChatbotRef | null {
 }
 
 export function refQuery(ref: ChatbotRef): string {
+  if ('collection' in ref) return `samling=${encodeURIComponent(ref.collection)}&id=${encodeURIComponent(ref.id)}`
   return 'id' in ref ? `id=${encodeURIComponent(ref.id)}` : `kode=${encodeURIComponent(ref.code)}`
+}
+
+// /snakkebot/samling/<ref> takes the collection's id or its code.
+export function parseCollectionRef(value: string): string | null {
+  if (isUuid(value)) return value.toLowerCase()
+  const code = normalizeCode(value)
+  return CODE_PATTERN.test(code) ? code : null
 }
 
 export function isLevel(value: unknown): value is ChatbotLevel {

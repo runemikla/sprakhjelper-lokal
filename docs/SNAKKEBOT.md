@@ -54,6 +54,25 @@ forespørsel. Bare lærerens innstillinger ligger i databasen (`chatbots`,
 Sider: `/snakkebot` (lærer: liste; elev: kode og snakkeboter fra gruppene),
 `/snakkebot/ny`, `/snakkebot/<id>/rediger`, `/snakkebot/<id eller KODE>` (samtale).
 
+## Samlinger
+
+En samling (`chatbot_collections`) setter sammen flere snakkeboter (caser) til én øving,
+for eksempel «Kundeveiledning» med ti ulike kunder. Bare administratorer lager samlinger
+(`/snakkebot/samling/ny`).
+
+- Samlingen har navn, kort beskrivelse og en tekst til eleven om instruksjoner og
+  læringsmål (`goals`). Teksten vises før eleven velger case, og legges også til i
+  systeminstruksen til snakkeboten eleven snakker med.
+- Eleven åpner `/snakkebot/samling/<id eller KODE>`, velger en case eller «Tilfeldig» og
+  kommer til `/snakkebot/samling/<ref>/<snakkebot-id>`. Hver case har sin egen instruks
+  og stemme.
+- Samlingen deles med grupper (`chatbot_collection_groups`) og har sin egen kode på fire
+  tegn. Kodene deles med snakkebotene, så kodefeltet på Snakkebot-siden virker for begge.
+- Gruppemedlemmer får tilgang til snakkebotene i en samling som er delt med gruppen
+  (`can_read_chatbot`). Med kode går alt via `get_chatbot_collection_by_code` og
+  `get_chatbot_in_collection_by_code`, som ikke viser instruksene til nettleseren.
+- SQL: `supabase/migrations/20261126120000_create_chatbot_collections.sql`.
+
 ## Oppsett
 
 ### Supabase
