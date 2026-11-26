@@ -6,4 +6,5 @@ export const VERKTOY_FARGE: Record<string, string> = {
   '/lytteoving': 'bg-vlfk-lysegronn',
   '/grammatikk': 'bg-vlfk-gul',
   '/grupper': 'bg-vlfk-lilla',
+  '/snakkebot': 'bg-vlfk-mint',
 }

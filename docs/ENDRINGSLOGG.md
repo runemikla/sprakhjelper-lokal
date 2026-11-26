@@ -29,7 +29,7 @@ Legg en ny oppføring **øverst** i `ENDRINGSLOGG` (nyeste først):
 
 | Side | Fil |
 | --- | --- |
-| Lærerveiledning | `app/laererveiledning/page.tsx` |
+| Kom i gang | `app/kom-i-gang/page.tsx` (/laererveiledning videresender hit) |
 | Om verktøyene | `app/om/page.tsx` |
 | Læreplaner | `app/laereplaner/page.tsx` + `lib/laereplaner.ts` (målene) |
 | Personvern og GDPR | `app/personvern/page.tsx` (oppdater `SIST_OPPDATERT` når teksten endres) |

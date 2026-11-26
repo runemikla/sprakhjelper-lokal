@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { ArrowRight } from 'lucide-react'
 
-// The four tools, in the order they appear on the cards.
+// The tools, in the order they appear on the cards.
 export const VERKTOY = [
   {
     href: '/spraakhjelper',
@@ -34,6 +34,13 @@ export const VERKTOY = [
     title: 'Grammatikkøving',
     description: 'Grammatikk med tilpassede øvinger.',
     image: '/images/verktoy/grammatikk.webp',
+    clearsSession: false,
+  },
+  {
+    href: '/snakkebot',
+    title: 'Snakkebot',
+    description: 'Øv på å snakke norsk med KI.',
+    image: '/images/verktoy/snakkebot.webp',
     clearsSession: false,
   },
 ] as const

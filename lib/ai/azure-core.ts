@@ -41,6 +41,7 @@ export interface ChatCompletionBody {
   temperature?: number;
   max_completion_tokens?: number;
   response_format?: unknown;
+  stream?: boolean;
 }
 
 // Reasoning models spend part of max_completion_tokens on hidden reasoning

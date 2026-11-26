@@ -19,16 +19,7 @@ export function Hero({ signedIn }: { signedIn: boolean }) {
         <div className="rounded-2xl bg-white/95 p-5 shadow-xl backdrop-blur-sm sm:p-8">
           <VerktoyKort />
 
-          {signedIn ? (
-            <div className="mt-6 flex flex-col gap-4 border-t border-gray-200 pt-5 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-gray-600">
-                Les om hvordan du bruker verktøyene i undervisningen.
-              </p>
-              <Button asChild size="lg" variant="outline">
-                <Link href="/laererveiledning">Lærerveiledning</Link>
-              </Button>
-            </div>
-          ) : (
+          {!signedIn && (
             // Visitors: one large, centred sign-in button.
             <div className="mt-6 flex justify-center border-t border-gray-200 pt-6">
               <Button asChild size="lg" className="h-14 w-full px-12 text-lg sm:w-auto sm:min-w-64">

@@ -24,8 +24,16 @@ export interface Endringsoppforing {
 
 export const ENDRINGSLOGG: Endringsoppforing[] = [
   {
+    dato: '2026-11-25',
+    endringer: [
+      { type: 'nytt', tekst: 'Stemmer: administrator har fått en ny side under Innstillinger med alle de norske stemmene fra Google (Chirp 3 HD og de andre typene). Du kan filtrere på type og kjønn, høre lydprøven «Hei! Velkommen til Språkhjelp!» og velge hvilke stemmer lærerne kan bruke i Lytteøving, ordlistene i Lær ord og Snakkebot. Innhold som allerede er laget, beholder stemmen sin.' },
+    ],
+  },
+  {
     dato: '2026-11-24',
     endringer: [
+      { type: 'nytt', tekst: 'Snakkebot: elevene kan snakke norsk med en KI i stedet for å skrive. Administrator lager snakkeboter med en instruks (for eksempel kafé, legetime eller jobbintervju), velger nivå og stemme, og deler dem med grupper eller med en kode. Lærere ser alle snakkebotene og koden de kan gi elevene. Svaret leses opp automatisk med samme stemmer som i Lytteøving. I automatisk talemodus åpner mikrofonen seg selv, og svaret sendes når eleven tar en pause. I manuell modus trykker eleven for å snakke og for å sende. Under Innstillinger kan eleven velge pause før sending, talehastighet og å skjule meldingene. Samtalen og lydopptaket lagres ikke.' },
+      { type: 'forbedret', tekst: 'Personvern: all opplesing (lytteøvinger og ordlister i Lær ord) lages nå hos Google i EU. Teksten som skal leses opp, sendes ikke lenger ut av Europa.' },
       { type: 'forbedret', tekst: 'Grammatikkøving: oppgavene i «Øv på feilene dine» ser nå ut som Skrivehjelp, med «Din setning» øverst, læreren til høyre, og fremdriftslinje og Forrige/Neste nederst. Boksen har fast høyde, så den hopper ikke mellom oppgavene eller når du får svar. Du kan også gå tilbake til forrige oppgave.' },
       { type: 'forbedret', tekst: 'Skrivehjelp: den grafiske visningen av feiltypene i sammendraget er enklere. Den viser bare én fargestolpe med fordelingen av alle feilene (staving, substantiv, verb osv.). Den detaljerte visningen har fått de samme fargene ved hver feiltype, så det er lett å se hvilken gruppe feilen hører til.' },
       { type: 'forbedret', tekst: 'Forsiden er enklere for dem som ikke er logget inn: nederst er det bare én stor «Logg inn»-knapp på midten.' },

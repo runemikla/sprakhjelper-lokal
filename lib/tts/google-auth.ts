@@ -6,6 +6,7 @@ const SCOPE = 'https://www.googleapis.com/auth/cloud-platform'
 interface ServiceAccount {
   client_email: string
   private_key: string
+  project_id?: string
 }
 
 let cachedToken: { value: string; expiresAt: number } | null = null
@@ -27,7 +28,20 @@ function readServiceAccount(): ServiceAccount | null {
       'GOOGLE_TTS_CREDENTIALS must be a service account key with client_email and private_key'
     )
   }
-  return { client_email: parsed.client_email, private_key: parsed.private_key }
+  return {
+    client_email: parsed.client_email,
+    private_key: parsed.private_key,
+    project_id: parsed.project_id,
+  }
+}
+
+/** The Google Cloud project of the service account in GOOGLE_TTS_CREDENTIALS. */
+export function getServiceAccountProjectId(): string | null {
+  try {
+    return readServiceAccount()?.project_id ?? null
+  } catch {
+    return null
+  }
 }
 
 function base64Url(value: string | Buffer): string {

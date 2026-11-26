@@ -111,6 +111,13 @@ export default function PersonvernPage() {
               <strong>Lær ord:</strong> Ordene i lærerens ordliste sendes til en språkmodell for å
               lage innhold, til tekst til tale for lyd og til en bildemodell for bilder.
             </li>
+            <li>
+              <strong>Snakkebot:</strong> Det eleven sier, tas opp i nettleseren og sendes til tale
+              til tekst for å bli gjort om til tekst. Teksten sendes til en språkmodell sammen med
+              lærerens instruks, og svaret sendes til tekst til tale for å bli lest opp. Verken
+              lydopptaket eller samtalen lagres. Bare lærerens innstillinger for snakkeboten (navn,
+              instruks og stemme) lagres.
+            </li>
           </ul>
           <p>
             Ikke skriv navn, fødselsnummer eller andre personopplysninger i tekstene. Verktøyene
@@ -131,11 +138,15 @@ export default function PersonvernPage() {
             <li>
               <strong>Google Cloud tekst til tale og Google Gemini</strong>: lyd i lytteøvinger og
               ordlister, og bilder i Lær ord. Dette gjelder bare tekst og ord som læreren har lagt
-              inn.
+              inn. I Snakkebot leser Google Cloud tekst til tale opp svarene fra snakkeboten.
             </li>
             <li>
-              <strong>Supabase</strong>: innlogging og lagring av grupper, ordlister og
-              lytteøvinger.
+              <strong>Google Cloud tale til tekst</strong>: gjør om det eleven sier i Snakkebot til
+              tekst.
+            </li>
+            <li>
+              <strong>Supabase</strong>: innlogging og lagring av grupper, ordlister,
+              lytteøvinger og snakkeboter.
             </li>
             <li>
               <strong>Hetzner</strong>: drift av nettsiden.
