@@ -8,6 +8,7 @@
 //                     generateContent format of the 2.5/3.1 TTS models;
 //                     falls back to gemini-2.5-flash-preview-tts on 404.
 
+import { logGeminiUsage, type UsageTool } from '@/lib/ai/usage'
 import { TextToSpeechError } from './errors'
 import { DEFAULT_GEMINI_VOICE, isGeminiVoice } from './gemini-voices'
 
@@ -68,7 +69,9 @@ export async function geminiTextToSpeech(
   text: string,
   voice: string = DEFAULT_GEMINI_VOICE,
   // Short English style instruction read before the text, without a colon.
-  style: string = DEFAULT_STYLE
+  style: string = DEFAULT_STYLE,
+  // Which tool asked, for the «Forbruk» admin page. Not logged without it.
+  tool?: UsageTool
 ): Promise<Buffer> {
   const { apiKey, model } = config()
   if (!apiKey) {
@@ -76,8 +79,10 @@ export async function geminiTextToSpeech(
   }
   const voiceName = isGeminiVoice(voice) ? voice : DEFAULT_GEMINI_VOICE
 
+  let usedModel = model
   let response = await request(model, apiKey, text, voiceName, style)
   if (response.status === 404 && model !== FALLBACK_MODEL) {
+    usedModel = FALLBACK_MODEL
     response = await request(FALLBACK_MODEL, apiKey, text, voiceName, style)
   }
 
@@ -90,6 +95,7 @@ export async function geminiTextToSpeech(
   }
 
   const payload = await response.json()
+  if (tool) logGeminiUsage(tool, usedModel, payload.usageMetadata, { kind: 'lyd', units: text.length })
   const parts = (payload.candidates?.[0]?.content?.parts ?? []) as {
     inlineData?: { data?: string; mimeType?: string }
   }[]

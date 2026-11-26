@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { getEnvModelConfig, guessModelType, sendChatCompletion, type AzureModelConfig } from '@/lib/ai/azure-core'
 import { geminiTextToSpeech, isGeminiTtsConfigured } from '@/lib/tts/gemini'
+import { logChatUsage, logGeminiUsage, type ChatUsage } from '@/lib/ai/usage'
 import { googleTextToSpeech } from '@/lib/tts/google'
 import { DEFAULT_CHOSEN_VOICE, isGeminiVoice } from '@/lib/tts/gemini-voices'
 import { isValidVoiceId } from '@/lib/tts/voices'
@@ -261,6 +262,11 @@ async function openAzureStream(system: string, messages: ChatMessage[]): Promise
         temperature: 0.7,
         max_completion_tokens: 400,
         stream: true,
+        // Token usage arrives in the last chunk. Older preview API versions
+        // do not know the option.
+        ...(config.apiVersion === 'v1' || config.apiVersion >= '2024-09-01'
+          ? { stream_options: { include_usage: true } }
+          : {}),
       })
     } catch (error) {
       const cause = error instanceof Error && error.cause instanceof Error ? ` (${error.cause.message})` : ''
@@ -303,43 +309,54 @@ async function openAzureStream(system: string, messages: ChatMessage[]): Promise
 /** The answer from Azure, piece by piece as it is written (server-sent events). */
 async function* azureStream(system: string, messages: ChatMessage[]): AsyncGenerator<string> {
   const response = await openAzureStream(system, messages)
-  const reader = response.body!.getReader()
-  const decoder = new TextDecoder()
-  let buffer = ''
-  let sent = false
-  let finish = ''
-  for (;;) {
-    const { done, value } = await reader.read()
-    if (done) break
-    buffer += decoder.decode(value, { stream: true })
-    let newline: number
-    while ((newline = buffer.indexOf('\n')) >= 0) {
-      const line = buffer.slice(0, newline).trim()
-      buffer = buffer.slice(newline + 1)
-      if (!line.startsWith('data:')) continue
-      const data = line.slice(5).trim()
-      if (data === '[DONE]') continue
-      let chunk: { choices?: { delta?: { content?: string }; finish_reason?: string | null }[] }
-      try {
-        chunk = JSON.parse(data)
-      } catch {
-        continue
-      }
-      const choice = chunk.choices?.[0]
-      if (choice?.finish_reason) finish = choice.finish_reason
-      const text = choice?.delta?.content
-      if (text) {
-        sent = true
-        yield text
+  const deployment = chatbotModel().deployment
+  let usage: ChatUsage | undefined
+  try {
+    const reader = response.body!.getReader()
+    const decoder = new TextDecoder()
+    let buffer = ''
+    let sent = false
+    let finish = ''
+    for (;;) {
+      const { done, value } = await reader.read()
+      if (done) break
+      buffer += decoder.decode(value, { stream: true })
+      let newline: number
+      while ((newline = buffer.indexOf('\n')) >= 0) {
+        const line = buffer.slice(0, newline).trim()
+        buffer = buffer.slice(newline + 1)
+        if (!line.startsWith('data:')) continue
+        const data = line.slice(5).trim()
+        if (data === '[DONE]') continue
+        let chunk: {
+          choices?: { delta?: { content?: string }; finish_reason?: string | null }[]
+          usage?: ChatUsage | null
+        }
+        try {
+          chunk = JSON.parse(data)
+        } catch {
+          continue
+        }
+        if (chunk.usage) usage = chunk.usage
+        const choice = chunk.choices?.[0]
+        if (choice?.finish_reason) finish = choice.finish_reason
+        const text = choice?.delta?.content
+        if (text) {
+          sent = true
+          yield text
+        }
       }
     }
-  }
-  if (finish === 'content_filter' && !sent) throw new ContentFilterError('finish_reason content_filter')
-  if (!sent) {
-    throw new ChatModelError(
-      `Tomt svar fra ${chatbotModel().deployment} (finish_reason: ${finish || 'ukjent'})`,
-      'Modellen sendte et tomt svar. For reasoning-modeller betyr det ofte at tokengrensen ble brukt opp; prøv CHATBOT_REASONING_EFFORT=minimal.'
-    )
+    if (finish === 'content_filter' && !sent) throw new ContentFilterError('finish_reason content_filter')
+    if (!sent) {
+      throw new ChatModelError(
+        `Tomt svar fra ${chatbotModel().deployment} (finish_reason: ${finish || 'ukjent'})`,
+        'Modellen sendte et tomt svar. For reasoning-modeller betyr det ofte at tokengrensen ble brukt opp; prøv CHATBOT_REASONING_EFFORT=minimal.'
+      )
+    }
+  } finally {
+    // Also runs when the caller stops reading early.
+    logChatUsage('snakkebot-svar', deployment, usage)
   }
 }
 
@@ -366,6 +383,7 @@ async function geminiReply(system: string, messages: ChatMessage[]): Promise<str
     throw new Error(`Gemini svarte ${response.status}: ${detail.slice(0, 300)}`)
   }
   const data = await response.json()
+  logGeminiUsage('snakkebot-svar', model, data.usageMetadata)
   const blocked = data.promptFeedback?.blockReason || (data.candidates?.[0]?.finishReason === 'SAFETY' ? 'SAFETY' : '')
   if (blocked) throw new ContentFilterError(String(blocked))
   const parts = (data.candidates?.[0]?.content?.parts ?? []) as { text?: string }[]
@@ -439,8 +457,8 @@ export async function chatbotSpeech(bot: Chatbot, text: string): Promise<{ audio
     const style = SPEAKING_STYLE[bot.level ?? 'A2'] ?? SPEAKING_STYLE.A2
     // Gemini has only the Chirp 3 HD names; other voices fall back to the default.
     const geminiVoice = isGeminiVoice(voice) ? voice : DEFAULT_CHOSEN_VOICE
-    return { audio: await geminiTextToSpeech(text, geminiVoice, style), mimeType: 'audio/wav' }
+    return { audio: await geminiTextToSpeech(text, geminiVoice, style, 'snakkebot-lyd'), mimeType: 'audio/wav' }
   }
   const rate = bot.level === 'A1' ? 0.85 : bot.level === 'A2' ? 0.92 : 1
-  return { audio: await googleTextToSpeech(text, rate, voice), mimeType: 'audio/mpeg' }
+  return { audio: await googleTextToSpeech(text, rate, voice, 'snakkebot-lyd'), mimeType: 'audio/mpeg' }
 }

@@ -24,7 +24,7 @@ export async function POST(req: Request) {
 
   try {
     const { text, voice } = schema.parse(await req.json())
-    const audio = await textToSpeech(text, 0.9, isValidVoiceId(voice) ? voice : DEFAULT_CHOSEN_VOICE)
+    const audio = await textToSpeech(text, 0.9, isValidVoiceId(voice) ? voice : DEFAULT_CHOSEN_VOICE, 'laer-ord-lyd')
     return new NextResponse(new Uint8Array(audio), {
       headers: {
         'Content-Type': 'audio/mpeg',

@@ -10,7 +10,7 @@ Du hjelper Rune å bytte modellen som alle KI-verktøyene i Språkhjelp bruker. 
 ## Slik er det satt opp
 
 - All kontakt med modellen går gjennom `azureChatCompletion()` i `lib/ai/azure.ts`. Ingen route skal bygge Azure-URL selv. Finner du en som gjør det, flytt den over til `azureChatCompletion()`. Selve forespørselen og tilpasningen til modelltypen ligger i `lib/ai/azure-core.ts`.
-- Den enkleste måten å bytte på er admin-siden `/sprakmodell` (tabellen `ai_models` i Supabase): legg til deployment, trykk Test, ta i bruk. Valget der gjelder både test.sprakhjelp.no og sprakhjelp.no, fordi de deler database.
+- Den enkleste måten å bytte på er admin-siden `/admin/sprakmodell` (tabellen `ai_models` i Supabase): legg til deployment, trykk Test, ta i bruk. Valget der gjelder både test.sprakhjelp.no og sprakhjelp.no, fordi de deler database.
 - Standardmodellen (reserve når ingen er valgt i admin) settes med miljøvariabler i Coolify: `AZURE_OPENAI_DEPLOYMENT_NAME`, `AZURE_OPENAI_API_VERSION`, `AZURE_OPENAI_MODEL_TYPE` og `AZURE_OPENAI_REASONING_EFFORT` (pluss `AZURE_OPENAI_ENDPOINT` og `AZURE_OPENAI_API_KEY`). Bruk disse når en modell skal testes bare på testappen.
 - Appen kjører i Coolify på Hetzner. Testappen (test.sprakhjelp.no) bygger fra `dev`, produksjon (sprakhjelp.no) fra `main`. Du har ikke tilgang til Coolify eller Azure; Rune gjør endringene der, og du forteller nøyaktig hva han skal skrive inn.
 

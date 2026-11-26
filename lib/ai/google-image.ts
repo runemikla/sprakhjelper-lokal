@@ -16,6 +16,11 @@ function imageConfig() {
   }
 }
 
+/** The image model in use, for the usage log. */
+export function imageModelName(): string {
+  return imageConfig().model
+}
+
 export function isImageModelConfigured(): boolean {
   return Boolean(imageConfig().apiKey)
 }

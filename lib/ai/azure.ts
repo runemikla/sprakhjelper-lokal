@@ -7,6 +7,7 @@ import {
   type ChatCompletionBody,
   type ModelSettings,
 } from '@/lib/ai/azure-core'
+import { logChatResponse, type UsageTool } from '@/lib/ai/usage'
 
 // The language model every AI route uses: the model an admin has chosen on
 // the "Språkmodell" page (table ai_models in Supabase), or the model from the
@@ -81,6 +82,11 @@ export function isAzureConfigured(): boolean {
   return Boolean(endpoint && apiKey)
 }
 
-export async function azureChatCompletion(body: ChatCompletionBody): Promise<Response> {
-  return sendChatCompletion(await getActiveModelConfig(), body)
+// `tool` says which tool made the call; the tokens are logged for the
+// «Forbruk» admin page.
+export async function azureChatCompletion(body: ChatCompletionBody, tool: UsageTool): Promise<Response> {
+  const config = await getActiveModelConfig()
+  const response = await sendChatCompletion(config, body)
+  logChatResponse(tool, config.deployment, response)
+  return response
 }

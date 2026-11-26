@@ -188,7 +188,7 @@ export async function POST(req: Request, { params }: RouteContext) {
             schema: responseSchema,
           },
         },
-      })
+      }, 'lytteoving-vurdering')
 
       if (!response.ok) {
         if (process.env.NODE_ENV === 'development') {

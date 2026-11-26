@@ -77,7 +77,7 @@ export async function POST(req: Request) {
           schema: responseSchema
         }
       }
-    });
+    }, 'skrivehjelp-setningssjekk');
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));

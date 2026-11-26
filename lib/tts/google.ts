@@ -1,3 +1,4 @@
+import { logAiUsage, type UsageTool } from '@/lib/ai/usage'
 import { TextToSpeechError } from './errors'
 import { getServiceAccountToken } from './google-auth'
 import { googleNameOf } from './voices'
@@ -23,7 +24,9 @@ export async function googleTextToSpeech(
   // Voice id (see lib/tts/voices.ts): a Chirp 3 HD name such as «Erinome»,
   // or a full Google name such as «nb-NO-Wavenet-A». Without it,
   // GOOGLE_TTS_VOICE or the default voice is used.
-  voice?: string
+  voice?: string,
+  // Which tool asked, for the «Forbruk» admin page. Not logged without it.
+  tool?: UsageTool
 ): Promise<Buffer> {
   const accessToken = await getServiceAccountToken()
   const apiKey = process.env.GOOGLE_TTS_API_KEY
@@ -82,5 +85,6 @@ export async function googleTextToSpeech(
     throw new Error('Empty audio response from Google TTS')
   }
 
+  if (tool) void logAiUsage({ tool, provider: 'google', model: voiceName, kind: 'lyd', units: text.length })
   return Buffer.from(data.audioContent, 'base64')
 }

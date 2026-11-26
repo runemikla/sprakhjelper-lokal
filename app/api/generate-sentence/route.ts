@@ -131,7 +131,7 @@ export async function POST(req: Request) {
           schema: responseSchema,
         },
       },
-    });
+    }, 'grammatikk-ordrekkefolge');
 
     if (!response.ok) {
       if (process.env.NODE_ENV === 'development') {

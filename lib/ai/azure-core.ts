@@ -42,6 +42,8 @@ export interface ChatCompletionBody {
   max_completion_tokens?: number;
   response_format?: unknown;
   stream?: boolean;
+  // Ask for token usage in the last chunk of a streamed answer.
+  stream_options?: { include_usage: boolean };
 }
 
 // Reasoning models spend part of max_completion_tokens on hidden reasoning

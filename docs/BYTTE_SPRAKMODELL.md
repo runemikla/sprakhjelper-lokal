@@ -4,7 +4,7 @@ Alle KI-verktøyene i Språkhjelp (skrivehjelp, setningsdeling, oppsummering, se
 
 Det er to måter å velge modell på:
 
-1. **Admin-siden Språkmodell** (`/sprakmodell`, i KI-verktøy-menyen for administratorer). Her legger du til en deployment, tester den og tar den i bruk med ett klikk. Dette er den enkleste måten.
+1. **Admin-siden Språkmodell** (`/admin/sprakmodell`, i Admin-menyen). Her legger du til en deployment, tester den og tar den i bruk med ett klikk. Dette er den enkleste måten.
 2. **Miljøvariablene i Coolify.** Modellen herfra er «standardmodellen». Den brukes når ingen modell er valgt på admin-siden, og som reserve hvis databasen ikke svarer.
 
 Koden som snakker med Azure ligger i `lib/ai/azure-core.ts` (selve forespørselen) og `lib/ai/azure.ts` (velger modellen fra admin-siden eller miljøvariablene).
