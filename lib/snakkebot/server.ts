@@ -4,7 +4,7 @@ import { geminiTextToSpeech, isGeminiTtsConfigured } from '@/lib/tts/gemini'
 import { googleTextToSpeech } from '@/lib/tts/google'
 import { DEFAULT_CHOSEN_VOICE, isGeminiVoice } from '@/lib/tts/gemini-voices'
 import { isValidVoiceId } from '@/lib/tts/voices'
-import { buildSystemPrompt, START_MESSAGE } from './prompt'
+import { buildSystemPrompt, END_INSTRUCTION, START_MESSAGE } from './prompt'
 import { cleanReply } from './text'
 import { isLevel, LIMITS, type Chatbot, type ChatbotRef, type ChatMessage } from './types'
 
@@ -282,8 +282,13 @@ async function geminiReply(system: string, messages: ChatMessage[]): Promise<str
  * conversation gets a greeting. Pieces are raw model text (the browser
  * cleans markdown away).
  */
-export async function* chatbotReplyStream(bot: Chatbot, history: ChatMessage[]): AsyncGenerator<string> {
-  const system = buildSystemPrompt({ name: bot.name, instructions: bot.instructions, level: bot.level })
+export async function* chatbotReplyStream(
+  bot: Chatbot,
+  history: ChatMessage[],
+  options: { ending?: boolean } = {}
+): AsyncGenerator<string> {
+  let system = buildSystemPrompt({ name: bot.name, instructions: bot.instructions, level: bot.level })
+  if (options.ending) system += `\n\n${END_INSTRUCTION}`
   let messages = history.slice(-LIMITS.history)
   // The model needs the conversation to start with the student.
   if (messages.length === 0 || messages[0].role === 'assistant') {

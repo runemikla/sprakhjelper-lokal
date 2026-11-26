@@ -24,6 +24,8 @@ const schema = z.object({
       })
     )
     .max(200),
+  // the conversation's time is up: the chatbot says goodbye
+  ending: z.boolean().optional(),
 })
 
 export async function POST(req: Request) {
@@ -34,14 +36,14 @@ export async function POST(req: Request) {
   if (!ref) return NextResponse.json({ error: 'Ukjent snakkebot.' }, { status: 400 })
 
   try {
-    const { messages } = schema.parse(await req.json())
+    const { messages, ending } = schema.parse(await req.json())
     const bot = await loadChatbot(ref)
     if (!bot) return NextResponse.json({ error: 'Fant ikke snakkeboten.' }, { status: 404 })
     if (!isChatModelConfigured()) {
       return NextResponse.json({ error: 'Språkmodellen er ikke satt opp.' }, { status: 503 })
     }
     const started = Date.now()
-    const pieces = chatbotReplyStream(bot, messages)
+    const pieces = chatbotReplyStream(bot, messages, { ending })
     // Wait for the first piece, so setup errors become a normal error response.
     const first = await pieces.next()
     const firstMs = Date.now() - started

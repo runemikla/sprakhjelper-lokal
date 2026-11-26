@@ -22,7 +22,7 @@ interface Message {
   audioUrl?: string
 }
 
-type Phase = 'start' | 'idle' | 'recording' | 'transcribing' | 'thinking' | 'speaking'
+type Phase = 'start' | 'idle' | 'recording' | 'transcribing' | 'thinking' | 'speaking' | 'ended'
 
 // The answer being read aloud, sentence by sentence while it streams in.
 interface SpeechQueue {
@@ -52,8 +52,18 @@ function seconds(ms: number | undefined): string {
   return ms === undefined ? '–' : `${(ms / 1000).toFixed(1).replace('.', ',')} s`
 }
 
-// In «Automatisk» the microphone closes again if nothing is said for this long.
-const AUTO_NO_SPEECH_MS = 20_000
+// The conversation ends when the microphone has been open this long without
+// the student saying anything, so it is never left on by mistake.
+const NO_SPEECH_MS = LIMITS.silenceEndSeconds * 1000
+// «Manuell»: after the student has spoken, this much silence sends the answer.
+const MANUAL_SILENCE_MS = LIMITS.silenceEndSeconds * 1000
+
+type EndReason = 'time' | 'silence'
+
+function clock(seconds: number): string {
+  const s = Math.max(0, Math.ceil(seconds))
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
+}
 
 // A very short silent WAV, played on the first tap so that iOS lets the page
 // play the answers later without another tap.
@@ -93,6 +103,8 @@ export function ChatbotChat({ userEmail, isAdmin, chatbot, chatRef, editHref, sh
   const [playingIndex, setPlayingIndex] = useState<number | null>(null)
   const [showSettings, setShowSettings] = useState(false)
   const [timing, setTiming] = useState<string | null>(null)
+  const [endReason, setEndReason] = useState<EndReason | null>(null)
+  const [secondsLeft, setSecondsLeft] = useState<number>(LIMITS.conversationSeconds)
   const [settings, updateSettings] = useTalkSettings()
 
   const audio = useRef<HTMLAudioElement | null>(null)
@@ -109,6 +121,10 @@ export function ChatbotChat({ userEmail, isAdmin, chatbot, chatRef, editHref, sh
   // sentences are not read aloud any more.
   const turn = useRef(0)
   const marks = useRef<Marks>({})
+  // When the conversation started (Date.now()), and whether its time is up.
+  const startedAt = useRef(0)
+  const timeUp = useRef(false)
+  const phaseRef = useRef<Phase>('start')
   const query = refQuery(chatRef)
   const auto = settings.mode === 'auto'
 
@@ -134,6 +150,44 @@ export function ChatbotChat({ userEmail, isAdmin, chatbot, chatRef, editHref, sh
     listEnd.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })
   }, [messages, phase])
 
+  useEffect(() => {
+    phaseRef.current = phase
+  }, [phase])
+
+  // The clock: at most LIMITS.conversationSeconds per conversation. When the
+  // time is up, the chatbot says goodbye after the student's next answer (or
+  // the conversation ends at once if nobody is talking).
+  const running = phase !== 'start' && phase !== 'ended'
+  useEffect(() => {
+    if (!running) return
+    const tick = () => {
+      const left = LIMITS.conversationSeconds - (Date.now() - startedAt.current) / 1000
+      setSecondsLeft(left)
+      if (left <= 0 && !timeUp.current) {
+        timeUp.current = true
+        if (phaseRef.current === 'idle') endConversation('time')
+      }
+    }
+    tick()
+    const id = setInterval(tick, 1000)
+    return () => clearInterval(id)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [running])
+
+  // Stops everything (microphone, audio, requests) but keeps the messages.
+  function endConversation(reason: EndReason) {
+    turn.current++
+    active.current = false
+    recorder.current?.cancel()
+    recorder.current = null
+    mic.current.close()
+    audio.current?.pause()
+    setPlayingIndex(null)
+    setLevel(0)
+    setEndReason(reason)
+    setPhase('ended')
+  }
+
   function updateMessages(next: Message[]) {
     messagesRef.current = next
     setMessages(next)
@@ -141,6 +195,10 @@ export function ChatbotChat({ userEmail, isAdmin, chatbot, chatRef, editHref, sh
 
   // After the chatbot has spoken: in «Automatisk», listen for the answer.
   function afterSpeaking() {
+    if (timeUp.current && active.current) {
+      endConversation('time')
+      return
+    }
     if (active.current && settingsRef.current.mode === 'auto' && isRecordingSupported()) {
       void startRecording()
     }
@@ -297,6 +355,7 @@ export function ChatbotChat({ userEmail, isAdmin, chatbot, chatRef, editHref, sh
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           messages: history.slice(-LIMITS.history).map((m) => ({ role: m.role, content: m.content.slice(0, LIMITS.message) })),
+          ending: timeUp.current || undefined,
         }),
       })
       if (response.status === 422) {
@@ -377,17 +436,8 @@ export function ChatbotChat({ userEmail, isAdmin, chatbot, chatRef, editHref, sh
     }
   }
 
-  async function start() {
-    setError(null)
-    setShowSettings(false)
-    active.current = true
-    marks.current = {}
-    // Unlock audio playback while we are inside the tap.
-    const el = new Audio(SILENT_WAV)
-    audio.current = el
-    void el.play().catch(() => undefined)
-    // In «Automatisk» the microphone opens later without a tap, so ask for
-    // it now (iOS needs a tap to start audio).
+  // Opens the microphone inside the tap (iOS) when «Automatisk» will need it.
+  async function openMicIfAuto() {
     if (settingsRef.current.mode === 'auto' && isRecordingSupported()) {
       try {
         await mic.current.open()
@@ -395,6 +445,34 @@ export function ChatbotChat({ userEmail, isAdmin, chatbot, chatRef, editHref, sh
         setError(micErrorText(e))
       }
     }
+  }
+
+  // After «Fortsett samtalen»: the student starts talking again.
+  async function resume() {
+    setError(null)
+    setEndReason(null)
+    active.current = true
+    await openMicIfAuto()
+    setPhase('idle')
+    if (isRecordingSupported()) void startRecording()
+  }
+
+  async function start() {
+    setError(null)
+    setShowSettings(false)
+    active.current = true
+    marks.current = {}
+    startedAt.current = Date.now()
+    timeUp.current = false
+    setSecondsLeft(LIMITS.conversationSeconds)
+    setEndReason(null)
+    // Unlock audio playback while we are inside the tap.
+    const el = new Audio(SILENT_WAV)
+    audio.current = el
+    void el.play().catch(() => undefined)
+    // In «Automatisk» the microphone opens later without a tap, so ask for
+    // it now (iOS needs a tap to start audio).
+    await openMicIfAuto()
 
     if (chatbot.greeting.trim()) {
       updateMessages([{ role: 'assistant', content: chatbot.greeting.trim() }])
@@ -418,6 +496,8 @@ export function ChatbotChat({ userEmail, isAdmin, chatbot, chatRef, editHref, sh
     setLevel(0)
     setError(null)
     setTiming(null)
+    setEndReason(null)
+    timeUp.current = false
     setPhase('start')
   }
 
@@ -430,7 +510,9 @@ export function ChatbotChat({ userEmail, isAdmin, chatbot, chatRef, editHref, sh
     await askChatbot(history)
   }
 
-  async function finishRecording() {
+  // byUser: the student tapped to stop. Otherwise the recorder stopped itself
+  // (pause after speaking, or nothing said for NO_SPEECH_MS).
+  async function finishRecording(byUser = false) {
     const rec = recorder.current
     if (!rec || finishing.current) return
     finishing.current = true
@@ -440,6 +522,15 @@ export function ChatbotChat({ userEmail, isAdmin, chatbot, chatRef, editHref, sh
     try {
       const recording = await rec.stop()
       if (!recording.heardSpeech || recording.seconds < 0.4) {
+        // Nothing said: end the conversation so the microphone is not left on.
+        if (!byUser) {
+          endConversation(timeUp.current ? 'time' : 'silence')
+          return
+        }
+        if (timeUp.current) {
+          endConversation('time')
+          return
+        }
         setError(
           settingsRef.current.mode === 'auto'
             ? 'Jeg hørte ingenting. Trykk på mikrofonen når du vil snakke.'
@@ -483,10 +574,11 @@ export function ChatbotChat({ userEmail, isAdmin, chatbot, chatRef, editHref, sh
     const rec = new WavRecorder(mic.current, {
       maxSeconds: LIMITS.recordingSeconds,
       // «Manuell»: the student taps again to send.
-      silenceMs: autoMode ? settingsRef.current.pauseMs : 0,
-      noSpeechMs: autoMode ? AUTO_NO_SPEECH_MS : 0,
+      // «Manuell» also sends after a long silence, so the mic is not left on.
+      silenceMs: autoMode ? settingsRef.current.pauseMs : MANUAL_SILENCE_MS,
+      noSpeechMs: NO_SPEECH_MS,
       onLevel: setLevel,
-      onAutoStop: () => void finishRecording(),
+      onAutoStop: () => void finishRecording(false),
     })
     recorder.current = rec
     try {
@@ -501,7 +593,7 @@ export function ChatbotChat({ userEmail, isAdmin, chatbot, chatRef, editHref, sh
   }
 
   function handleMic() {
-    if (phase === 'recording') void finishRecording()
+    if (phase === 'recording') void finishRecording(true)
     else if (phase === 'idle' || phase === 'speaking') void startRecording()
   }
 
@@ -571,7 +663,17 @@ export function ChatbotChat({ userEmail, isAdmin, chatbot, chatRef, editHref, sh
           )}
 
           <div className="flex items-center justify-between gap-2 pb-2">
-            <span className="text-sm text-gray-500">{auto ? 'Automatisk talemodus' : 'Manuell talemodus'}</span>
+            <span className="text-sm text-gray-500">
+              {auto ? 'Automatisk talemodus' : 'Manuell talemodus'}
+              {running && (
+                <>
+                  {' · '}
+                  <span className={cn('tabular-nums', secondsLeft <= 60 && 'font-medium text-vlfk-ink')} aria-label="Tid igjen">
+                    {clock(secondsLeft)}
+                  </span>
+                </>
+              )}
+            </span>
             <button
               type="button"
               onClick={() => setShowSettings((v) => !v)}
@@ -602,12 +704,14 @@ export function ChatbotChat({ userEmail, isAdmin, chatbot, chatRef, editHref, sh
                 Start samtalen
               </Button>
               <p className="max-w-md text-xs text-gray-500">
-                Samtalen og lyden lagres ikke. Ikke si navn eller andre personopplysninger.
+                En samtale varer i høyst {LIMITS.conversationSeconds / 60} minutter. Samtalen og lyden lagres ikke. Ikke si navn eller andre personopplysninger.
               </p>
             </div>
           ) : (
             <>
-              {settings.hideMessages ? (
+              {phase === 'ended' && settings.hideMessages ? (
+                <div className="flex-1" />
+              ) : settings.hideMessages ? (
                 <div className="flex flex-1 flex-col items-center justify-center gap-4 text-center" aria-live="polite">
                   <button
                     type="button"
@@ -693,6 +797,25 @@ export function ChatbotChat({ userEmail, isAdmin, chatbot, chatRef, editHref, sh
                 <div className="mt-3 rounded-xl border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-800">{error}</div>
               )}
 
+              {phase === 'ended' ? (
+                <div className="mt-3 flex flex-col items-center gap-3 border-t border-gray-200 pt-4 text-center" aria-live="polite">
+                  <p className="font-medium text-gray-900">
+                    {endReason === 'time'
+                      ? `Samtalen er ferdig. Dere har snakket i ${LIMITS.conversationSeconds / 60} minutter.`
+                      : `Samtalen stoppet fordi det var stille i ${LIMITS.silenceEndSeconds} sekunder.`}
+                  </p>
+                  <div className="flex flex-wrap justify-center gap-2">
+                    {endReason === 'silence' && !timeUp.current && (
+                      <Button onClick={() => void resume()}>
+                        <Mic className="h-4 w-4" /> Fortsett samtalen
+                      </Button>
+                    )}
+                    <Button variant={endReason === 'silence' ? 'outline' : 'default'} onClick={restart}>
+                      <RotateCcw className="h-4 w-4" /> Ny samtale
+                    </Button>
+                  </div>
+                </div>
+              ) : (
               <div className="mt-3 flex flex-col items-center gap-2 border-t border-gray-200 pt-4">
                 {micSupported && !settings.hideMessages && (
                   <>
@@ -738,6 +861,7 @@ export function ChatbotChat({ userEmail, isAdmin, chatbot, chatRef, editHref, sh
                 </form>
                 {isAdmin && timing && <p className="text-center text-xs text-gray-500">{timing}</p>}
               </div>
+              )}
             </>
           )}
         </CardContent>
