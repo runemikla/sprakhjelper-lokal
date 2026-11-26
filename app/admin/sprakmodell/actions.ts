@@ -46,7 +46,7 @@ async function ensureAdmin(): Promise<string | null> {
 
 function done(): ActionResult {
   clearModelCache()
-  revalidatePath('/sprakmodell')
+  revalidatePath('/admin/sprakmodell')
   return { ok: true }
 }
 
@@ -95,7 +95,7 @@ export async function createAiModel(input: {
     })
     if (activateError) {
       console.error('Activate AI model error:', activateError.message)
-      revalidatePath('/sprakmodell')
+      revalidatePath('/admin/sprakmodell')
       return { ok: false, error: 'Modellen ble lagret, men kunne ikke tas i bruk.' }
     }
   }

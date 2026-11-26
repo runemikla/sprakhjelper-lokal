@@ -10,7 +10,7 @@ import { useUserRoles } from '@/components/auth/user-roles-provider'
 
 interface NavbarProps {
   userEmail?: string | null
-  // When true, the admin-only «Innstillinger» link is shown.
+  // When true, the admin-only «Admin» link is shown.
   isAdmin?: boolean
 }
 
@@ -18,7 +18,7 @@ export function Navbar({ userEmail = null, isAdmin: isAdminProp = false }: Navba
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   // Everyone finds the tools as cards on the start page; there is no tools menu.
   // The role also comes from the root layout, so pages that do not pass
-  // isAdmin still show «Innstillinger» to admins.
+  // isAdmin still show «Admin» to admins.
   const roles = useUserRoles()
   const isAdmin = isAdminProp || roles.isAdmin
 
@@ -56,10 +56,10 @@ export function Navbar({ userEmail = null, isAdmin: isAdminProp = false }: Navba
             </Link>
             {isAdmin && (
               <Link
-                href="/innstillinger"
+                href="/admin"
                 className="text-gray-700 hover:text-vlfk-ink transition-colors font-medium"
               >
-                Innstillinger
+                Admin
               </Link>
             )}
             {userEmail ? (
@@ -115,11 +115,11 @@ export function Navbar({ userEmail = null, isAdmin: isAdminProp = false }: Navba
               </Link>
               {isAdmin && (
                 <Link
-                  href="/innstillinger"
+                  href="/admin"
                   className="text-gray-700 hover:text-vlfk-ink transition-colors font-medium px-2"
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  Innstillinger
+                  Admin
                 </Link>
               )}
               {userEmail ? (

@@ -66,6 +66,15 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  // The admin pages moved under /admin (with a sidebar menu) in November 2026.
+  async redirects() {
+    return [
+      { source: '/innstillinger', destination: '/admin', permanent: false },
+      { source: '/instrukser', destination: '/admin/instrukser', permanent: false },
+      { source: '/sprakmodell', destination: '/admin/sprakmodell', permanent: false },
+      { source: '/stemmer', destination: '/admin/stemmer', permanent: false },
+    ];
+  },
   async headers() {
     return [
       {
