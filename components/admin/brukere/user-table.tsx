@@ -3,6 +3,7 @@
 import * as React from 'react'
 import { ChevronLeft, ChevronRight, Filter, GraduationCap, Search, ShieldCheck, UserRound, Users } from 'lucide-react'
 import { setUserRole } from '@/app/admin/brukere/actions'
+import { DeleteUserButton } from '@/components/admin/brukere/delete-user-button'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -127,7 +128,10 @@ function RoleSelect({ user, isSelf }: { user: AdminUser; isSelf: boolean }) {
   )
 }
 
-export function UserTable({ users, currentUserId }: { users: AdminUser[]; currentUserId: string }) {
+export function UserTable({ users: initialUsers, currentUserId }: { users: AdminUser[]; currentUserId: string }) {
+  // Deleted users disappear right away; the server list follows on refresh.
+  const [deleted, setDeleted] = React.useState<string[]>([])
+  const users = React.useMemo(() => initialUsers.filter((u) => !deleted.includes(u.id)), [initialUsers, deleted])
   const [query, setQuery] = React.useState('')
   const [roleFilter, setRoleFilter] = React.useState<Role | 'alle'>('alle')
   const [page, setPage] = React.useState(1)
@@ -151,7 +155,8 @@ export function UserTable({ users, currentUserId }: { users: AdminUser[]; curren
         <h2 className="text-xl font-semibold text-vlfk-ink sm:text-2xl">Brukere</h2>
         <p className="max-w-3xl text-sm text-vlfk-ink-muted sm:text-base">
           Alle som har konto i Språkhjelp. Endre rollen i menyen på raden; endringen gjelder neste gang brukeren
-          åpner en side. Du kan ikke endre din egen rolle.
+          åpner en side. Søppelbøtta sletter en bruker og alt hen har laget. Du kan ikke endre eller slette deg selv,
+          og en administrator må gjøres om til lærer eller elev før kontoen kan slettes.
         </p>
       </div>
 
@@ -200,12 +205,15 @@ export function UserTable({ users, currentUserId }: { users: AdminUser[]; curren
                 <TableHead className="hidden text-xs text-vlfk-ink-muted sm:table-cell sm:text-sm">Grupper</TableHead>
                 <TableHead className="hidden text-xs text-vlfk-ink-muted sm:text-sm md:table-cell">Sist innlogget</TableHead>
                 <TableHead className="hidden text-xs text-vlfk-ink-muted sm:text-sm lg:table-cell">Opprettet</TableHead>
+                <TableHead className="w-10">
+                  <span className="sr-only">Slett</span>
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {shown.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="h-20 text-center text-sm text-vlfk-ink-muted">
+                  <TableCell colSpan={6} className="h-20 text-center text-sm text-vlfk-ink-muted">
                     Fant ingen brukere.
                   </TableCell>
                 </TableRow>
@@ -232,6 +240,15 @@ export function UserTable({ users, currentUserId }: { users: AdminUser[]; curren
                     </TableCell>
                     <TableCell className="hidden whitespace-nowrap text-xs text-vlfk-ink-muted sm:text-sm lg:table-cell">
                       {formatDate(u.createdAt)}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {u.id !== currentUserId && u.role !== 'admin' && (
+                        <DeleteUserButton
+                          userId={u.id}
+                          email={u.email}
+                          onDeleted={() => setDeleted((ids) => [...ids, u.id])}
+                        />
+                      )}
                     </TableCell>
                   </TableRow>
                 ))

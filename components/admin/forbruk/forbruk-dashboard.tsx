@@ -6,7 +6,7 @@ import {
   AudioLines,
   ChevronLeft,
   ChevronRight,
-  CircleDollarSign,
+  Coins,
   ClipboardList,
   Cpu,
   Filter,
@@ -31,7 +31,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { USAGE_TOOLS, type UsageTool } from '@/lib/ai/usage'
-import { estimateCost } from '@/lib/admin/priser'
+import { estimateCost, type UsageNumbers } from '@/lib/admin/priser'
 import { cn } from '@/lib/utils'
 
 // «Forbruk»: the KPI cards, chart over time, share per tool and the table of
@@ -79,17 +79,17 @@ const SERIES_COLORS = { a: '#00C7B1', b: '#E06287' }
 
 const numberFormatter = new Intl.NumberFormat('nb-NO')
 const compactFormatter = new Intl.NumberFormat('nb-NO', { notation: 'compact', maximumFractionDigits: 1 })
-const dollarFormatter = new Intl.NumberFormat('nb-NO', {
+const kronerFormatter = new Intl.NumberFormat('nb-NO', {
   style: 'currency',
-  currency: 'USD',
+  currency: 'NOK',
   minimumFractionDigits: 2,
   maximumFractionDigits: 2,
 })
-const smallDollarFormatter = new Intl.NumberFormat('nb-NO', {
+const smallKronerFormatter = new Intl.NumberFormat('nb-NO', {
   style: 'currency',
-  currency: 'USD',
-  minimumFractionDigits: 4,
-  maximumFractionDigits: 4,
+  currency: 'NOK',
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 3,
 })
 const dayFormatter = new Intl.DateTimeFormat('nb-NO', { day: 'numeric', month: 'short', timeZone: 'UTC' })
 const timeFormatter = new Intl.DateTimeFormat('nb-NO', {
@@ -100,7 +100,16 @@ const timeFormatter = new Intl.DateTimeFormat('nb-NO', {
   timeZone: 'Europe/Oslo',
 })
 
-const formatDollars = (value: number) => (value > 0 && value < 0.01 ? smallDollarFormatter : dollarFormatter).format(value)
+const formatKroner = (value: number) => (value > 0 && value < 1 ? smallKronerFormatter : kronerFormatter).format(value)
+
+// Kroner per dollar. The prices in lib/admin/priser.ts are in dollars; the
+// page shows kroner at the rate the server passes in (USD_NOK_KURS).
+const RateContext = React.createContext(10.5)
+
+/** Estimated cost in kroner. */
+function nok(row: UsageNumbers, rate: number): number {
+  return estimateCost(row) * rate
+}
 
 function toolInfo(tool: string): { label: string; group: string } {
   return USAGE_TOOLS[tool as UsageTool] ?? { label: tool, group: 'Annet' }
@@ -153,13 +162,13 @@ interface Totals {
   seconds: number
 }
 
-function totalsOf(rows: DailyRow[]): Totals {
+function totalsOf(rows: DailyRow[], rate: number): Totals {
   const t: Totals = { calls: 0, input: 0, output: 0, cost: 0, images: 0, characters: 0, seconds: 0 }
   for (const r of rows) {
     t.calls += r.calls
     t.input += r.input_tokens
     t.output += r.output_tokens
-    t.cost += estimateCost(r)
+    t.cost += nok(r, rate)
     if (r.kind === 'bilde') t.images += r.units
     if (r.kind === 'lyd') t.characters += r.units
     if (r.kind === 'tale') t.seconds += r.units
@@ -172,7 +181,7 @@ function StatsCards({ current, previous }: { current: Totals; previous: Totals }
     { title: 'KI-kall', icon: Sigma, value: current.calls, prev: previous.calls, format: numberFormatter.format },
     { title: 'Tokens inn', icon: TextCursorInput, value: current.input, prev: previous.input, format: numberFormatter.format },
     { title: 'Tokens ut', icon: TextQuote, value: current.output, prev: previous.output, format: numberFormatter.format },
-    { title: 'Anslått kostnad', icon: CircleDollarSign, value: current.cost, prev: previous.cost, format: formatDollars },
+    { title: 'Anslått kostnad', icon: Coins, value: current.cost, prev: previous.cost, format: formatKroner },
   ]
   return (
     <div className="rounded-xl border bg-white">
@@ -244,7 +253,7 @@ function dayRange(days: number, end: string): string[] {
   return out
 }
 
-function seriesFor(metric: Metric, rows: DailyRow[], days: string[]): DayPoint[] {
+function seriesFor(metric: Metric, rows: DailyRow[], days: string[], rate: number): DayPoint[] {
   const byDay = new Map(days.map((d) => [d, { a: 0, b: 0 }]))
   for (const r of rows) {
     const point = byDay.get(r.day)
@@ -256,8 +265,8 @@ function seriesFor(metric: Metric, rows: DailyRow[], days: string[]): DayPoint[]
       if (r.kind === 'tekst') point.a += r.calls
       else point.b += r.calls
     } else {
-      if (r.kind === 'tekst') point.a += estimateCost(r)
-      else point.b += estimateCost(r)
+      if (r.kind === 'tekst') point.a += nok(r, rate)
+      else point.b += nok(r, rate)
     }
   }
   return days.map((day) => ({ day, label: dayFormatter.format(new Date(`${day}T00:00:00Z`)), ...byDay.get(day)! }))
@@ -281,7 +290,7 @@ function ChartTooltip({
   metric: Metric
 }) {
   if (!active || !payload?.length) return null
-  const format = metric === 'kostnad' ? formatDollars : numberFormatter.format
+  const format = metric === 'kostnad' ? formatKroner : numberFormatter.format
   return (
     <div className="rounded-lg border bg-white p-2 shadow-lg sm:p-3">
       <p className="mb-1.5 text-xs font-medium text-vlfk-ink sm:text-sm">{label}</p>
@@ -306,12 +315,13 @@ const usageChartConfig = {
 } satisfies ChartConfig
 
 function UsageOverTimeChart({ rows, days, end }: { rows: DailyRow[]; days: number; end: string }) {
+  const rate = React.useContext(RateContext)
   const [metric, setMetric] = React.useState<Metric>('tokens')
   const [hovered, setHovered] = React.useState<'a' | 'b' | null>(null)
-  const data = React.useMemo(() => seriesFor(metric, rows, dayRange(days, end)), [metric, rows, days, end])
+  const data = React.useMemo(() => seriesFor(metric, rows, dayRange(days, end), rate), [metric, rows, days, end, rate])
   const total = data.reduce((sum, d) => sum + d.a + d.b, 0)
-  const format = metric === 'kostnad' ? formatDollars : numberFormatter.format
-  const tickFormat = (v: number) => (metric === 'kostnad' ? `$${compactFormatter.format(v)}` : compactFormatter.format(v))
+  const format = metric === 'kostnad' ? formatKroner : numberFormatter.format
+  const tickFormat = (v: number) => (metric === 'kostnad' ? `${compactFormatter.format(v)} kr` : compactFormatter.format(v))
 
   return (
     <div className="flex min-w-0 flex-1 flex-col gap-4 rounded-xl border bg-white p-4 sm:gap-6 sm:p-6">
@@ -394,20 +404,21 @@ function UsageOverTimeChart({ rows, days, end }: { rows: DailyRow[]; days: numbe
 // ---------------------------------------------------------------------------
 
 function PerToolChart({ rows }: { rows: DailyRow[] }) {
+  const rate = React.useContext(RateContext)
   const [active, setActive] = React.useState<number | null>(null)
   const groups = React.useMemo(() => {
     const byGroup = new Map<string, { cost: number; calls: number }>()
     for (const r of rows) {
       const g = toolInfo(r.tool).group
       const entry = byGroup.get(g) ?? { cost: 0, calls: 0 }
-      entry.cost += estimateCost(r)
+      entry.cost += nok(r, rate)
       entry.calls += r.calls
       byGroup.set(g, entry)
     }
     return [...byGroup.entries()]
       .map(([name, v]) => ({ name, ...v, color: groupColor(name) }))
       .sort((a, b) => b.cost - a.cost)
-  }, [rows])
+  }, [rows, rate])
   const total = groups.reduce((sum, g) => sum + g.cost, 0)
 
   return (
@@ -447,7 +458,7 @@ function PerToolChart({ rows }: { rows: DailyRow[] }) {
               </PieChart>
             </ChartContainer>
             <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-xs font-semibold text-vlfk-ink tabular-nums sm:text-sm">{formatDollars(total)}</span>
+              <span className="text-xs font-semibold text-vlfk-ink tabular-nums sm:text-sm">{formatKroner(total)}</span>
               <span className="text-[10px] text-vlfk-ink-muted">Totalt</span>
             </div>
           </div>
@@ -467,8 +478,8 @@ function PerToolChart({ rows }: { rows: DailyRow[] }) {
                   {g.name}
                 </span>
                 <span className="flex items-center gap-2 text-xs tabular-nums">
-                  <span className="font-medium text-vlfk-ink">{formatDollars(g.cost)}</span>
-                  <span className="w-10 text-right text-vlfk-ink-muted">
+                  <span className="font-medium text-vlfk-ink">{formatKroner(g.cost)}</span>
+                  <span className="w-8 text-right text-vlfk-ink-muted">
                     {total ? Math.round((g.cost / total) * 100) : 0} %
                   </span>
                 </span>
@@ -504,17 +515,18 @@ function MediaCard({ totals }: { totals: Totals }) {
 }
 
 function PerModelCard({ rows }: { rows: DailyRow[] }) {
+  const rate = React.useContext(RateContext)
   const models = React.useMemo(() => {
     const byModel = new Map<string, { tokens: number; calls: number; cost: number; provider: string }>()
     for (const r of rows) {
       const m = byModel.get(r.model) ?? { tokens: 0, calls: 0, cost: 0, provider: r.provider }
       m.tokens += r.input_tokens + r.output_tokens
       m.calls += r.calls
-      m.cost += estimateCost(r)
+      m.cost += nok(r, rate)
       byModel.set(r.model, m)
     }
     return [...byModel.entries()].sort((a, b) => b[1].cost - a[1].cost).slice(0, 6)
-  }, [rows])
+  }, [rows, rate])
 
   return (
     <div className="rounded-xl border bg-white p-4 sm:p-5">
@@ -534,7 +546,7 @@ function PerModelCard({ rows }: { rows: DailyRow[] }) {
                   {numberFormatter.format(m.calls)} kall · {compactFormatter.format(m.tokens)} tokens
                 </span>
               </span>
-              <span className="shrink-0 font-medium text-vlfk-ink tabular-nums">{formatDollars(m.cost)}</span>
+              <span className="shrink-0 font-medium text-vlfk-ink tabular-nums">{formatKroner(m.cost)}</span>
             </li>
           ))}
         </ul>
@@ -555,6 +567,7 @@ function amountOf(call: CallRow): string {
 }
 
 function CallsTable({ calls }: { calls: CallRow[] }) {
+  const rate = React.useContext(RateContext)
   const [group, setGroup] = React.useState<string>('alle')
   const [page, setPage] = React.useState(1)
   const pageSize = 10
@@ -645,7 +658,7 @@ function CallsTable({ calls }: { calls: CallRow[] }) {
                       {amountOf(call)}
                     </TableCell>
                     <TableCell className="whitespace-nowrap text-right text-xs text-vlfk-ink tabular-nums sm:text-sm">
-                      {formatDollars(estimateCost(call))}
+                      {formatKroner(nok(call, rate))}
                     </TableCell>
                   </TableRow>
                 )
@@ -693,8 +706,11 @@ export function ForbrukDashboard({
   today,
   daily,
   calls,
+  nokPerUsd,
 }: {
   days: number
+  // Kroner per US dollar for the cost estimates.
+  nokPerUsd: number
   // Today's date in Oslo (YYYY-MM-DD), the last day in the chart.
   today: string
   daily: DailyRow[]
@@ -703,39 +719,42 @@ export function ForbrukDashboard({
   const start = dayRange(days, today)[0]
   const current = daily.filter((r) => r.day >= start)
   const previous = daily.filter((r) => r.day < start)
-  const totals = totalsOf(current)
+  const rate = nokPerUsd
+  const totals = totalsOf(current, rate)
 
   return (
-    <div className="space-y-4 sm:space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div className="space-y-1.5">
-          <h2 className="text-xl font-semibold text-vlfk-ink sm:text-2xl">Forbruk</h2>
-          <p className="max-w-3xl text-sm text-vlfk-ink-muted sm:text-base">
-            Tokens og kall til språkmodellene, bilder og lyd. Kostnaden er et anslag ut fra listeprisene; fakturaen
-            ligger i Azure- og Google Cloud-portalen.
-          </p>
+    <RateContext.Provider value={rate}>
+      <div className="space-y-4 sm:space-y-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div className="space-y-1.5">
+            <h2 className="text-xl font-semibold text-vlfk-ink sm:text-2xl">Forbruk</h2>
+            <p className="max-w-3xl text-sm text-vlfk-ink-muted sm:text-base">
+              Tokens og kall til språkmodellene, bilder og lyd. Kostnaden er et anslag ut fra listeprisene i dollar,
+              regnet om med 1 USD = {kronerFormatter.format(rate)}. Fakturaen ligger i Azure- og Google Cloud-portalen.
+            </p>
+          </div>
+          <PeriodPicker days={days} />
         </div>
-        <PeriodPicker days={days} />
-      </div>
 
-      <StatsCards current={totals} previous={totalsOf(previous)} />
+        <StatsCards current={totals} previous={totalsOf(previous, rate)} />
 
-      <div className="flex flex-col gap-4 sm:gap-6 xl:flex-row">
-        <UsageOverTimeChart rows={current} days={days} end={today} />
-        <div className="flex w-full flex-col gap-4 xl:w-[410px]">
-          <PerToolChart rows={current} />
-          <MediaCard totals={totals} />
+        <div className="flex flex-col gap-4 sm:gap-6 xl:flex-row">
+          <UsageOverTimeChart rows={current} days={days} end={today} />
+          <div className="flex w-full flex-col gap-4 xl:w-[410px]">
+            <PerToolChart rows={current} />
+            <MediaCard totals={totals} />
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-4 xl:flex-row">
+          <div className="min-w-0 flex-1">
+            <CallsTable calls={calls} />
+          </div>
+          <div className="xl:w-[360px]">
+            <PerModelCard rows={current} />
+          </div>
         </div>
       </div>
-
-      <div className="flex flex-col gap-4 xl:flex-row">
-        <div className="min-w-0 flex-1">
-          <CallsTable calls={calls} />
-        </div>
-        <div className="xl:w-[360px]">
-          <PerModelCard rows={current} />
-        </div>
-      </div>
-    </div>
+    </RateContext.Provider>
   )
 }

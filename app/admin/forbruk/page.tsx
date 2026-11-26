@@ -11,6 +11,15 @@ const ALLOWED_DAYS = [7, 30, 90]
 // The most recent calls shown in the table.
 const CALL_LIMIT = 500
 
+// Kroner per US dollar for the cost estimates. Set USD_NOK_KURS in Coolify
+// to change it (for example 10.8); the default is a rounded rate.
+const DEFAULT_NOK_PER_USD = 10.5
+
+function nokPerUsd(): number {
+  const rate = Number(process.env.USD_NOK_KURS?.replace(',', '.'))
+  return Number.isFinite(rate) && rate > 0 ? rate : DEFAULT_NOK_PER_USD
+}
+
 function osloToday(): string {
   // en-CA gives YYYY-MM-DD.
   return new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Oslo' }).format(new Date())
@@ -61,5 +70,13 @@ export default async function ForbrukPage({ searchParams }: { searchParams: Prom
     units: Number(r.units) || 0,
   }))
 
-  return <ForbrukDashboard days={days} today={osloToday()} daily={daily} calls={(callsResult.data ?? []) as CallRow[]} />
+  return (
+    <ForbrukDashboard
+      days={days}
+      nokPerUsd={nokPerUsd()}
+      today={osloToday()}
+      daily={daily}
+      calls={(callsResult.data ?? []) as CallRow[]}
+    />
+  )
 }
