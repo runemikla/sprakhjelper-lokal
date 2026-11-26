@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, ClipboardList, ImageIcon, Loader2, Plus, Trash2 } from 'lucide-react'
+import { ArrowLeft, ClipboardList, ImageIcon, Loader2, Plus, RefreshCw, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -12,13 +12,20 @@ import { Textarea } from '@/components/ui/textarea'
 import { ListeningPageShell } from '@/components/lytteoving/page-shell'
 import { LanguagePicker } from '@/components/ordlister/language-picker'
 import { groupStore, wordListStore } from '@/lib/ordlister/db-store'
-import { isItemReady, listVoice, type Group, type WordList, type WordListItem } from '@/lib/ordlister/types'
+import { isItemReady, listVoice, mediaSig, sameMedia, type Group, type WordList, type WordListItem } from '@/lib/ordlister/types'
 import { VoicePicker } from '@/components/ordlister/voice-picker'
 import { DEFAULT_CHOSEN_VOICE } from '@/lib/tts/gemini-voices'
 import { isValidVoiceId } from '@/lib/tts/voices'
-import { generateList, imagesAvailable, type ItemStatus } from '@/lib/ordlister/generate'
+import {
+  generateList,
+  imageStatus,
+  remakeImage,
+  type ImageQuota,
+  type ItemStatus,
+} from '@/lib/ordlister/generate'
 import { GenerationPanel } from '@/components/ordlister/generation-panel'
 import { ItemThumb } from '@/components/ordlister/item-thumb'
+import { mediaUrl } from '@/lib/ordlister/media'
 
 const MAX_DESCRIPTION = 300
 const MAX_IMAGE_CONTEXT = 500
@@ -70,6 +77,17 @@ export function WordListEditor({ listId, userEmail = null, isAdmin = false }: Wo
   const newWordRef = useRef<HTMLInputElement>(null)
 
   const [imagesOn, setImagesOn] = useState(true)
+  const [quota, setQuota] = useState<ImageQuota>({ limited: false })
+  // «Lag nytt bilde»: the word being drawn, and an error per word.
+  const [remaking, setRemaking] = useState<string | null>(null)
+  const [remakeErrors, setRemakeErrors] = useState<Record<string, string>>({})
+
+  async function refreshImageStatus() {
+    const status = await imageStatus()
+    setImagesOn(status.available)
+    setQuota(status.quota)
+    return status.available
+  }
   // Voice for the recordings (see lib/tts/voices.ts). A list keeps the voice it was made with;
   // a new list starts with the teacher's last choice.
   const [voice, setVoice] = useState<string>(DEFAULT_CHOSEN_VOICE)
@@ -91,7 +109,7 @@ export function WordListEditor({ listId, userEmail = null, isAdmin = false }: Wo
       const remembered = rememberedVoice()
       if (remembered) setVoice(remembered)
     }
-    void imagesAvailable().then(setImagesOn)
+    void refreshImageStatus()
     void groupStore
       .list()
       .then((all) => setGroups(all.filter((g) => g.isOwner || g.accessCode !== null)))
@@ -103,8 +121,7 @@ export function WordListEditor({ listId, userEmail = null, isAdmin = false }: Wo
     setRunning(true)
     setStatuses({})
     try {
-      const withImages = await imagesAvailable()
-      setImagesOn(withImages)
+      const withImages = await refreshImageStatus()
       await generateList(list, {
         withImages,
         voice,
@@ -122,6 +139,29 @@ export function WordListEditor({ listId, userEmail = null, isAdmin = false }: Wo
       })
     } finally {
       setRunning(false)
+      void refreshImageStatus()
+    }
+  }
+
+  async function handleRemakeImage(itemId: string) {
+    if (!saved || running || remaking) return
+    setRemaking(itemId)
+    setRemakeErrors((current) => {
+      const next = { ...current }
+      delete next[itemId]
+      return next
+    })
+    try {
+      const updated = await remakeImage(saved, itemId)
+      setSaved(updated)
+      const fresh = updated.words.find((w) => w.id === itemId)
+      setWords((current) => current.map((w) => (w.id === itemId && fresh ? { ...w, media: fresh.media } : w)))
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Kunne ikke lage bildet.'
+      setRemakeErrors((current) => ({ ...current, [itemId]: message }))
+    } finally {
+      setRemaking(null)
+      void refreshImageStatus()
     }
   }
 
@@ -325,6 +365,7 @@ export function WordListEditor({ listId, userEmail = null, isAdmin = false }: Wo
               running={running}
               statuses={statuses}
               imagesOn={imagesOn}
+              quota={quota}
               readyCount={saved.words.filter((w) => isItemReady(w, saved.languages, imagesOn, voice, saved.imageContext)).length}
               onStart={() => void runGeneration(saved)}
             />
@@ -504,7 +545,19 @@ export function WordListEditor({ listId, userEmail = null, isAdmin = false }: Wo
                         </Button>
                       </div>
                       {open && (
-                        <div className="mt-2 pl-8">
+                        <div className="mt-2 space-y-3 pl-8">
+                          {saved && imagesOn && (
+                            <ImageRemake
+                              list={saved}
+                              item={item}
+                              busy={remaking === item.id}
+                              disabled={running || (remaking !== null && remaking !== item.id)}
+                              quotaLeft={quota.limited ? quota.remaining : null}
+                              error={remakeErrors[item.id]}
+                              onRemake={() => void handleRemakeImage(item.id)}
+                            />
+                          )}
+                          <div>
                           <Label
                             htmlFor={`desc-${item.id}`}
                             className="text-xs font-medium text-gray-600"
@@ -524,6 +577,7 @@ export function WordListEditor({ listId, userEmail = null, isAdmin = false }: Wo
                           <p className="mt-1 text-right text-xs tabular-nums text-gray-400">
                             {item.imageDescription.length}/{MAX_DESCRIPTION}
                           </p>
+                          </div>
                         </div>
                       )}
                     </li>
@@ -605,5 +659,66 @@ export function WordListEditor({ listId, userEmail = null, isAdmin = false }: Wo
         </CardContent>
       </Card>
     </ListeningPageShell>
+  )
+}
+
+interface ImageRemakeProps {
+  list: WordList
+  item: WordListItem
+  busy: boolean
+  disabled: boolean
+  // Pictures the teacher can still make today, or null when there is no limit.
+  quotaLeft: number | null
+  error?: string
+  onRemake: () => void
+}
+
+// The word's current picture, with «Lag nytt bilde». Only the picture is made
+// again; the sentence, translations and recordings stay as they are.
+function ImageRemake({ list, item, busy, disabled, quotaLeft, error, onRemake }: ImageRemakeProps) {
+  const stored = list.words.find((w) => w.id === item.id)
+  if (!stored?.content) return null
+  // The picture belongs to the saved word and description. After an edit the
+  // teacher saves first, which makes the picture again anyway.
+  const changed = stored.word !== item.word.trim() || stored.imageDescription !== item.imageDescription.trim()
+  const current = sameMedia(stored.media?.img, mediaSig(stored, 'img', '', list.imageContext))
+  const url = mediaUrl(list.id, stored, 'img')
+  const noneLeft = quotaLeft === 0
+
+  return (
+    <div className="flex items-start gap-3">
+      {url ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={url}
+          alt={`Bildet til «${stored.word}»`}
+          className={`h-24 w-24 shrink-0 rounded-md border border-gray-200 object-cover ${busy ? 'opacity-40' : ''}`}
+        />
+      ) : (
+        <div className="h-24 w-24 shrink-0 rounded-md bg-gray-100" aria-hidden="true" />
+      )}
+      <div className="space-y-1">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={onRemake}
+          disabled={busy || disabled || changed || noneLeft || !current}
+        >
+          {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+          {busy ? 'Lager bilde …' : 'Lag nytt bilde'}
+        </Button>
+        <p className="text-xs text-gray-500">
+          {changed
+            ? 'Du har endret ordet eller beskrivelsen. Lagre, så lages et nytt bilde.'
+            : !current
+              ? 'Bildet lages når du trykker «Lag det som mangler».'
+              : noneLeft
+                ? 'Du har nådd grensen for bilder i dag.'
+                : 'Lager et nytt bilde fra samme beskrivelse. Det gamle bildet erstattes.'}
+        </p>
+        {error && <p className="text-xs text-red-700">{error}</p>}
+      </div>
+    </div>
   )
 }

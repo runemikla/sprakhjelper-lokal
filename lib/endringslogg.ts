@@ -26,6 +26,8 @@ export const ENDRINGSLOGG: Endringsoppforing[] = [
   {
     dato: '2026-11-26',
     endringer: [
+      { type: 'nytt', tekst: 'Lær ord: «Lag nytt bilde». Når du redigerer en ordliste og trykker på bildeknappen ved et ord, ser du bildet i større format og kan be om et nytt. Bare bildet lages på nytt; setning, oversettelse og lyd blir som før. Det gamle bildet erstattes.' },
+      { type: 'nytt', tekst: 'Lær ord: hver lærer kan lage inntil 40 bilder per døgn. Du ser hvor mange du har igjen der innholdet lages. Når grensen er nådd, får ordene lyd, setning og oversettelse som vanlig, og bildene kan lages senere med «Lag det som mangler».' },
       { type: 'nytt', tekst: 'Snakkebot: samlinger. Administrator kan sette sammen flere snakkeboter til én øving, for eksempel «Kundeveiledning» med ulike kunder. Hver snakkebot beholder sin egen instruks og stemme. Eleven ser ett kort, leser hva øvingen går ut på og hva hen skal øve på, og velger hvem hen vil snakke med, eller trykker «Tilfeldig». Samlingen deles med grupper eller med en egen kode, akkurat som en snakkebot.' },
       { type: 'forbedret', tekst: 'Snakkebot: en samtale varer nå i høyst 5 minutter. Tiden som er igjen, står øverst i samtalen. Når tiden er ute, svarer snakkeboten på det siste eleven sa og sier ha det. Er mikrofonen på uten at noe blir sagt i 10 sekunder, stopper samtalen og mikrofonen slås av. Eleven kan da fortsette eller starte en ny samtale.' },
       { type: 'forbedret', tekst: 'Snakkebot: svarene leses opp raskere. Opplesingen starter allerede etter første setning, mens resten av svaret skrives. Under mikrofonen står det bare ett ord om hva som skjer (Lytter, Tenker, Snakker, Din tur).' },

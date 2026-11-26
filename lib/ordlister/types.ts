@@ -51,6 +51,14 @@ export function mediaSig(
   return text ? JSON.stringify([text, voice]) : null
 }
 
+// True when a stored file was made for this version. «Lag nytt bilde» stores
+// the picture's version with «#<time>» after it, so the URL changes (the
+// bucket is cached) while the picture still counts as up to date.
+export function sameMedia(stored: string | undefined, sig: string | null) {
+  if (!stored || !sig) return false
+  return stored === sig || stored.startsWith(`${sig}#`)
+}
+
 // The voice the list's recordings were made with, if any.
 export function listVoice(list: Pick<WordList, 'words'>): string | null {
   for (const item of list.words) {
@@ -74,7 +82,7 @@ export function isItemReady(
 ) {
   if (item.content?.sig !== contentSig(item, languages)) return false
   const kinds: MediaKind[] = withImages ? ['w', 's', 'img'] : ['w', 's']
-  return kinds.every((k) => item.media?.[k] === mediaSig(item, k, voice, imageContext))
+  return kinds.every((k) => sameMedia(item.media?.[k], mediaSig(item, k, voice, imageContext)))
 }
 
 export interface WordList {

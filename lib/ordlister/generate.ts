@@ -10,6 +10,7 @@ import { shrinkImage, uploadMedia } from './media'
 import {
   contentSig,
   mediaSig,
+  sameMedia,
   type MediaKind,
   type WordList,
   type WordListItem,
@@ -35,13 +36,62 @@ async function errorText(response: Response) {
   return body?.error || `Feil ${response.status}`
 }
 
-export async function imagesAvailable(): Promise<boolean> {
+// Thrown when the teacher has made as many pictures as they may today.
+export class ImageLimitError extends Error {}
+
+// How many more pictures the teacher can make (see lib/ordlister/image-quota.ts).
+export type ImageQuota =
+  | { limited: false }
+  | { limited: true; limit: number; used: number; remaining: number }
+
+export interface ImageStatus {
+  available: boolean
+  quota: ImageQuota
+}
+
+export async function imageStatus(): Promise<ImageStatus> {
   try {
-    const response = await fetch('/api/ordlister/bilde')
-    return Boolean(((await response.json()) as { available?: boolean }).available)
+    const response = await fetch('/api/ordlister/bilde', { cache: 'no-store' })
+    const body = (await response.json()) as Partial<ImageStatus>
+    return { available: Boolean(body.available), quota: body.quota ?? { limited: false } }
   } catch {
-    return false
+    return { available: false, quota: { limited: false } }
   }
+}
+
+// Draws the picture for one word and stores it in the bucket. The caller
+// records the new version on the item.
+async function drawImage(list: WordList, item: WordListItem) {
+  if (!item.content) throw new Error('Ordet mangler tekst. Trykk «Lag det som mangler» først.')
+  const response = await fetch('/api/ordlister/bilde', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      word: item.word,
+      theme: list.title,
+      context: list.imageContext.trim() || undefined,
+      motif: (item.content.motif || item.imageDescription || item.content.en).slice(0, 400),
+    }),
+  })
+  if (response.status === 429) {
+    const body = (await response.clone().json().catch(() => null)) as { code?: string } | null
+    if (body?.code === 'image_limit') throw new ImageLimitError(await errorText(response))
+  }
+  if (!response.ok) throw new Error(await errorText(response))
+  const blob = await shrinkImage(await response.blob())
+  await uploadMedia(list.id, item.id, 'img', blob)
+}
+
+// «Lag nytt bilde»: a new picture for one word from the same description.
+// Text, translations and recordings stay as they are.
+export async function remakeImage(list: WordList, itemId: string): Promise<WordList> {
+  const item = list.words.find((w) => w.id === itemId)
+  const sig = item && mediaSig(item, 'img', '', list.imageContext)
+  if (!item || !sig) throw new Error('Fant ikke ordet.')
+  await drawImage(list, item)
+  const media = { ...item.media, img: `${sig}#${Date.now().toString(36)}` }
+  await wordListStore.patchItem(item.id, { media })
+  return { ...list, words: list.words.map((w) => (w.id === item.id ? { ...w, media } : w)) }
 }
 
 export async function generateList(start: WordList, options: GenerateOptions): Promise<WordList> {
@@ -104,40 +154,39 @@ export async function generateList(start: WordList, options: GenerateOptions): P
   // 2. Recordings and pictures, a few words at a time.
   const kinds: MediaKind[] = options.withImages ? ['w', 's', 'img'] : ['w', 's']
   const queue = list.words.filter((w) => !failed.has(w.id)).map((w) => w.id)
+  // Set when the teacher reaches the daily picture limit; the rest of the
+  // words then get their recordings but no new picture.
+  let imageLimit: string | null = null
 
   async function makeMedia(id: string) {
     for (const kind of kinds) {
       const item = list.words.find((w) => w.id === id)
       if (!item?.content) return
       const sig = mediaSig(item, kind, options.voice, list.imageContext)
-      if (!sig || item.media?.[kind] === sig) continue
+      if (!sig || sameMedia(item.media?.[kind], sig)) continue
 
-      options.onStatus(id, kind === 'img' ? 'bilde' : 'lyd')
-      const response =
-        kind === 'img'
-          ? await fetch('/api/ordlister/bilde', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                word: item.word,
-                theme: list.title,
-                context: list.imageContext.trim() || undefined,
-                motif: (item.content.motif || item.imageDescription || item.content.en).slice(0, 400),
-              }),
-            })
-          : await fetch('/api/ordlister/lyd', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                text: kind === 'w' ? item.word : plainSentence(item.content.s),
-                voice: options.voice,
-              }),
-            })
-      if (!response.ok) throw new Error(await errorText(response))
-
-      let blob = await response.blob()
-      if (kind === 'img') blob = await shrinkImage(blob)
-      await uploadMedia(list.id, id, kind, blob)
+      if (kind === 'img') {
+        if (imageLimit) throw new ImageLimitError(imageLimit)
+        options.onStatus(id, 'bilde')
+        try {
+          await drawImage(list, item)
+        } catch (error) {
+          if (error instanceof ImageLimitError) imageLimit = error.message
+          throw error
+        }
+      } else {
+        options.onStatus(id, 'lyd')
+        const response = await fetch('/api/ordlister/lyd', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            text: kind === 'w' ? item.word : plainSentence(item.content.s),
+            voice: options.voice,
+          }),
+        })
+        if (!response.ok) throw new Error(await errorText(response))
+        await uploadMedia(list.id, id, kind, await response.blob())
+      }
       await patchItem(id, { media: { ...item.media, [kind]: sig } })
     }
   }

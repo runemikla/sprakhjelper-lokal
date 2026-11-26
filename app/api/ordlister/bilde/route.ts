@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { checkRateLimit } from '@/lib/api-helpers'
 import { generateImage, ImageGenerationError, isImageModelConfigured } from '@/lib/ai/google-image'
+import { claimImage, getImageQuota, IMAGE_LIMIT_PER_DAY } from '@/lib/ordlister/image-quota'
 import { requireTeacher } from '@/lib/ordlister/require-teacher'
 
 // Draws one picture for a word in a teacher's list.
@@ -17,9 +18,10 @@ const schema = z.object({
   motif: z.string().trim().min(1).max(400),
 })
 
-// Lets the editor tell the teacher whether pictures can be made at all.
+// Lets the editor tell the teacher whether pictures can be made at all, and
+// how many more they can make today (see lib/ordlister/image-quota.ts).
 export async function GET() {
-  return NextResponse.json({ available: isImageModelConfigured() })
+  return NextResponse.json({ available: isImageModelConfigured(), quota: await getImageQuota() })
 }
 
 export async function POST(req: Request) {
@@ -30,6 +32,18 @@ export async function POST(req: Request) {
 
   try {
     const { word, theme, context, motif } = schema.parse(await req.json())
+    if (!isImageModelConfigured()) {
+      return NextResponse.json({ error: 'Ingen bildemodell er satt opp ennå.' }, { status: 503 })
+    }
+    if (!(await claimImage())) {
+      return NextResponse.json(
+        {
+          error: `Du har laget ${IMAGE_LIMIT_PER_DAY} bilder det siste døgnet. Prøv igjen senere.`,
+          code: 'image_limit',
+        },
+        { status: 429 }
+      )
+    }
     // Same style prompt as the built-in «Lær ord» pictures (see
     // «Slik lages ordbildene»), so teachers' pictures match the set.
     const prompt = [
