@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { AlertCircle, Check, Loader2, Play } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import type { ItemStatus } from '@/lib/ordlister/generate'
+import type { ImageQuota, ItemStatus } from '@/lib/ordlister/generate'
 import type { WordList } from '@/lib/ordlister/types'
 import { cn } from '@/lib/utils'
 
@@ -22,6 +22,7 @@ interface GenerationPanelProps {
   statuses: Record<string, { status: ItemStatus; error?: string }>
   readyCount: number
   imagesOn: boolean
+  quota: ImageQuota
   onStart: () => void
 }
 
@@ -32,6 +33,7 @@ export function GenerationPanel({
   statuses,
   readyCount,
   imagesOn,
+  quota,
   onStart,
 }: GenerationPanelProps) {
   const total = list.words.length
@@ -74,6 +76,14 @@ export function GenerationPanel({
       {!imagesOn && (
         <p className="mt-3 text-xs text-amber-800">
           Bildemodellen er ikke satt opp ennå, så ordene får foreløpig ikke bilder.
+        </p>
+      )}
+
+      {imagesOn && quota.limited && (
+        <p className={cn('mt-3 text-xs', quota.remaining === 0 ? 'text-amber-800' : 'text-gray-500')}>
+          {quota.remaining === 0
+            ? `Du har laget ${quota.limit} bilder det siste døgnet, som er grensen. Nye bilder kan lages igjen senere.`
+            : `Du kan lage ${quota.remaining} bilder til nå. Grensen er ${quota.limit} bilder per døgn.`}
         </p>
       )}
 
