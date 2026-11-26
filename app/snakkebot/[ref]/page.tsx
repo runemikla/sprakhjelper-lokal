@@ -1,7 +1,7 @@
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import { ChatbotChat } from '@/components/snakkebot/chat'
 import { getPageUser } from '@/lib/auth/page-user'
-import { loadChatbot } from '@/lib/snakkebot/server'
+import { loadChatbot, loadCollection } from '@/lib/snakkebot/server'
 import { parseRef } from '@/lib/snakkebot/types'
 
 export const metadata = { title: 'Snakkebot - Språkhjelp' }
@@ -15,7 +15,13 @@ export default async function SnakkebotSamtalePage({ params }: { params: Promise
 
   const { email, isAdmin, isTeacher } = await getPageUser()
   const bot = await loadChatbot(ref).catch(() => null)
-  if (!bot) notFound()
+  if (!bot) {
+    // The code box takes collection codes too.
+    if ('code' in ref && (await loadCollection(ref.code).catch(() => null))) {
+      redirect(`/snakkebot/samling/${ref.code}`)
+    }
+    notFound()
+  }
 
   // Only admins change chatbots; teachers see the code to share it.
   const canEdit = isAdmin

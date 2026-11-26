@@ -26,6 +26,7 @@ export const ENDRINGSLOGG: Endringsoppforing[] = [
   {
     dato: '2026-11-26',
     endringer: [
+      { type: 'nytt', tekst: 'Snakkebot: samlinger. Administrator kan sette sammen flere snakkeboter til én øving, for eksempel «Kundeveiledning» med ulike kunder. Hver snakkebot beholder sin egen instruks og stemme. Eleven ser ett kort, leser hva øvingen går ut på og hva hen skal øve på, og velger hvem hen vil snakke med, eller trykker «Tilfeldig». Samlingen deles med grupper eller med en egen kode, akkurat som en snakkebot.' },
       { type: 'forbedret', tekst: 'Snakkebot: en samtale varer nå i høyst 5 minutter. Tiden som er igjen, står øverst i samtalen. Når tiden er ute, svarer snakkeboten på det siste eleven sa og sier ha det. Er mikrofonen på uten at noe blir sagt i 10 sekunder, stopper samtalen og mikrofonen slås av. Eleven kan da fortsette eller starte en ny samtale.' },
       { type: 'forbedret', tekst: 'Snakkebot: svarene leses opp raskere. Opplesingen starter allerede etter første setning, mens resten av svaret skrives. Under mikrofonen står det bare ett ord om hva som skjer (Lytter, Tenker, Snakker, Din tur).' },
     ],

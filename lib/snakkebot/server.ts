@@ -6,7 +6,16 @@ import { DEFAULT_CHOSEN_VOICE, isGeminiVoice } from '@/lib/tts/gemini-voices'
 import { isValidVoiceId } from '@/lib/tts/voices'
 import { buildSystemPrompt, END_INSTRUCTION, START_MESSAGE } from './prompt'
 import { cleanReply } from './text'
-import { isLevel, LIMITS, type Chatbot, type ChatbotRef, type ChatMessage } from './types'
+import {
+  isLevel,
+  isUuid,
+  LIMITS,
+  parseCollectionRef,
+  type Chatbot,
+  type ChatbotRef,
+  type ChatMessage,
+  type PublicCollection,
+} from './types'
 
 // Server side of Snakkebot: finding the chatbot, asking the language model
 // and reading the answer aloud. Nothing from the conversation is stored.
@@ -34,6 +43,7 @@ interface ChatbotRow {
   level: string | null
   access_code: string
   created_by?: string
+  collection_goals?: string
 }
 
 function toChatbot(row: ChatbotRow): Chatbot {
@@ -48,6 +58,7 @@ function toChatbot(row: ChatbotRow): Chatbot {
     accessCode: row.access_code,
     createdBy: row.created_by,
     groupIds: [],
+    collectionGoals: row.collection_goals ?? undefined,
   }
 }
 
@@ -58,6 +69,32 @@ function toChatbot(row: ChatbotRow): Chatbot {
  */
 export async function loadChatbot(ref: ChatbotRef): Promise<Chatbot | null> {
   const supabase = await createClient()
+  if ('collection' in ref) {
+    // A case in a collection: by the collection's code (anyone), or by its id
+    // (row level security: admins, teachers and members of a shared group).
+    if (!isUuid(ref.collection)) {
+      const { data, error } = await supabase.rpc('get_chatbot_in_collection_by_code', {
+        p_access_code: ref.collection,
+        p_chatbot_id: ref.id,
+      })
+      if (error) throw new Error(error.message)
+      const row = (Array.isArray(data) ? data[0] : data) as ChatbotRow | undefined
+      return row ? toChatbot(row) : null
+    }
+    const { data: item, error: itemError } = await supabase
+      .from('chatbot_collection_items')
+      .select('chatbot_id, chatbot_collections(goals)')
+      .eq('collection_id', ref.collection)
+      .eq('chatbot_id', ref.id)
+      .maybeSingle()
+    if (itemError) throw new Error(itemError.message)
+    if (!item) return null
+    const bot = await loadChatbot({ id: ref.id })
+    if (!bot) return null
+    const collection = (item as { chatbot_collections: { goals: string } | { goals: string }[] | null }).chatbot_collections
+    const goals = Array.isArray(collection) ? collection[0]?.goals : collection?.goals
+    return { ...bot, collectionGoals: goals ?? '' }
+  }
   if ('code' in ref) {
     const { data, error } = await supabase.rpc('get_chatbot_by_code', { p_access_code: ref.code })
     if (error) throw new Error(error.message)
@@ -73,9 +110,68 @@ export async function loadChatbot(ref: ChatbotRef): Promise<Chatbot | null> {
   return data ? toChatbot(data as ChatbotRow) : null
 }
 
+interface CollectionJson {
+  id: string
+  name: string
+  description: string
+  goals: string
+  access_code: string
+  bots: { id: string; name: string; description: string; level: string | null }[]
+}
+
+/**
+ * A collection and its cases (names only, no instructions), by its code
+ * (anyone) or its id (row level security). Null when it does not exist or
+ * is hidden.
+ */
+export async function loadCollection(ref: string): Promise<PublicCollection | null> {
+  const supabase = await createClient()
+  if (!isUuid(ref)) {
+    const { data, error } = await supabase.rpc('get_chatbot_collection_by_code', { p_access_code: ref })
+    if (error) throw new Error(error.message)
+    const row = data as CollectionJson | null
+    if (!row) return null
+    return {
+      id: row.id,
+      name: row.name,
+      description: row.description ?? '',
+      goals: row.goals ?? '',
+      accessCode: row.access_code,
+      bots: row.bots ?? [],
+    }
+  }
+  const { data, error } = await supabase
+    .from('chatbot_collections')
+    .select('id, name, description, goals, access_code, chatbot_collection_items(position, chatbots(id, name, description, level))')
+    .eq('id', ref)
+    .maybeSingle()
+  if (error) throw new Error(error.message)
+  if (!data) return null
+  type Item = { position: number; chatbots: CollectionJson['bots'][number] | CollectionJson['bots'][number][] | null }
+  const row = data as Omit<CollectionJson, 'bots'> & { chatbot_collection_items: Item[] }
+  const bots = (row.chatbot_collection_items ?? [])
+    .slice()
+    .sort((a, b) => a.position - b.position)
+    .map((item) => (Array.isArray(item.chatbots) ? item.chatbots[0] : item.chatbots))
+    .filter((b): b is CollectionJson['bots'][number] => Boolean(b))
+  return {
+    id: row.id,
+    name: row.name,
+    description: row.description ?? '',
+    goals: row.goals ?? '',
+    accessCode: row.access_code,
+    bots,
+  }
+}
+
 export function readRef(url: URL): ChatbotRef | null {
   const id = url.searchParams.get('id')
   const code = url.searchParams.get('kode')
+  const collection = url.searchParams.get('samling')
+  if (collection) {
+    const parsed = parseCollectionRef(collection)
+    return parsed && id && isUuid(id) ? { collection: parsed, id: id.toLowerCase() } : null
+  }
   if (id && /^[0-9a-f-]{36}$/i.test(id)) return { id: id.toLowerCase() }
   if (code) {
     const normalized = code.replace(/[^A-Za-z0-9]/g, '').toUpperCase()
@@ -287,7 +383,12 @@ export async function* chatbotReplyStream(
   history: ChatMessage[],
   options: { ending?: boolean } = {}
 ): AsyncGenerator<string> {
-  let system = buildSystemPrompt({ name: bot.name, instructions: bot.instructions, level: bot.level })
+  let system = buildSystemPrompt({
+    name: bot.name,
+    instructions: bot.instructions,
+    level: bot.level,
+    goals: bot.collectionGoals,
+  })
   if (options.ending) system += `\n\n${END_INSTRUCTION}`
   let messages = history.slice(-LIMITS.history)
   // The model needs the conversation to start with the student.

@@ -91,9 +91,21 @@ interface ChatbotChatProps {
   chatRef: ChatbotRef
   editHref: string | null
   showCode: boolean
+  // where «tilbake» goes: the collection, when the chatbot is a case in one
+  backHref?: string
+  backLabel?: string
 }
 
-export function ChatbotChat({ userEmail, isAdmin, chatbot, chatRef, editHref, showCode }: ChatbotChatProps) {
+export function ChatbotChat({
+  userEmail,
+  isAdmin,
+  chatbot,
+  chatRef,
+  editHref,
+  showCode,
+  backHref = '/snakkebot',
+  backLabel = 'Snakkebot',
+}: ChatbotChatProps) {
   const [messages, setMessages] = useState<Message[]>([])
   const [phase, setPhase] = useState<Phase>('start')
   const [error, setError] = useState<string | null>(null)
@@ -629,8 +641,8 @@ export function ChatbotChat({ userEmail, isAdmin, chatbot, chatRef, editHref, sh
     <ListeningPageShell userEmail={userEmail} isAdmin={isAdmin}>
       <PageHeader
         compact
-        backHref="/snakkebot"
-        backLabel="Snakkebot"
+        backHref={backHref}
+        backLabel={backLabel}
         title={chatbot.name}
         description={chatbot.description || 'Snakk norsk med snakkeboten. Den svarer med stemme.'}
         actions={

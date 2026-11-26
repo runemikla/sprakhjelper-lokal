@@ -1,5 +1,7 @@
 import Link from 'next/link'
+import { Layers, MessageCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Card, CardContent } from '@/components/ui/card'
 import { PageHeader } from '@/components/landing/page-header'
 import { ListeningPageShell } from '@/components/lytteoving/page-shell'
@@ -20,12 +22,71 @@ interface Row {
   chatbot_groups: { group_id: string }[]
 }
 
+interface CollectionRow {
+  id: string
+  name: string
+  description: string
+  access_code: string
+  chatbot_collection_items: { chatbot_id: string }[]
+  chatbot_collection_groups: { group_id: string }[]
+}
+
+// «Samlinger» and «Snakkeboter» as two tabs, for admins and teachers.
+function ListTabs({
+  collections,
+  chatbots,
+  collectionCount,
+  chatbotCount,
+}: {
+  collections: React.ReactNode
+  chatbots: React.ReactNode
+  collectionCount: number
+  chatbotCount: number
+}) {
+  return (
+    <Tabs defaultValue={collectionCount > 0 ? 'samlinger' : 'snakkeboter'}>
+      <TabsList className="w-full sm:w-fit">
+        <TabsTrigger value="samlinger">
+          <Layers className="h-4 w-4" /> Samlinger <span className="tabular-nums text-gray-500">({collectionCount})</span>
+        </TabsTrigger>
+        <TabsTrigger value="snakkeboter">
+          <MessageCircle className="h-4 w-4" /> Snakkeboter <span className="tabular-nums text-gray-500">({chatbotCount})</span>
+        </TabsTrigger>
+      </TabsList>
+      <TabsContent value="samlinger" className="space-y-3">
+        <p className="text-sm text-gray-600">Flere snakkeboter i én øving. Elevene velger case selv, eller får en tilfeldig.</p>
+        {collections}
+      </TabsContent>
+      <TabsContent value="snakkeboter">{chatbots}</TabsContent>
+    </Tabs>
+  )
+}
+
 export default async function SnakkebotPage() {
   const { user, email, isAdmin, isTeacher } = await getPageUser()
 
   let items: ChatbotListItem[] = []
+  let collections: ChatbotListItem[] = []
   if (user) {
     const supabase = await createClient()
+    // RLS: admins and teachers see all collections, students those shared
+    // with their groups.
+    const { data: collectionRows } = await supabase
+      .from('chatbot_collections')
+      .select('id, name, description, access_code, chatbot_collection_items(chatbot_id), chatbot_collection_groups(group_id)')
+      .order('updated_at', { ascending: false })
+    collections = ((collectionRows ?? []) as CollectionRow[]).map((row) => ({
+      kind: 'collection' as const,
+      id: row.id,
+      name: row.name,
+      description: row.description,
+      accessCode: row.access_code,
+      level: null,
+      caseCount: row.chatbot_collection_items?.length ?? 0,
+      groupCount: row.chatbot_collection_groups?.length ?? 0,
+      canManage: isAdmin,
+      showCode: isAdmin || isTeacher,
+    }))
     // RLS: chatbots shared with the user's groups; all of them for admins
     // (and for teachers once 20261124200000_chatbots_admin_only.sql has run).
     const { data } = await supabase
@@ -44,6 +105,14 @@ export default async function SnakkebotPage() {
         canManage: isAdmin,
         showCode: isAdmin || isTeacher,
       }))
+    // Students reach the cases of a collection through the collection, so
+    // they are not listed again on their own (unless shared directly).
+    if (!isAdmin && !isTeacher) {
+      const inCollections = new Set(
+        ((collectionRows ?? []) as CollectionRow[]).flatMap((c) => c.chatbot_collection_items.map((i) => i.chatbot_id))
+      )
+      items = items.filter((item) => item.groupCount > 0 || !inCollections.has(item.id))
+    }
   }
 
   if (isAdmin) {
@@ -53,16 +122,33 @@ export default async function SnakkebotPage() {
           title="Snakkebot"
           description="Lag KI-samtalepartnere som elevene snakker med. Del dem med grupper, eller gi elevene og lærerne koden."
           actions={
-            <Button asChild variant="outline">
-              <Link href="/snakkebot/ny">Lag ny</Link>
-            </Button>
+            <>
+              <Button asChild variant="outline">
+                <Link href="/snakkebot/samling/ny">Lag samling</Link>
+              </Button>
+              <Button asChild variant="outline">
+                <Link href="/snakkebot/ny">Lag ny</Link>
+              </Button>
+            </>
           }
         />
         <Card className="bg-white/95 backdrop-blur-sm border-white/20 shadow-xl">
           <CardContent className="pt-6">
-            <ChatbotList
-              items={items}
-              emptyText="Du har ikke laget noen snakkeboter ennå. Trykk «Lag ny» for å komme i gang."
+            <ListTabs
+              collections={
+                <ChatbotList
+                  items={collections}
+                  emptyText="Du har ikke laget noen samlinger ennå. Trykk «Lag samling» for å sette sammen flere snakkeboter til én øving."
+                />
+              }
+              chatbots={
+                <ChatbotList
+                  items={items}
+                  emptyText="Du har ikke laget noen snakkeboter ennå. Trykk «Lag ny» for å komme i gang."
+                />
+              }
+              collectionCount={collections.length}
+              chatbotCount={items.length}
             />
           </CardContent>
         </Card>
@@ -76,7 +162,7 @@ export default async function SnakkebotPage() {
         title="Snakkebot"
         description="Snakk norsk med en KI som svarer med stemme. Skriv inn koden fra læreren, eller velg en snakkebot fra gruppen din."
       />
-      {user && items.length > 0 && (
+      {user && items.length + collections.length > 0 && (
         <Card className="bg-white/95 backdrop-blur-sm border-white/20 shadow-xl">
           <CardContent className="pt-6">
             <h2 className="mb-3 text-base font-semibold text-gray-900">
@@ -85,7 +171,16 @@ export default async function SnakkebotPage() {
             {isTeacher && (
               <p className="mb-3 text-sm text-gray-600">Gi elevene koden, så kan de åpne snakkeboten uten å logge inn.</p>
             )}
-            <ChatbotList items={items} emptyText="" />
+            {isTeacher ? (
+              <ListTabs
+                collections={<ChatbotList items={collections} emptyText="Det finnes ingen samlinger ennå." />}
+                chatbots={<ChatbotList items={items} emptyText="Det finnes ingen snakkeboter ennå." />}
+                collectionCount={collections.length}
+                chatbotCount={items.length}
+              />
+            ) : (
+              <ChatbotList items={[...collections, ...items]} emptyText="" />
+            )}
           </CardContent>
         </Card>
       )}
