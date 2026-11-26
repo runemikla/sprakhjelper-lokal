@@ -28,8 +28,19 @@ Eleven kan også skrive svaret.
 **Talemodus** (Innstillinger i samtalen, lagres i nettleseren og gjelder alle snakkeboter):
 - *Automatisk* (standard): mikrofonen åpner seg når snakkeboten er ferdig, og svaret
   sendes når eleven har vært stille i valgt pause (0,3–3 s, standard 1,5 s). Ingen tale
-  på 20 s lukker mikrofonen.
-- *Manuell*: trykk på mikrofonen for å snakke og igjen for å sende.
+  på 10 s avslutter samtalen (se Tidsgrenser).
+- *Manuell*: trykk på mikrofonen for å snakke og igjen for å sende (sendes også selv etter
+  10 s stillhet).
+
+**Tidsgrenser** (`LIMITS` i `lib/snakkebot/types.ts`):
+- En samtale varer i høyst 5 minutter (`conversationSeconds`). Tiden som er igjen, vises
+  øverst. Når tiden er ute, sendes neste forespørsel med `ending: true`, og modellen får
+  beskjed om å svare kort og si ha det (`END_INSTRUCTION` i `prompt.ts`). Deretter avsluttes
+  samtalen. Sitter ingen og snakker når tiden går ut, avsluttes den med en gang.
+- Er mikrofonen åpen i 10 sekunder uten tale (`silenceEndSeconds`), avsluttes samtalen og
+  mikrofonen lukkes. Eleven kan trykke «Fortsett samtalen» (så lenge tiden ikke er ute)
+  eller «Ny samtale».
+- Grensene gjelder i nettleseren. «Ny samtale» starter klokken på nytt.
 - Talehastighet (0,75–1,3×) og «Skjul meldingene» (bare lytt og snakk).
 
 **Hvem gjør hva:** bare administratorer lager og endrer snakkeboter. Lærere ser alle

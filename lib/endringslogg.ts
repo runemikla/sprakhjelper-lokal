@@ -24,6 +24,13 @@ export interface Endringsoppforing {
 
 export const ENDRINGSLOGG: Endringsoppforing[] = [
   {
+    dato: '2026-11-26',
+    endringer: [
+      { type: 'forbedret', tekst: 'Snakkebot: en samtale varer nå i høyst 5 minutter. Tiden som er igjen, står øverst i samtalen. Når tiden er ute, svarer snakkeboten på det siste eleven sa og sier ha det. Er mikrofonen på uten at noe blir sagt i 10 sekunder, stopper samtalen og mikrofonen slås av. Eleven kan da fortsette eller starte en ny samtale.' },
+      { type: 'forbedret', tekst: 'Snakkebot: svarene leses opp raskere. Opplesingen starter allerede etter første setning, mens resten av svaret skrives. Under mikrofonen står det bare ett ord om hva som skjer (Lytter, Tenker, Snakker, Din tur).' },
+    ],
+  },
+  {
     dato: '2026-11-25',
     endringer: [
       { type: 'nytt', tekst: 'Stemmer: administrator har fått en ny side under Innstillinger med alle de norske stemmene fra Google (Chirp 3 HD og de andre typene). Du kan filtrere på type og kjønn, høre lydprøven «Hei! Velkommen til Språkhjelp!» og velge hvilke stemmer lærerne kan bruke i Lytteøving, ordlistene i Lær ord og Snakkebot. Innhold som allerede er laget, beholder stemmen sin.' },

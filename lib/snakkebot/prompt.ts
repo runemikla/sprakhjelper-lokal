@@ -42,3 +42,7 @@ ${options.instructions.trim()}
 // conversation starts.
 export const START_MESSAGE =
   '(Eleven har akkurat åpnet samtalen og har ikke sagt noe ennå. Hils kort og start samtalen i rollen din.)'
+
+// Added to the system prompt for the last answer, when the time is up.
+export const END_INSTRUCTION =
+  'Tiden for samtalen er ute. Svar kort på det eleven sa, og avslutt samtalen vennlig med en kort hilsen. Ikke still flere spørsmål.'

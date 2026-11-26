@@ -22,6 +22,11 @@ export const LIMITS = {
   history: 40,
   // seconds of speech per recording (Google's synchronous limit is 60)
   recordingSeconds: 55,
+  // a conversation lasts at most this long
+  conversationSeconds: 300,
+  // the conversation ends when nothing is said for this long with the
+  // microphone open
+  silenceEndSeconds: 10,
 } as const
 
 export interface Chatbot {
