@@ -1,5 +1,7 @@
 import Link from 'next/link'
+import { Layers, MessageCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Card, CardContent } from '@/components/ui/card'
 import { PageHeader } from '@/components/landing/page-header'
 import { ListeningPageShell } from '@/components/lytteoving/page-shell'
@@ -27,6 +29,37 @@ interface CollectionRow {
   access_code: string
   chatbot_collection_items: { chatbot_id: string }[]
   chatbot_collection_groups: { group_id: string }[]
+}
+
+// «Samlinger» and «Snakkeboter» as two tabs, for admins and teachers.
+function ListTabs({
+  collections,
+  chatbots,
+  collectionCount,
+  chatbotCount,
+}: {
+  collections: React.ReactNode
+  chatbots: React.ReactNode
+  collectionCount: number
+  chatbotCount: number
+}) {
+  return (
+    <Tabs defaultValue={collectionCount > 0 ? 'samlinger' : 'snakkeboter'}>
+      <TabsList className="w-full sm:w-fit">
+        <TabsTrigger value="samlinger">
+          <Layers className="h-4 w-4" /> Samlinger <span className="tabular-nums text-gray-500">({collectionCount})</span>
+        </TabsTrigger>
+        <TabsTrigger value="snakkeboter">
+          <MessageCircle className="h-4 w-4" /> Snakkeboter <span className="tabular-nums text-gray-500">({chatbotCount})</span>
+        </TabsTrigger>
+      </TabsList>
+      <TabsContent value="samlinger" className="space-y-3">
+        <p className="text-sm text-gray-600">Flere snakkeboter i én øving. Elevene velger case selv, eller får en tilfeldig.</p>
+        {collections}
+      </TabsContent>
+      <TabsContent value="snakkeboter">{chatbots}</TabsContent>
+    </Tabs>
+  )
 }
 
 export default async function SnakkebotPage() {
@@ -99,21 +132,23 @@ export default async function SnakkebotPage() {
             </>
           }
         />
-        {collections.length > 0 && (
-          <Card className="bg-white/95 backdrop-blur-sm border-white/20 shadow-xl">
-            <CardContent className="pt-6">
-              <h2 className="mb-1 text-base font-semibold text-gray-900">Samlinger</h2>
-              <p className="mb-3 text-sm text-gray-600">Flere snakkeboter i én øving. Elevene velger case selv, eller får en tilfeldig.</p>
-              <ChatbotList items={collections} emptyText="" />
-            </CardContent>
-          </Card>
-        )}
         <Card className="bg-white/95 backdrop-blur-sm border-white/20 shadow-xl">
           <CardContent className="pt-6">
-            {collections.length > 0 && <h2 className="mb-3 text-base font-semibold text-gray-900">Snakkeboter</h2>}
-            <ChatbotList
-              items={items}
-              emptyText="Du har ikke laget noen snakkeboter ennå. Trykk «Lag ny» for å komme i gang."
+            <ListTabs
+              collections={
+                <ChatbotList
+                  items={collections}
+                  emptyText="Du har ikke laget noen samlinger ennå. Trykk «Lag samling» for å sette sammen flere snakkeboter til én øving."
+                />
+              }
+              chatbots={
+                <ChatbotList
+                  items={items}
+                  emptyText="Du har ikke laget noen snakkeboter ennå. Trykk «Lag ny» for å komme i gang."
+                />
+              }
+              collectionCount={collections.length}
+              chatbotCount={items.length}
             />
           </CardContent>
         </Card>
@@ -136,7 +171,16 @@ export default async function SnakkebotPage() {
             {isTeacher && (
               <p className="mb-3 text-sm text-gray-600">Gi elevene koden, så kan de åpne snakkeboten uten å logge inn.</p>
             )}
-            <ChatbotList items={[...collections, ...items]} emptyText="" />
+            {isTeacher ? (
+              <ListTabs
+                collections={<ChatbotList items={collections} emptyText="Det finnes ingen samlinger ennå." />}
+                chatbots={<ChatbotList items={items} emptyText="Det finnes ingen snakkeboter ennå." />}
+                collectionCount={collections.length}
+                chatbotCount={items.length}
+              />
+            ) : (
+              <ChatbotList items={[...collections, ...items]} emptyText="" />
+            )}
           </CardContent>
         </Card>
       )}
