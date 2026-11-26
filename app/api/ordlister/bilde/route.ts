@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { checkRateLimit } from '@/lib/api-helpers'
-import { generateImage, ImageGenerationError, isImageModelConfigured } from '@/lib/ai/google-image'
+import { generateImage, ImageGenerationError, imageModelName, isImageModelConfigured } from '@/lib/ai/google-image'
+import { logAiUsage } from '@/lib/ai/usage'
 import { claimImage, getImageQuota, IMAGE_LIMIT_PER_DAY } from '@/lib/ordlister/image-quota'
 import { requireTeacher } from '@/lib/ordlister/require-teacher'
 
@@ -57,6 +58,7 @@ export async function POST(req: Request) {
       .join(' ')
 
     const image = await generateImage(prompt)
+    void logAiUsage({ tool: 'laer-ord-bilde', provider: 'gemini', model: imageModelName(), kind: 'bilde', units: 1 })
     return new NextResponse(new Uint8Array(image.data), {
       headers: { 'Content-Type': image.mimeType, 'Cache-Control': 'no-store' },
     })

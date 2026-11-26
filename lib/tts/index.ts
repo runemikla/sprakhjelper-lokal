@@ -1,6 +1,7 @@
 import { elevenLabsTextToSpeech } from './elevenlabs'
 import { googleTextToSpeech } from './google'
 import { DEFAULT_SPEAKING_RATE } from '@/lib/lytteoving'
+import type { UsageTool } from '@/lib/ai/usage'
 
 export { TextToSpeechError } from './errors'
 
@@ -12,10 +13,12 @@ export async function textToSpeech(
   text: string,
   speakingRate: number = DEFAULT_SPEAKING_RATE,
   // One of the chosen voices (see lib/tts/gemini-voices.ts). Only used by Google.
-  voice?: string
+  voice?: string,
+  // Which tool asked, for the «Forbruk» admin page.
+  tool?: UsageTool
 ): Promise<Buffer> {
   if (process.env.TTS_PROVIDER?.toLowerCase() === 'elevenlabs') {
     return elevenLabsTextToSpeech(text, speakingRate)
   }
-  return googleTextToSpeech(text, speakingRate, voice)
+  return googleTextToSpeech(text, speakingRate, voice, tool)
 }

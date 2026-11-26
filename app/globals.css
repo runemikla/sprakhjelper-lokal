@@ -68,19 +68,19 @@
   .animation-delay-75 {
     animation-delay: 75ms;
   }
-  
+
   .animation-delay-200 {
     animation-delay: 200ms;
   }
-  
+
   .animation-delay-400 {
     animation-delay: 400ms;
   }
-  
+
   .animation-delay-600 {
     animation-delay: 600ms;
   }
-  
+
   @keyframes fade-in {
     from {
       opacity: 0;
@@ -89,7 +89,7 @@
       opacity: 1;
     }
   }
-  
+
   @keyframes fade-in-up {
     from {
       opacity: 0;
@@ -100,11 +100,11 @@
       transform: translateY(0);
     }
   }
-  
+
   .animate-fade-in {
     animation: fade-in 0.8s ease-out forwards;
   }
-  
+
   .animate-fade-in-up {
     animation: fade-in-up 0.8s ease-out forwards;
   }
@@ -124,3 +124,26 @@
   }
 }
 
+:root {
+  /* Admin sidebar in VLFK colours: off-white surface, ink text, light-blue
+     marker for the active page. */
+  --sidebar: #f4f4f2;
+  --sidebar-foreground: #1d1d1b;
+  --sidebar-primary: #1d1d1b;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #e2f5f9;
+  --sidebar-accent-foreground: #1d1d1b;
+  --sidebar-border: #e5e5e2;
+  --sidebar-ring: #1d1d1b;
+}
+
+.dark {
+  --sidebar: hsl(240 5.9% 10%);
+  --sidebar-foreground: hsl(240 4.8% 95.9%);
+  --sidebar-primary: hsl(224.3 76.3% 48%);
+  --sidebar-primary-foreground: hsl(0 0% 100%);
+  --sidebar-accent: hsl(240 3.7% 15.9%);
+  --sidebar-accent-foreground: hsl(240 4.8% 95.9%);
+  --sidebar-border: hsl(240 3.7% 15.9%);
+  --sidebar-ring: hsl(217.2 91.2% 59.8%);
+}

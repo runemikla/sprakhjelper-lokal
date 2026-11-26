@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server'
 import { checkRateLimit } from '@/lib/api-helpers'
 import { loadChatbot, readRef } from '@/lib/snakkebot/server'
-import { isSpeechToTextConfigured, speechToText, SpeechToTextError } from '@/lib/stt/google'
+import { isSpeechToTextConfigured, speechToText, speechToTextModel, SpeechToTextError } from '@/lib/stt/google'
+import { logAiUsage } from '@/lib/ai/usage'
 
 // Turns the student's recording (16 kHz mono WAV from the browser) into text
 // with Google Cloud Speech-to-Text. The recording is not stored.
@@ -30,6 +31,15 @@ export async function POST(req: Request) {
     }
 
     const text = await speechToText(body)
+    // Seconds of speech: data bytes divided by the byte rate in the WAV header.
+    const byteRate = body.readUInt32LE(28) || 32000
+    void logAiUsage({
+      tool: 'snakkebot-tale',
+      provider: 'google',
+      model: speechToTextModel(),
+      kind: 'tale',
+      units: Math.ceil((body.length - 44) / byteRate),
+    })
     return NextResponse.json({ text })
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error)

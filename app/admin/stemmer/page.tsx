@@ -1,7 +1,5 @@
-import { redirect } from 'next/navigation'
-import { FjordPageShell } from '@/components/landing/fjord-page-shell'
-import { PageHeader } from '@/components/landing/page-header'
-import { getPageUser } from '@/lib/auth/page-user'
+import { AdminIntro, AdminNotice } from '@/components/admin/admin-intro'
+import { requireAdminPage } from '@/lib/auth/require-admin-page'
 import { createClient } from '@/lib/supabase/server'
 import { voiceFromRow, type TtsVoiceRow } from '@/lib/tts/available-voices'
 import { listGoogleVoices } from '@/lib/tts/google-voices'
@@ -24,11 +22,7 @@ async function loadChosen(): Promise<TtsVoice[] | null> {
 }
 
 export default async function StemmerPage() {
-  const { user, email, isAdmin } = await getPageUser()
-
-  // Server-side guard: hiding the menu item alone is not enough.
-  if (!user) redirect('/auth/login?next=/stemmer')
-  if (!isAdmin) redirect('/')
+  await requireAdminPage('/admin/stemmer')
 
   const [chosen, google] = await Promise.all([
     loadChosen(),
@@ -44,26 +38,27 @@ export default async function StemmerPage() {
   const all = sortVoices([...known, ...(chosen ?? []).filter((c) => !known.some((k) => k.id === c.id))])
 
   return (
-    <FjordPageShell userEmail={email} isAdmin={isAdmin}>
-      <PageHeader
+    <div className="space-y-6">
+      <AdminIntro
         title="Stemmer"
         description="Hør de norske stemmene fra Google og velg hvilke lærerne kan bruke i Lytteøving, ordlistene i Lær ord og Snakkebot."
       />
 
-      <div className="rounded-2xl bg-white/95 p-5 shadow-xl backdrop-blur-sm sm:p-8">
-        {chosen === null && (
-          <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-            Fant ikke tabellen for stemmer i databasen. Verktøyene bruker de fire faste stemmene
-            (Enceladus, Iapetus, Erinome og Callirrhoe) til migrasjonen er kjørt. Du kan likevel høre på stemmene.
-          </div>
-        )}
-        {google.error && (
-          <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-            Kunne ikke hente stemmelisten fra Google, så bare Chirp 3 HD-stemmene vises. {google.error}
-          </div>
-        )}
+      {chosen === null && (
+        <AdminNotice>
+          Fant ikke tabellen for stemmer i databasen. Verktøyene bruker de fire faste stemmene
+          (Enceladus, Iapetus, Erinome og Callirrhoe) til migrasjonen er kjørt. Du kan likevel høre på stemmene.
+        </AdminNotice>
+      )}
+      {google.error && (
+        <AdminNotice>
+          Kunne ikke hente stemmelisten fra Google, så bare Chirp 3 HD-stemmene vises. {google.error}
+        </AdminNotice>
+      )}
+
+      <div className="rounded-xl border bg-white p-4 sm:p-6">
         <VoiceBrowser voices={all} chosenIds={(chosen ?? []).map((v) => v.id)} canEdit={chosen !== null} />
       </div>
-    </FjordPageShell>
+    </div>
   )
 }

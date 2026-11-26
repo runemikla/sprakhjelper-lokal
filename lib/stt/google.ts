@@ -55,6 +55,12 @@ function settings() {
   }
 }
 
+/** The speech model in use, for the usage log. */
+export function speechToTextModel(): string {
+  const s = settings()
+  return s.version === 'v2' ? s.model || 'chirp_3' : s.model || 'v1-standard'
+}
+
 export function isSpeechToTextConfigured(): boolean {
   return Boolean(process.env.GOOGLE_TTS_CREDENTIALS?.trim())
 }

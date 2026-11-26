@@ -54,6 +54,6 @@ export async function setVoiceAvailable(input: {
   }
 
   clearAvailableVoicesCache()
-  revalidatePath('/stemmer')
+  revalidatePath('/admin/stemmer')
   return { ok: true }
 }

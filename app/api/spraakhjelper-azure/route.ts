@@ -95,7 +95,7 @@ export async function POST(req: Request) {
           schema: responseSchema
         }
       }
-    });
+    }, 'skrivehjelp-analyse');
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));

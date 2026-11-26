@@ -50,7 +50,7 @@ export async function POST(req: Request) {
           schema: SAMMENDRAG_SVARSKJEMA
         }
       }
-    });
+    }, 'skrivehjelp-sammendrag');
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));

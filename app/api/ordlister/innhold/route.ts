@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { checkRateLimit, validateResponseSize } from '@/lib/api-helpers'
 import { isAzureConfigured } from '@/lib/ai/azure'
 import { getEnvModelConfig, guessModelType, sendChatCompletion, type AzureModelConfig } from '@/lib/ai/azure-core'
+import { logChatResponse } from '@/lib/ai/usage'
 import { requireTeacher } from '@/lib/ordlister/require-teacher'
 
 // Writes the text «Lær ord» needs for each word in a teacher's list:
@@ -97,7 +98,8 @@ export async function POST(req: Request) {
       .map((w, i) => `${i + 1}. ${w.word}${w.description ? ` (lærerens beskrivelse: ${w.description})` : ''}`)
       .join('\n')
 
-    const response = await sendChatCompletion(ordlisterModel(), {
+    const model = ordlisterModel()
+    const response = await sendChatCompletion(model, {
       messages: [
         { role: 'system', content: SYSTEM_PROMPT },
         {
@@ -113,6 +115,7 @@ export async function POST(req: Request) {
       },
     })
 
+    logChatResponse('laer-ord-innhold', model.deployment, response)
     if (!response.ok) throw new Error(`Språkmodellen svarte ${response.status}`)
     const data = await response.json()
     const content = data.choices?.[0]?.message?.content?.trim()

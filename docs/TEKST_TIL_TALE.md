@@ -48,9 +48,9 @@ Gemini API brukes ikke lenger til lyd, fordi det ikke har noen EU-garanti.
 - Lyden lagres som MP3. Eldre lister kan ha WAV-filer fra Gemini; de spilles av som før.
 - Pris: Chirp 3 HD koster ca. 30 $ per million tegn, altså langt under 0,01 $ per ord med setning.
 
-## Hvilke stemmer lærerne kan velge (admin: Innstillinger → Stemmer)
+## Hvilke stemmer lærerne kan velge (Admin → Stemmer)
 
-Siden `/stemmer` henter alle norske stemmer fra Google (`voices.list`, `languageCode=nb-NO`,
+Siden `/admin/stemmer` henter alle norske stemmer fra Google (`voices.list`, `languageCode=nb-NO`,
 samme endepunkt og tjenestekonto som opplesingen), spiller lydprøven «Hei! Velkommen til
 Språkhjelp!» og lar admin velge hvilke stemmer som er tilgjengelige i Lytteøving, ordlistene
 og Snakkebot. Valget ligger i tabellen `tts_voices`

@@ -75,7 +75,7 @@ export async function POST(req: Request) {
           schema: responseSchema,
         },
       },
-    });
+    }, 'grammatikk-ovinger');
 
     if (!response.ok) {
       console.error('Generate exercises: Azure OpenAI error status', response.status);

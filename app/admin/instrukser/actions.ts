@@ -34,7 +34,7 @@ async function ensureAdmin(): Promise<string | null> {
 
 function done(instructionKey: string): ActionResult {
   if (isInstructionKey(instructionKey)) clearInstructionCache(instructionKey)
-  revalidatePath('/instrukser')
+  revalidatePath('/admin/instrukser')
   return { ok: true }
 }
 
@@ -73,7 +73,7 @@ export async function createInstructionVersion(input: {
     })
     if (activateError) {
       console.error('Activate instruction version error:', activateError.message)
-      revalidatePath('/instrukser')
+      revalidatePath('/admin/instrukser')
       return { ok: false, error: 'Versjonen ble lagret, men kunne ikke tas i bruk.' }
     }
   }

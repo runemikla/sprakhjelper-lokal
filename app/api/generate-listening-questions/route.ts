@@ -123,7 +123,7 @@ async function generateQuestions(
         schema: isStatement ? statementQuestionsSchema() : openQuestionsSchema(),
       },
     },
-  })
+  }, 'lytteoving-sporsmal')
 
   if (!response.ok) {
     if (process.env.NODE_ENV === 'development') {
@@ -183,7 +183,7 @@ export async function POST(req: Request) {
 
     const [questions, audioBuffer] = await Promise.all([
       generateQuestions(originalText, parsed.questionCount, questionType),
-      textToSpeech(originalText, parsed.speakingRate, parsed.voice),
+      textToSpeech(originalText, parsed.speakingRate, parsed.voice, 'lytteoving-lyd'),
     ])
 
     return NextResponse.json({

@@ -39,7 +39,7 @@ export async function POST(req: Request) {
       ],
       temperature: 0,
       max_completion_tokens: 4000,
-    });
+    }, 'skrivehjelp-setningsdeling');
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
