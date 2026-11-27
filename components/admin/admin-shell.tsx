@@ -32,6 +32,7 @@ import {
   SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
+  SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarProvider,
@@ -40,6 +41,7 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar'
 import { TooltipProvider } from '@/components/ui/tooltip'
+import { badgeText, newUsersLabel, useNewUsersCount } from '@/lib/admin/use-new-users'
 
 // The admin area, built on the shadcnblocks «Dashboard 5» layout: a sidebar
 // with one link per admin page, and the page in an inset panel. New admin
@@ -51,12 +53,15 @@ interface NavItem {
   icon: LucideIcon
 }
 
+// The users page; opening it marks the new users as seen.
+const USERS_HREF = '/admin/brukere'
+
 export const ADMIN_NAV: { title: string; items: NavItem[] }[] = [
   {
     title: 'Oversikt',
     items: [
       { href: '/admin/forbruk', label: 'Forbruk', icon: Gauge },
-      { href: '/admin/brukere', label: 'Brukere', icon: Users },
+      { href: USERS_HREF, label: 'Brukere', icon: Users },
     ],
   },
   {
@@ -136,7 +141,7 @@ function NavUser({ email }: { email: string }) {
   )
 }
 
-function AdminSidebar({ email }: { email: string }) {
+function AdminSidebar({ email, newUsers }: { email: string; newUsers: number }) {
   const pathname = usePathname()
   const { isMobile, setOpenMobile } = useSidebar()
   return (
@@ -153,16 +158,41 @@ function AdminSidebar({ email }: { email: string }) {
             <SidebarGroupLabel>{group.title}</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                {group.items.map(({ href, label, icon: Icon }) => (
-                  <SidebarMenuItem key={href}>
-                    <SidebarMenuButton asChild isActive={isActive(pathname, href)} tooltip={label}>
-                      <Link href={href} onClick={() => isMobile && setOpenMobile(false)}>
-                        <Icon className="size-4" aria-hidden="true" />
-                        <span>{label}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
+                {group.items.map(({ href, label, icon: Icon }) => {
+                  const badge = href === USERS_HREF ? newUsers : 0
+                  return (
+                    <SidebarMenuItem key={href}>
+                      <SidebarMenuButton
+                        asChild
+                        isActive={isActive(pathname, href)}
+                        tooltip={badge > 0 ? `${label} (${newUsersLabel(badge)})` : label}
+                      >
+                        <Link href={href} onClick={() => isMobile && setOpenMobile(false)}>
+                          <span className="relative">
+                            <Icon className="size-4" aria-hidden="true" />
+                            {badge > 0 && (
+                              // Shows on the icon when the menu is folded in.
+                              <span
+                                aria-hidden="true"
+                                className="absolute -right-1 -top-1 hidden size-2 rounded-full bg-vlfk-rod-oransje group-data-[collapsible=icon]:block"
+                              />
+                            )}
+                          </span>
+                          <span>{label}</span>
+                          {badge > 0 && <span className="sr-only">({newUsersLabel(badge)})</span>}
+                        </Link>
+                      </SidebarMenuButton>
+                      {badge > 0 && (
+                        <SidebarMenuBadge
+                          aria-hidden="true"
+                          className="rounded-full bg-vlfk-rod-oransje font-semibold text-vlfk-ink peer-hover/menu-button:text-vlfk-ink peer-data-[active=true]/menu-button:text-vlfk-ink"
+                        >
+                          {badgeText(badge)}
+                        </SidebarMenuBadge>
+                      )}
+                    </SidebarMenuItem>
+                  )
+                })}
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
@@ -176,13 +206,21 @@ function AdminSidebar({ email }: { email: string }) {
   )
 }
 
-function AdminHeader() {
+function AdminHeader({ newUsers }: { newUsers: number }) {
   const pathname = usePathname()
   const current = ADMIN_NAV.flatMap((g) => g.items).find((item) => isActive(pathname, item.href))
   const Icon = current?.icon ?? Gauge
   return (
     <header className="flex w-full items-center gap-3 border-b bg-white px-4 py-3 sm:px-6 sm:py-4">
-      <SidebarTrigger className="md:hidden" aria-label="Vis menyen" />
+      <span className="relative md:hidden">
+        <SidebarTrigger aria-label={newUsers > 0 ? `Vis menyen (${newUsersLabel(newUsers)})` : 'Vis menyen'} />
+        {newUsers > 0 && (
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute right-0.5 top-0.5 size-2.5 rounded-full bg-vlfk-rod-oransje ring-2 ring-white"
+          />
+        )}
+      </span>
       <Icon className="size-5 text-vlfk-ink" aria-hidden="true" />
       <h1 className="text-base font-medium text-vlfk-ink">{current?.label ?? 'Admin'}</h1>
       <Link
@@ -197,6 +235,10 @@ function AdminHeader() {
 }
 
 export function AdminShell({ email, children }: { email: string; children: ReactNode }) {
+  const pathname = usePathname()
+  // Fetched again on every page, so the badge goes away once Brukere is open.
+  const fetched = useNewUsersCount(true, pathname)
+  const newUsers = isActive(pathname, USERS_HREF) ? 0 : fetched
   return (
     <TooltipProvider>
       <SidebarProvider className="bg-sidebar">
@@ -206,10 +248,10 @@ export function AdminShell({ email, children }: { email: string; children: React
         >
           Hopp til innholdet
         </a>
-        <AdminSidebar email={email} />
+        <AdminSidebar email={email} newUsers={newUsers} />
         <div className="h-svh w-full min-w-0 overflow-hidden md:p-2">
           <div className="flex h-full w-full flex-col overflow-hidden bg-white md:rounded-xl md:border">
-            <AdminHeader />
+            <AdminHeader newUsers={newUsers} />
             <main
               id="admin-main"
               tabIndex={-1}

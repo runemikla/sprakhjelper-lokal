@@ -38,5 +38,12 @@ export default async function BrukerePage() {
     })
   )
 
-  return <UserTable users={users} currentUserId={user!.id} />
+  // Opening this page marks the new users as seen, so the badges at «Admin»
+  // and «Brukere» go away. The users that were new are marked «Ny» this time.
+  // Without the migration this does nothing.
+  const seen = await supabase.rpc('admin_mark_users_seen')
+  if (seen.error) console.error('Mark users seen:', seen.error.message)
+  const newSince = seen.error ? null : ((seen.data as string | null) ?? null)
+
+  return <UserTable users={users} currentUserId={user!.id} newSince={newSince} />
 }

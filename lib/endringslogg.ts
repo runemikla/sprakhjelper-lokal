@@ -24,6 +24,15 @@ export interface Endringsoppforing {
 
 export const ENDRINGSLOGG: Endringsoppforing[] = [
   {
+    dato: '2026-11-27',
+    endringer: [
+      { type: 'forbedret', tekst: 'Admin → Instrukser: hvert verktøy har sin egen farge (samme som på verktøykortene), så det er lett å se hvilke instrukser som hører til Skrivehjelp, Grammatikkøving og Lytteøving. Knappene øverst hopper rett til verktøyet.' },
+      { type: 'nytt', tekst: 'Admin → Stemmer: skriv inn din egen setning og hør hvordan stemmene sier den. Er feltet tomt, sier stemmen «Hei! Velkommen til Språkhjelp!».' },
+      { type: 'nytt', tekst: 'Admin → Stemmer: gi stemmene egne navn. Lærerne ser navnet når de velger stemme i Lytteøving, Lær ord og Snakkebot.' },
+      { type: 'nytt', tekst: 'Admin: et merke ved «Admin» i toppmenyen og ved «Brukere» i adminmenyen viser hvor mange nye brukere som har kommet til. Merket forsvinner når du åpner Brukere, og de nye brukerne er merket «Ny» i listen.' },
+    ],
+  },
+  {
     dato: '2026-11-26',
     endringer: [
       { type: 'nytt', tekst: 'Admin har fått sin egen side med meny til venstre. Lenken «Admin» i toppmenyen tar deg dit, og der ligger Forbruk, Brukere, Språkmodell, Instrukser og Stemmer. De gamle adressene sender deg videre.' },

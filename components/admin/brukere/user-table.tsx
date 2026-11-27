@@ -128,7 +128,17 @@ function RoleSelect({ user, isSelf }: { user: AdminUser; isSelf: boolean }) {
   )
 }
 
-export function UserTable({ users: initialUsers, currentUserId }: { users: AdminUser[]; currentUserId: string }) {
+export function UserTable({
+  users: initialUsers,
+  currentUserId,
+  newSince = null,
+}: {
+  users: AdminUser[]
+  currentUserId: string
+  // Users created after this time are marked «Ny» (new since the last visit).
+  newSince?: string | null
+}) {
+  const newSinceTime = newSince ? new Date(newSince).getTime() : null
   // Deleted users disappear right away; the server list follows on refresh.
   const [deleted, setDeleted] = React.useState<string[]>([])
   const users = React.useMemo(() => initialUsers.filter((u) => !deleted.includes(u.id)), [initialUsers, deleted])
@@ -221,7 +231,14 @@ export function UserTable({ users: initialUsers, currentUserId }: { users: Admin
                 shown.map((u) => (
                   <TableRow key={u.id}>
                     <TableCell className="max-w-[180px] text-xs sm:max-w-none sm:text-sm">
-                      <span className="block truncate font-medium text-vlfk-ink">{u.firstName || u.email}</span>
+                      <span className="flex items-center gap-1.5">
+                        <span className="truncate font-medium text-vlfk-ink">{u.firstName || u.email}</span>
+                        {newSinceTime !== null && new Date(u.createdAt).getTime() > newSinceTime && (
+                          <span className="shrink-0 rounded-sm bg-vlfk-rod-oransje px-1.5 py-0.5 text-[10px] font-semibold text-vlfk-ink">
+                            Ny
+                          </span>
+                        )}
+                      </span>
                       {u.firstName && <span className="block truncate text-vlfk-ink-muted">{u.email}</span>}
                       {!u.confirmed && (
                         <span className="mt-1 inline-block rounded-sm bg-vlfk-surface-muted px-1.5 py-0.5 text-[10px] font-medium text-vlfk-ink-muted">

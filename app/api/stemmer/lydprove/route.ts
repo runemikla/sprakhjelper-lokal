@@ -7,11 +7,15 @@ import { TextToSpeechError } from '@/lib/tts/errors'
 import { isValidVoiceId, SAMPLE_TEXT } from '@/lib/tts/voices'
 
 // The sample «Hei! Velkommen til Språkhjelp!» in one voice, for the admin page
-// /stemmer. Each sample is made once per server process and kept in memory,
-// and the browser keeps it for a week, so browsing the voices again costs
-// nothing at Google.
+// /admin/stemmer. Each standard sample is made once per server process and
+// kept in memory, and the browser keeps it for a week, so browsing the voices
+// again costs nothing at Google.
+//
+// The admin can also write their own sentence (?text=…). Those samples are
+// not kept on the server, and the browser keeps them for an hour.
 
 const samples = new Map<string, Buffer>()
+const MAX_TEXT = 300
 
 export async function GET(req: Request) {
   const user = await getUser()
@@ -24,13 +28,19 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: 'Ukjent stemme.' }, { status: 400 })
   }
 
-  let audio = samples.get(voice)
+  const ownText = (new URL(req.url).searchParams.get('text') ?? '').trim()
+  if (ownText.length > MAX_TEXT) {
+    return NextResponse.json({ error: `Teksten kan ha maks ${MAX_TEXT} tegn.` }, { status: 400 })
+  }
+  const isStandard = ownText === '' || ownText === SAMPLE_TEXT
+
+  let audio = isStandard ? samples.get(voice) : undefined
   if (!audio) {
     const limited = checkRateLimit(req, 120, 60000)
     if (limited) return limited
     try {
-      audio = await googleTextToSpeech(SAMPLE_TEXT, 1, voice)
-      samples.set(voice, audio)
+      audio = await googleTextToSpeech(isStandard ? SAMPLE_TEXT : ownText, 1, voice)
+      if (isStandard) samples.set(voice, audio)
     } catch (error) {
       const message =
         error instanceof TextToSpeechError
@@ -43,7 +53,7 @@ export async function GET(req: Request) {
   return new NextResponse(new Uint8Array(audio), {
     headers: {
       'Content-Type': 'audio/mpeg',
-      'Cache-Control': 'private, max-age=604800, immutable',
+      'Cache-Control': isStandard ? 'private, max-age=604800, immutable' : 'private, max-age=3600',
     },
   })
 }

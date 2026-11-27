@@ -7,6 +7,21 @@ import { Button } from '@/components/ui/button'
 import { Menu, X } from 'lucide-react'
 import { LogoutButton } from '@/components/logout-button'
 import { useUserRoles } from '@/components/auth/user-roles-provider'
+import { badgeText, newUsersLabel, useNewUsersCount } from '@/lib/admin/use-new-users'
+
+// Badge with the number of new users, next to «Admin».
+function NewUsersBadge({ count }: { count: number }) {
+  if (count === 0) return null
+  return (
+    <span
+      className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-vlfk-rod-oransje px-1.5 text-xs font-semibold tabular-nums text-vlfk-ink"
+      title={newUsersLabel(count)}
+    >
+      <span aria-hidden="true">{badgeText(count)}</span>
+      <span className="sr-only">{newUsersLabel(count)}</span>
+    </span>
+  )
+}
 
 interface NavbarProps {
   userEmail?: string | null
@@ -21,6 +36,7 @@ export function Navbar({ userEmail = null, isAdmin: isAdminProp = false }: Navba
   // isAdmin still show «Admin» to admins.
   const roles = useUserRoles()
   const isAdmin = isAdminProp || roles.isAdmin
+  const newUsers = useNewUsersCount(isAdmin)
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-200">
@@ -57,9 +73,10 @@ export function Navbar({ userEmail = null, isAdmin: isAdminProp = false }: Navba
             {isAdmin && (
               <Link
                 href="/admin"
-                className="text-gray-700 hover:text-vlfk-ink transition-colors font-medium"
+                className="inline-flex items-center gap-1.5 text-gray-700 hover:text-vlfk-ink transition-colors font-medium"
               >
                 Admin
+                <NewUsersBadge count={newUsers} />
               </Link>
             )}
             {userEmail ? (
@@ -86,9 +103,16 @@ export function Navbar({ userEmail = null, isAdmin: isAdminProp = false }: Navba
               variant="ghost"
               size="icon"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              aria-label="Toggle menu"
+              aria-label={newUsers > 0 && !mobileMenuOpen ? `Vis menyen (${newUsersLabel(newUsers)})` : 'Toggle menu'}
+              className="relative"
             >
               {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+              {newUsers > 0 && !mobileMenuOpen && (
+                <span
+                  aria-hidden="true"
+                  className="absolute right-1 top-1 h-2.5 w-2.5 rounded-full bg-vlfk-rod-oransje ring-2 ring-white"
+                />
+              )}
             </Button>
           </div>
         </div>
@@ -116,10 +140,11 @@ export function Navbar({ userEmail = null, isAdmin: isAdminProp = false }: Navba
               {isAdmin && (
                 <Link
                   href="/admin"
-                  className="text-gray-700 hover:text-vlfk-ink transition-colors font-medium px-2"
+                  className="inline-flex items-center gap-1.5 text-gray-700 hover:text-vlfk-ink transition-colors font-medium px-2"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   Admin
+                  <NewUsersBadge count={newUsers} />
                 </Link>
               )}
               {userEmail ? (
