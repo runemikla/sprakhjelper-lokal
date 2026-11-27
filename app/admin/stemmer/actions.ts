@@ -57,3 +57,37 @@ export async function setVoiceAvailable(input: {
   revalidatePath('/admin/stemmer')
   return { ok: true }
 }
+
+const nameSchema = z.object({
+  voiceId: z.string().trim().min(1).max(40),
+  // Empty: back to the Google name.
+  displayName: z.string().trim().max(40, 'Navnet kan ha maks 40 tegn.'),
+})
+
+// Gives an available voice the admin's own name, which teachers see in the
+// voice pickers. Only the name shown changes; content keeps its voice.
+export async function setVoiceDisplayName(input: { voiceId: string; displayName: string }): Promise<ActionResult> {
+  const user = await getUser()
+  if (!user || !(await isAdmin(user))) return { ok: false, error: 'Bare administratorer har tilgang.' }
+
+  const parsed = nameSchema.safeParse(input)
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? 'Ugyldig navn' }
+  const { voiceId, displayName } = parsed.data
+  if (!isValidVoiceId(voiceId)) return { ok: false, error: 'Ukjent stemme' }
+
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('tts_voices')
+    .update({ display_name: displayName || null })
+    .eq('voice_id', voiceId)
+    .select('voice_id')
+  if (error) {
+    console.error('Rename TTS voice error:', error.message)
+    return { ok: false, error: 'Kunne ikke lagre navnet. Er migrasjonen for stemmenavn kjørt?' }
+  }
+  if (!data || data.length === 0) return { ok: false, error: 'Stemmen er ikke tilgjengelig i verktøyene.' }
+
+  clearAvailableVoicesCache()
+  revalidatePath('/admin/stemmer')
+  return { ok: true }
+}

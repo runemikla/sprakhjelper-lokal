@@ -1,4 +1,6 @@
+import Image from 'next/image'
 import { AdminIntro, AdminNotice } from '@/components/admin/admin-intro'
+import { VERKTOY_FARGE, VERKTOY_KANT } from '@/components/landing/verktoy-farger'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { createClient } from '@/lib/supabase/server'
 import { requireAdminPage } from '@/lib/auth/require-admin-page'
@@ -27,9 +29,25 @@ interface ReferenceItem {
   content: string
 }
 
-const TOOLS: { tool: string; description: string; references: ReferenceItem[] }[] = [
+// Each tool is colour coded with its VLFK profile colour (the same as on the
+// tool cards), so it is easy to see which instructions belong to which tool.
+interface ToolGroup {
+  tool: string
+  // Anchor id on this page.
+  id: string
+  // The tool's route; picks the colour from VERKTOY_FARGE.
+  href: string
+  image: string
+  description: string
+  references: ReferenceItem[]
+}
+
+const TOOLS: ToolGroup[] = [
   {
     tool: 'Skrivehjelp',
+    id: 'skrivehjelp',
+    href: '/spraakhjelper',
+    image: '/images/verktoy/skrivehjelp.webp',
     description:
       'Systeminstrukser bak skrivehjelpen: hovedanalyse, setningsdeling, setningssjekk og sammendrag.',
     references: [
@@ -41,8 +59,11 @@ const TOOLS: { tool: string; description: string; references: ReferenceItem[] }[
     ],
   },
   {
-    tool: 'Grammatikk øving',
-    description: 'Systeminstrukser bak ordrekkefølge-øvingene.',
+    tool: 'Grammatikkøving',
+    id: 'grammatikkoving',
+    href: '/grammatikk',
+    image: '/images/verktoy/grammatikk.webp',
+    description: 'Systeminstrukser bak «Øv på feilene dine» og ordrekkefølge-øvingene.',
     references: [
       {
         title: 'Nivåspesifikasjoner',
@@ -53,6 +74,9 @@ const TOOLS: { tool: string; description: string; references: ReferenceItem[] }[
   },
   {
     tool: 'Lytteøving',
+    id: 'lytteoving',
+    href: '/lytteoving',
+    image: '/images/verktoy/lytteoving.webp',
     description:
       'Systeminstrukser bak lytteøvingene: spørsmålsgenerering og automatisk vurdering av elevsvar.',
     references: [],
@@ -107,14 +131,39 @@ export default async function InstrukserPage() {
         </AdminNotice>
       )}
 
+      <nav aria-label="Verktøy" className="flex flex-wrap gap-2">
+        {TOOLS.map((group) => (
+          <a
+            key={group.id}
+            href={`#${group.id}`}
+            className={`inline-flex items-center rounded-md px-3 py-1.5 text-sm font-medium text-vlfk-ink hover:ring-2 hover:ring-vlfk-ink/20 ${VERKTOY_FARGE[group.href]}`}
+          >
+            {group.tool}
+          </a>
+        ))}
+      </nav>
+
       <div className="space-y-6">
         {TOOLS.map((group) => (
-          <Card key={group.tool}>
-            <CardHeader>
-              <CardTitle className="text-2xl">{group.tool}</CardTitle>
-              <p className="text-sm text-gray-600">{group.description}</p>
+          <Card
+            key={group.tool}
+            id={group.id}
+            className={`scroll-mt-4 overflow-hidden border-l-4 sm:border-l-8 ${VERKTOY_KANT[group.href]}`}
+          >
+            <CardHeader className={`flex flex-row items-center gap-4 space-y-0 p-4 sm:p-6 ${VERKTOY_FARGE[group.href]}`}>
+              <Image
+                src={group.image}
+                alt=""
+                width={64}
+                height={48}
+                className="hidden h-12 w-16 shrink-0 rounded-md object-cover sm:block"
+              />
+              <div className="space-y-1">
+                <CardTitle className="text-xl text-vlfk-ink sm:text-2xl">{group.tool}</CardTitle>
+                <p className="text-sm text-vlfk-ink">{group.description}</p>
+              </div>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="space-y-3 p-3 pt-4 sm:p-6">
               {INSTRUCTION_DEFINITIONS.filter(
                 (definition) => definition.tool === group.tool
               ).map((definition) => (

@@ -1,4 +1,4 @@
-import { createClient as createSupabaseClient } from '@supabase/supabase-js'
+import { createClient as createSupabaseClient, type SupabaseClient } from '@supabase/supabase-js'
 import { getSupabaseEnv } from '@/lib/supabase/env'
 import {
   DEFAULT_AVAILABLE_VOICES,
@@ -24,13 +24,29 @@ export interface TtsVoiceRow {
   voice_id: string
   google_name: string
   gender: string | null
+  // Missing before the migration that adds the column is applied.
+  display_name?: string | null
 }
 
 export function voiceFromRow(row: TtsVoiceRow): TtsVoice {
   const gender = (['kvinne', 'mann', 'nøytral'] as const).includes(row.gender as VoiceGender)
     ? (row.gender as VoiceGender)
     : null
-  return describeVoice(row.google_name, gender)
+  return { ...describeVoice(row.google_name, gender), displayName: row.display_name?.trim() || null }
+}
+
+/**
+ * Reads the rows of tts_voices. Before the column display_name exists
+ * (migration 20261127150000 not applied), it reads them without names, so the
+ * tools keep working.
+ */
+export async function selectVoiceRows(
+  supabase: SupabaseClient
+): Promise<{ rows: TtsVoiceRow[]; hasNames: boolean; error: { message: string } | null }> {
+  const withNames = await supabase.from('tts_voices').select('voice_id, google_name, gender, display_name')
+  if (!withNames.error) return { rows: (withNames.data ?? []) as TtsVoiceRow[], hasNames: true, error: null }
+  const plain = await supabase.from('tts_voices').select('voice_id, google_name, gender')
+  return { rows: (plain.data ?? []) as TtsVoiceRow[], hasNames: false, error: plain.error }
 }
 
 // Also used where nobody is logged in (Snakkebot by code), so this is a plain
@@ -40,9 +56,9 @@ async function fetchAvailableVoices(): Promise<TtsVoice[]> {
   const supabase = createSupabaseClient(url, key, {
     auth: { persistSession: false, autoRefreshToken: false },
   })
-  const { data, error } = await supabase.from('tts_voices').select('voice_id, google_name, gender')
+  const { rows, error } = await selectVoiceRows(supabase)
   if (error) throw error
-  const voices = (data ?? []).filter((r) => isValidVoiceId(r.voice_id)).map(voiceFromRow)
+  const voices = rows.filter((r) => isValidVoiceId(r.voice_id)).map(voiceFromRow)
   return voices.length > 0 ? sortVoices(voices) : DEFAULT_AVAILABLE_VOICES
 }
 

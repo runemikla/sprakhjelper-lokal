@@ -22,6 +22,9 @@ export interface TtsVoice {
   gender: VoiceGender | null
   // Short description; only Chirp 3 HD voices have one.
   style: string | null
+  // The admin's own name for the voice (page /admin/stemmer), shown to
+  // teachers instead of the Google name. Null or missing: the Google name.
+  displayName?: string | null
 }
 
 export const SAMPLE_TEXT = 'Hei! Velkommen til Språkhjelp!'
@@ -103,9 +106,14 @@ export function voiceShortName(voice: TtsVoice): string {
   return parts[parts.length - 1]
 }
 
-/** «Erinome (kvinne, klar)» or «WaveNet A (kvinne)». */
+/** «Erinome» or «WaveNet A»: the voice's name at Google, without the language. */
+export function googleVoiceLabel(voice: TtsVoice): string {
+  return voice.type === CHIRP3 ? voiceShortName(voice) : `${voiceTypeLabel(voice.type)} ${voiceShortName(voice)}`
+}
+
+/** «Erinome (kvinne, klar)», «WaveNet A (kvinne)», or the admin's own name: «Sara (kvinne, klar)». */
 export function ttsVoiceLabel(voice: TtsVoice): string {
-  const name = voice.type === CHIRP3 ? voiceShortName(voice) : `${voiceTypeLabel(voice.type)} ${voiceShortName(voice)}`
+  const name = voice.displayName?.trim() || googleVoiceLabel(voice)
   const details = [voice.gender, voice.style].filter(Boolean).join(', ')
   return details ? `${name} (${details})` : name
 }

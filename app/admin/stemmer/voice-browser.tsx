@@ -4,20 +4,27 @@ import { useMemo, useRef, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { Check, Loader2, Square, Volume2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import {
   SAMPLE_TEXT,
+  googleVoiceLabel,
   ttsVoiceLabel,
-  voiceShortName,
   voiceTypeLabel,
   type TtsVoice,
 } from '@/lib/tts/voices'
-import { setVoiceAvailable } from './actions'
+import { setVoiceAvailable, setVoiceDisplayName } from './actions'
 
 interface VoiceBrowserProps {
   voices: TtsVoice[]
-  chosenIds: string[]
+  // The voices in the tools, with the admin's own names.
+  chosen: TtsVoice[]
   canEdit: boolean
+  // False before the column for own names exists in the database.
+  canName: boolean
 }
+
+const MAX_TEXT = 300
 
 type GenderFilter = 'alle' | 'kvinne' | 'mann'
 
@@ -27,9 +34,20 @@ function chipClass(active: boolean) {
   }`
 }
 
-export function VoiceBrowser({ voices, chosenIds, canEdit }: VoiceBrowserProps) {
+export function VoiceBrowser({ voices, chosen: chosenVoicesProp, canEdit, canName }: VoiceBrowserProps) {
   const router = useRouter()
-  const [chosen, setChosen] = useState<Set<string>>(() => new Set(chosenIds))
+  const [chosen, setChosen] = useState<Set<string>>(() => new Set(chosenVoicesProp.map((v) => v.id)))
+  // The admin's own names, by voice id: saved, and what is in the fields now.
+  const savedNames = useMemo(
+    () => new Map(chosenVoicesProp.map((v) => [v.id, v.displayName ?? ''])),
+    [chosenVoicesProp]
+  )
+  const [names, setNames] = useState<Record<string, string>>({})
+  const [savingName, setSavingName] = useState<string | null>(null)
+  const [savedName, setSavedName] = useState<string | null>(null)
+  // The admin's own test sentence; empty means the standard sample.
+  const [testText, setTestText] = useState('')
+  const sampleText = testText.trim()
   const [type, setType] = useState<string>('alle')
   const [gender, setGender] = useState<GenderFilter>('alle')
   const [onlyChosen, setOnlyChosen] = useState(false)
@@ -55,7 +73,8 @@ export function VoiceBrowser({ voices, chosenIds, canEdit }: VoiceBrowserProps) 
       (gender === 'alle' || v.gender === gender) &&
       (!onlyChosen || chosen.has(v.id))
   )
-  const chosenVoices = voices.filter((v) => chosen.has(v.id))
+  const withName = (v: TtsVoice): TtsVoice => ({ ...v, displayName: savedNames.get(v.id) || null })
+  const chosenVoices = voices.filter((v) => chosen.has(v.id)).map(withName)
 
   function stop() {
     audio.current?.pause()
@@ -70,17 +89,20 @@ export function VoiceBrowser({ voices, chosenIds, canEdit }: VoiceBrowserProps) 
       return
     }
     stop()
-    let url = samples.current.get(voice.id)
+    const key = `${voice.id}|${sampleText}`
+    let url = samples.current.get(key)
     if (!url) {
       setLoading(voice.id)
       try {
-        const response = await fetch(`/api/stemmer/lydprove?voice=${encodeURIComponent(voice.id)}`)
+        const params = new URLSearchParams({ voice: voice.id })
+        if (sampleText) params.set('text', sampleText)
+        const response = await fetch(`/api/stemmer/lydprove?${params}`)
         if (!response.ok) {
           const body = (await response.json().catch(() => null)) as { error?: string } | null
           throw new Error(body?.error || `Feil ${response.status}`)
         }
         url = URL.createObjectURL(await response.blob())
-        samples.current.set(voice.id, url)
+        samples.current.set(key, url)
       } catch (e) {
         setError(`${ttsVoiceLabel(voice)}: ${e instanceof Error ? e.message : 'Kunne ikke spille av stemmen.'}`)
         return
@@ -93,6 +115,47 @@ export function VoiceBrowser({ voices, chosenIds, canEdit }: VoiceBrowserProps) 
     audio.current = element
     setPlaying(voice.id)
     void element.play()
+  }
+
+  async function saveName(voice: TtsVoice) {
+    setError(null)
+    setSavedName(null)
+    setSavingName(voice.id)
+    const result = await setVoiceDisplayName({ voiceId: voice.id, displayName: names[voice.id] ?? '' })
+    setSavingName(null)
+    if (!result.ok) {
+      setError(result.error)
+      return
+    }
+    setNames((current) => {
+      const next = { ...current }
+      delete next[voice.id]
+      return next
+    })
+    setSavedName(voice.id)
+    startTransition(() => router.refresh())
+  }
+
+  function playButton(v: TtsVoice) {
+    return (
+      <Button
+        type="button"
+        variant="outline"
+        size="icon"
+        className="shrink-0"
+        onClick={() => void play(v)}
+        disabled={loading === v.id}
+        aria-label={playing === v.id ? `Stopp ${ttsVoiceLabel(v)}` : `Hør ${ttsVoiceLabel(v)}`}
+      >
+        {loading === v.id ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : playing === v.id ? (
+          <Square className="h-4 w-4" />
+        ) : (
+          <Volume2 className="h-4 w-4" />
+        )}
+      </Button>
+    )
   }
 
   async function toggle(voice: TtsVoice) {
@@ -120,25 +183,95 @@ export function VoiceBrowser({ voices, chosenIds, canEdit }: VoiceBrowserProps) 
 
   return (
     <div className="space-y-6">
-      <section>
+      <section className="space-y-2">
+        <Label htmlFor="testsetning" className="text-base font-semibold text-vlfk-ink">
+          Hva skal stemmene si?
+        </Label>
+        <Input
+          id="testsetning"
+          value={testText}
+          maxLength={MAX_TEXT}
+          placeholder={SAMPLE_TEXT}
+          onChange={(e) => {
+            stop()
+            setTestText(e.target.value)
+          }}
+          className="max-w-2xl"
+        />
+        <p className="text-sm text-vlfk-ink-muted">
+          Skriv det du vil høre, og trykk på høyttaleren ved en stemme. Er feltet tomt, sier stemmen «{SAMPLE_TEXT}»
+        </p>
+      </section>
+
+      <section className="border-t border-gray-200 pt-5">
         <h2 className="text-lg font-semibold text-gray-900">Tilgjengelig i verktøyene ({chosenVoices.length})</h2>
         <p className="mt-1 text-sm text-gray-600">
           Lærerne velger blant disse når de lager lytteøvinger, ordlister og snakkeboter. Innhold som
           allerede er laget, beholder stemmen sin. Endringen gjelder i løpet av et halvt minutt.
+          {canName && ' Gi gjerne stemmene egne navn; lærerne ser navnet i stedet for Google-navnet.'}
         </p>
-        <div className="mt-3 flex flex-wrap gap-2">
-          {chosenVoices.map((v) => (
-            <span key={v.id} className="inline-flex items-center rounded-full bg-vlfk-lyseblaa/40 px-3 py-1 text-sm font-medium text-vlfk-ink">
-              {ttsVoiceLabel(v)}
-            </span>
-          ))}
-        </div>
+        {canName ? (
+          <ul className="mt-3 divide-y divide-gray-200 rounded-xl border border-gray-200">
+            {chosenVoices.map((v) => {
+              const saved = savedNames.get(v.id) ?? ''
+              const value = names[v.id] ?? saved
+              const changed = value.trim() !== saved
+              return (
+                <li key={v.id} className="flex flex-wrap items-center gap-3 px-3 py-3 sm:flex-nowrap sm:px-4">
+                  {playButton(v)}
+                  <div className="min-w-0 flex-1 sm:max-w-56">
+                    <p className="font-semibold text-gray-900">{googleVoiceLabel(v)}</p>
+                    <p className="text-sm text-gray-600">{[v.gender, v.style].filter(Boolean).join(' · ')}</p>
+                  </div>
+                  <form
+                    className="flex w-full items-center gap-2 sm:w-auto sm:flex-1"
+                    onSubmit={(e) => {
+                      e.preventDefault()
+                      if (changed) void saveName(v)
+                    }}
+                  >
+                    <Label htmlFor={`navn-${v.id}`} className="sr-only">
+                      Eget navn for {googleVoiceLabel(v)}
+                    </Label>
+                    <Input
+                      id={`navn-${v.id}`}
+                      value={value}
+                      maxLength={40}
+                      placeholder="Eget navn"
+                      onChange={(e) => {
+                        setSavedName(null)
+                        setNames((current) => ({ ...current, [v.id]: e.target.value }))
+                      }}
+                      className="min-w-0 flex-1"
+                    />
+                    <Button type="submit" variant="outline" disabled={!changed || savingName !== null} className="shrink-0">
+                      {savingName === v.id ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : savedName === v.id && !changed ? (
+                        <Check className="h-4 w-4" />
+                      ) : null}
+                      {savedName === v.id && !changed ? 'Lagret' : 'Lagre'}
+                    </Button>
+                  </form>
+                </li>
+              )
+            })}
+          </ul>
+        ) : (
+          <div className="mt-3 flex flex-wrap gap-2">
+            {chosenVoices.map((v) => (
+              <span key={v.id} className="inline-flex items-center rounded-full bg-vlfk-lyseblaa/40 px-3 py-1 text-sm font-medium text-vlfk-ink">
+                {ttsVoiceLabel(v)}
+              </span>
+            ))}
+          </div>
+        )}
       </section>
 
       <section className="space-y-3 border-t border-gray-200 pt-5">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <h2 className="text-lg font-semibold text-gray-900">Alle norske stemmer ({voices.length})</h2>
-          <p className="text-sm text-gray-600">Lydprøve: «{SAMPLE_TEXT}»</p>
+          <p className="text-sm text-gray-600">Lydprøve: «{sampleText || SAMPLE_TEXT}»</p>
         </div>
 
         <div className="flex flex-wrap gap-2" role="group" aria-label="Stemmetype">
@@ -176,33 +309,20 @@ export function VoiceBrowser({ voices, chosenIds, canEdit }: VoiceBrowserProps) 
         </p>
       ) : (
         <ul className="divide-y divide-gray-200 rounded-xl border border-gray-200">
-          {shown.map((v) => {
+          {shown.map((voice) => {
+            const v = withName(voice)
             const isChosen = chosen.has(v.id)
             return (
               <li key={v.id} className="flex flex-wrap items-center gap-3 px-3 py-3 sm:flex-nowrap sm:px-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  className="shrink-0"
-                  onClick={() => void play(v)}
-                  disabled={loading === v.id}
-                  aria-label={playing === v.id ? `Stopp ${ttsVoiceLabel(v)}` : `Hør ${ttsVoiceLabel(v)}`}
-                >
-                  {loading === v.id ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : playing === v.id ? (
-                    <Square className="h-4 w-4" />
-                  ) : (
-                    <Volume2 className="h-4 w-4" />
-                  )}
-                </Button>
+                {playButton(v)}
                 <div className="min-w-0 flex-1">
                   <p className="font-semibold text-gray-900">
-                    {v.type === 'Chirp3-HD' ? voiceShortName(v) : `${voiceTypeLabel(v.type)} ${voiceShortName(v)}`}
+                    {v.displayName || googleVoiceLabel(v)}
                   </p>
                   <p className="text-sm text-gray-600">
-                    {[voiceTypeLabel(v.type), v.gender, v.style].filter(Boolean).join(' · ')}
+                    {[v.displayName ? googleVoiceLabel(v) : null, voiceTypeLabel(v.type), v.gender, v.style]
+                      .filter(Boolean)
+                      .join(' · ')}
                   </p>
                 </div>
                 {canEdit && (

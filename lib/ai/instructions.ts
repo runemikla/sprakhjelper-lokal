@@ -327,7 +327,7 @@ Skriv én kort setning om noe eleven får til i teksten, gjerne noe konkret («D
 Returner resultatet som JSON.`;
 
 // ---------------------------------------------------------------------------
-// Grammatikk øving: word-order exercise generation
+// Grammatikkøving: word-order exercise generation
 // ---------------------------------------------------------------------------
 // Level-specific instructions for the 7 difficulty levels.
 // Used by app/api/generate-sentence/route.ts.
@@ -457,7 +457,7 @@ export interface InstructionVariable {
 
 export interface InstructionDefinition {
   key: InstructionKey
-  tool: 'Skrivehjelp' | 'Grammatikk øving' | 'Lytteøving'
+  tool: 'Skrivehjelp' | 'Grammatikkøving' | 'Lytteøving'
   title: string
   route: string
   variables: InstructionVariable[]
@@ -525,7 +525,7 @@ export const INSTRUCTION_DEFINITIONS: InstructionDefinition[] = [
   },
   {
     key: 'skrivehjelp_ovinger',
-    tool: 'Grammatikk øving',
+    tool: 'Grammatikkøving',
     title: 'Øv på feilene dine (øvinger fra feilene i en Skrivehjelp-tekst)',
     route: 'app/api/generate-exercises',
     variables: [
@@ -545,7 +545,7 @@ export const INSTRUCTION_DEFINITIONS: InstructionDefinition[] = [
   },
   {
     key: 'grammatikk_setningsgenerator',
-    tool: 'Grammatikk øving',
+    tool: 'Grammatikkøving',
     title: 'Setningsgenerator (ordrekkefølge)',
     route: 'app/api/generate-sentence',
     variables: [
