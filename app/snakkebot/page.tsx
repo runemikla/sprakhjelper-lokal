@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Layers, MessageCircle } from 'lucide-react'
+import { Layers, MessageCircle, Upload } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Card, CardContent } from '@/components/ui/card'
@@ -128,6 +128,11 @@ export default async function SnakkebotPage() {
               </Button>
               <Button asChild variant="outline">
                 <Link href="/snakkebot/ny">Lag ny</Link>
+              </Button>
+              <Button asChild variant="outline">
+                <Link href="/snakkebot/importer">
+                  <Upload className="h-4 w-4" /> Last opp JSON
+                </Link>
               </Button>
             </>
           }

@@ -24,6 +24,13 @@ export interface Endringsoppforing {
 
 export const ENDRINGSLOGG: Endringsoppforing[] = [
   {
+    dato: '2026-11-28',
+    endringer: [
+      { type: 'nytt', tekst: 'Snakkebot: administrator kan laste opp ferdige snakkeboter som JSON-filer, mange på én gang. Hver fil blir en ny snakkebot med egen kode. Før opplastingen ser du hvilke filer som er i orden og hva som er feil i de andre. Siden har en eksempelfil som viser formatet.' },
+      { type: 'nytt', tekst: 'Snakkebot: «Last ned som JSON» på redigeringssiden lagrer snakkeboten som en fil, som kan brukes som mal eller lastes opp igjen.' },
+    ],
+  },
+  {
     dato: '2026-11-27',
     endringer: [
       { type: 'forbedret', tekst: 'Admin → Instrukser: hvert verktøy har sin egen farge (samme som på verktøykortene), så det er lett å se hvilke instrukser som hører til Skrivehjelp, Grammatikkøving og Lytteøving. Knappene øverst hopper rett til verktøyet.' },
