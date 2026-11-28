@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Loader2 } from 'lucide-react'
+import { Download, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -16,6 +16,7 @@ import { VoicePicker } from '@/components/ordlister/voice-picker'
 import { groupStore } from '@/lib/ordlister/db-store'
 import type { Group } from '@/lib/ordlister/types'
 import { chatbotStore } from '@/lib/snakkebot/db-store'
+import { chatbotFileName, chatbotToFile, downloadJson } from '@/lib/snakkebot/import'
 import { CHATBOT_LEVELS, LEVEL_LABELS, LIMITS, type Chatbot, type ChatbotLevel } from '@/lib/snakkebot/types'
 import { DEFAULT_CHOSEN_VOICE } from '@/lib/tts/gemini-voices'
 
@@ -336,6 +337,28 @@ export function ChatbotEditor({ userEmail, isAdmin, chatbotId }: ChatbotEditorPr
             <Button type="button" variant="outline" onClick={() => void handleSave(false)} disabled={saving}>
               Lagre
             </Button>
+            {saved && (
+              <Button
+                type="button"
+                variant="outline"
+                className="sm:ml-auto"
+                onClick={() =>
+                  downloadJson(
+                    chatbotFileName(name),
+                    chatbotToFile({
+                      name: name.trim(),
+                      description: description.trim(),
+                      instructions: instructions.trim(),
+                      greeting: greeting.trim(),
+                      level: level || null,
+                      voice,
+                    })
+                  )
+                }
+              >
+                <Download className="h-4 w-4" /> Last ned som JSON
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>
