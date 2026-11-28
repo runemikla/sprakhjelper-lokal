@@ -34,12 +34,13 @@ export async function POST(req: Request) {
 
     // Make API call to Azure OpenAI with structured output. The instruction is
     // the system message and the student's text is sent alone as the user
-    // message, so the text cannot easily override the instruction.
+    // message, so the text cannot easily override the instruction. No prefix
+    // such as «Tekst: »: the model copied it into the first sentence.
     console.log('Calling Azure OpenAI with structured output...');
     const response = await azureChatCompletion({
       messages: [
         { role: 'system', content: systemPrompt },
-        { role: 'user', content: `Tekst: ${text}` }
+        { role: 'user', content: text }
       ],
       temperature: 0,
       max_completion_tokens: 4000,
