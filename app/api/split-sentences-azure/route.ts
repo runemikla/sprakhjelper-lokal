@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { checkRateLimit, validateResponseSize } from '@/lib/api-helpers';
 import { getInstruction } from '@/lib/ai/instruction-store';
 import { azureChatCompletion, isAzureConfigured } from '@/lib/ai/azure';
+import { SETNINGSDELING_SVARSKJEMA, type DeltSetning } from '@/lib/setningsdeling/skjema';
 
 // Input validation schema
 const splitSentencesSchema = z.object({
@@ -31,14 +32,25 @@ export async function POST(req: Request) {
     // version (or the default)
     const systemPrompt = await getInstruction('skrivehjelp_setningsdeling');
 
-    // Make API call to Azure OpenAI
-    console.log('Calling Azure OpenAI...');
+    // Make API call to Azure OpenAI with structured output. The instruction is
+    // the system message and the student's text is sent alone as the user
+    // message, so the text cannot easily override the instruction.
+    console.log('Calling Azure OpenAI with structured output...');
     const response = await azureChatCompletion({
       messages: [
-        { role: 'user', content: `${systemPrompt}\n\nTekst: ${text}` }
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: `Tekst: ${text}` }
       ],
       temperature: 0,
       max_completion_tokens: 4000,
+      response_format: {
+        type: 'json_schema',
+        json_schema: {
+          name: 'sentence_split',
+          strict: true,
+          schema: SETNINGSDELING_SVARSKJEMA
+        }
+      }
     }, 'skrivehjelp-setningsdeling');
 
     if (!response.ok) {
@@ -62,28 +74,14 @@ export async function POST(req: Request) {
 
     console.log('Received response from Azure OpenAI');
 
-    // Parse JSON response from AI
-    let parsedResponse;
-    try {
-      const cleanedResponse = aiResponse.replace(/^```json\s*/, '').replace(/\s*```$/, '').trim();
-      parsedResponse = JSON.parse(cleanedResponse);
-    } catch (parseError) {
-      // Secure logging: Only log error message, never full error object
-      if (process.env.NODE_ENV === 'development') {
-        console.error('Failed to parse AI response as JSON');
-      }
-      throw new Error('Invalid JSON response from AI model');
-    }
-
-    // Validate that the response is an array
-    if (!Array.isArray(parsedResponse)) {
-      throw new Error('AI response is not an array of sentence objects');
-    }
+    // Parse JSON response - guaranteed valid by JSON Schema
+    const parsedResponse: { sentences?: DeltSetning[] } = JSON.parse(aiResponse);
+    const sentences = parsedResponse.sentences ?? [];
 
     return NextResponse.json({
       success: true,
-      sentences: parsedResponse,
-      sentenceCount: parsedResponse.length,
+      sentences,
+      sentenceCount: sentences.length,
       morsmaal,
       originalText: text,
       provider: 'azure',
